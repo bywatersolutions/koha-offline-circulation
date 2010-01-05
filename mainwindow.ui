@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>897</width>
-    <height>821</height>
+    <height>870</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,7 +24,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -65,16 +65,29 @@
                <item>
                 <widget class="QPushButton" name="pushButtonIssuesAcceptCardnumber">
                  <property name="text">
-                  <string>Accept</string>
+                  <string>&amp;Accept</string>
                  </property>
                 </widget>
                </item>
                <item>
                 <widget class="QPushButton" name="pushButtonIssuesSearchBorrowers">
                  <property name="text">
-                  <string>Search</string>
+                  <string>&amp;Search</string>
                  </property>
                 </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_8">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
                </item>
               </layout>
              </widget>
@@ -91,9 +104,22 @@
                <item>
                 <widget class="QPushButton" name="pushButtonAddItemBarcode">
                  <property name="text">
-                  <string>Add Item</string>
+                  <string>Add &amp;Item</string>
                  </property>
                 </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_9">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
                </item>
               </layout>
              </widget>
@@ -105,7 +131,11 @@
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_3">
                <item>
-                <widget class="QListWidget" name="listWidgetIssuesScannedBarcodes"/>
+                <widget class="QListWidget" name="listWidgetIssuesScannedBarcodes">
+                 <property name="selectionMode">
+                  <enum>QAbstractItemView::MultiSelection</enum>
+                 </property>
+                </widget>
                </item>
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayoutDeleteButton">
@@ -131,7 +161,7 @@
                  <item>
                   <widget class="QPushButton" name="pushButtonIssuesDeleteSelectedItem">
                    <property name="text">
-                    <string>Delete Selected Item</string>
+                    <string>&amp;Delete Selected Item(s)</string>
                    </property>
                   </widget>
                  </item>
@@ -293,7 +323,7 @@
                   <item>
                    <widget class="QPushButton" name="pushButtonPayFines">
                     <property name="text">
-                     <string>Pay Fines</string>
+                     <string>Pay &amp;Fines</string>
                     </property>
                    </widget>
                   </item>
@@ -378,120 +408,151 @@
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_6">
         <item>
-         <layout class="QVBoxLayout" name="verticalLayoutIssuesInput_2">
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <property name="margin">
+           <number>0</number>
+          </property>
           <item>
-           <widget class="QGroupBox" name="groupBoxItemBarcode_2">
-            <property name="title">
-             <string>Item Barcode</string>
+           <layout class="QVBoxLayout" name="verticalLayoutIssuesInput_2">
+            <item>
+             <widget class="QGroupBox" name="groupBoxItemBarcode_2">
+              <property name="title">
+               <string>Item Barcode</string>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_12">
+               <item>
+                <widget class="QLineEdit" name="lineEditReturnsItemBarcode"/>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pushButtonReturnsAddItemBarcode">
+                 <property name="text">
+                  <string>&amp;Add Item</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_5">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="groupBox_2">
+              <property name="title">
+               <string>Previously Scanned Barcodes</string>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_4">
+               <item>
+                <widget class="QListWidget" name="listWidgetReturnsScannedBarcodes">
+                 <property name="selectionMode">
+                  <enum>QAbstractItemView::MultiSelection</enum>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayoutDeleteButton_2">
+                 <property name="topMargin">
+                  <number>5</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>5</number>
+                 </property>
+                 <item>
+                  <spacer name="horizontalSpacer_3">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="pushButtonReturnsDeleteSelectedItem">
+                   <property name="text">
+                    <string>&amp;Delete Selected Item(s)</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <spacer name="verticalSpacer_2">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeType">
+                  <enum>QSizePolicy::Fixed</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>20</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayoutCompleteCancelButtons_2">
+                 <item>
+                  <spacer name="horizontalSpacer_4">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="QDialogButtonBox" name="buttonBoxReturns">
+                   <property name="standardButtons">
+                    <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="Line" name="line_2">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
             </property>
-            <layout class="QHBoxLayout" name="horizontalLayout_12">
-             <item>
-              <widget class="QLineEdit" name="lineEditReturnsItemBarcode"/>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pushButtonReturnsAddItemBarcode">
-               <property name="text">
-                <string>Add Item</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="horizontalSpacer_5">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
            </widget>
           </item>
           <item>
-           <widget class="QGroupBox" name="groupBox_2">
-            <property name="title">
-             <string>Previously Scanned Barcodes</string>
+           <spacer name="horizontalSpacer_7">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
             </property>
-            <layout class="QVBoxLayout" name="verticalLayout_4">
-             <item>
-              <widget class="QListWidget" name="listWidgetReturnsScannedBarcodes"/>
-             </item>
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayoutDeleteButton_2">
-               <property name="topMargin">
-                <number>5</number>
-               </property>
-               <property name="bottomMargin">
-                <number>5</number>
-               </property>
-               <item>
-                <spacer name="horizontalSpacer_3">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pushButtonReturnsDeleteSelectedItem">
-                 <property name="text">
-                  <string>Delete Selected Item</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item>
-              <spacer name="verticalSpacer_2">
-               <property name="orientation">
-                <enum>Qt::Vertical</enum>
-               </property>
-               <property name="sizeType">
-                <enum>QSizePolicy::Fixed</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>20</width>
-                 <height>40</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayoutCompleteCancelButtons_2">
-               <item>
-                <spacer name="horizontalSpacer_4">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QDialogButtonBox" name="buttonBoxReturns">
-                 <property name="standardButtons">
-                  <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-            </layout>
-           </widget>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </item>
@@ -544,7 +605,7 @@
           <item>
            <widget class="QPushButton" name="pushButtonHistoryDeleteSelectedItem">
             <property name="text">
-             <string>Delete Selected Item</string>
+             <string>&amp;Delete Selected Item</string>
             </property>
            </widget>
           </item>
@@ -574,11 +635,11 @@
     <addaction name="actionOpen_Recent"/>
     <addaction name="separator"/>
     <addaction name="actionSave"/>
-    <addaction name="actionSave_As"/>
+    <addaction name="actionSaveAs"/>
     <addaction name="separator"/>
     <addaction name="actionClose"/>
     <addaction name="separator"/>
-    <addaction name="actionQuite"/>
+    <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -610,7 +671,7 @@
     <string>Save</string>
    </property>
   </action>
-  <action name="actionSave_As">
+  <action name="actionSaveAs">
    <property name="text">
     <string>Save As...</string>
    </property>
@@ -620,7 +681,7 @@
     <string>Close</string>
    </property>
   </action>
-  <action name="actionQuite">
+  <action name="actionQuit">
    <property name="text">
     <string>Quit</string>
    </property>

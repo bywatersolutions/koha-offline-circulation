@@ -105,7 +105,7 @@ void MainWindow::commitIssues() {
 	tableWidgetHistory->setItem(row, 0, type);
 	tableWidgetHistory->setItem(row, 1, borrowerCardnumber);
 	tableWidgetHistory->setItem(row, 2, itemBarcode);
-	tableWidgetHistory->setItem(row, 3, dateTime);
+	tableWidgetHistory->setItem(row, 4, dateTime);
 /*
     int row = filesTable->rowCount();
     filesTable->insertRow(row);

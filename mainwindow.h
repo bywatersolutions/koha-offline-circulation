@@ -53,13 +53,15 @@ class MainWindow : public QMainWindow,
     QString mFilePath;
     QLabel *mStatLabel;
 
+  /* Private Constants */
   private:
 	QString DATETIME_FORMAT;
-	int COLUMN_TYPE;
-	int COLUMN_CARDNUMBER;
-	int COLUMN_BARCODE;
-	int COLUMN_PAYMENT;
-	int COLUMN_DATE;
+
+	static const int COLUMN_TYPE = 0;
+	static const int COLUMN_CARDNUMBER = 1;
+	static const int COLUMN_BARCODE = 2;
+	static const int COLUMN_PAYMENT = 3;
+	static const int COLUMN_DATE = 4;
 };
 
 #endif // MAINWINDOW_H

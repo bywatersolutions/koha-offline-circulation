@@ -5,11 +5,6 @@ MainWindow::MainWindow(QWidget *parent)
  : QMainWindow(parent)
 {
   DATETIME_FORMAT = "yyyy-MM-dd hh:mm:ss zzz";
-  COLUMN_TYPE = 0;
-  COLUMN_CARDNUMBER = 1;
-  COLUMN_BARCODE = 2;
-  COLUMN_PAYMENT = 3;
-  COLUMN_DATE = 4;
 
   setupUi(this);
   setupActions();

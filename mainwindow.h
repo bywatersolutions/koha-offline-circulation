@@ -49,6 +49,9 @@ class MainWindow : public QMainWindow,
 	void commitReturns();
 	void cancelReturns();
 
+	/* History Related */
+	void historyDeleteRow();
+
   private:
     QString mFilePath;
     QLabel *mStatLabel;

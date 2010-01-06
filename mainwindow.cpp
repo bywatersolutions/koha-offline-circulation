@@ -63,6 +63,10 @@ void MainWindow::setupActions()
           this, SLOT(commitReturns()));
   connect(buttonBoxReturns, SIGNAL(rejected()),
           this, SLOT(cancelReturns()));
+
+  /* History Tab Actions */
+  connect(pushButtonHistoryDeleteSelectedItem, SIGNAL(clicked()),
+          this, SLOT(historyDeleteRow()));
 }
 
 MainWindow::~MainWindow()
@@ -78,8 +82,7 @@ void MainWindow::issuesAddItem() {
   QString itemBarcode = lineEditIssuesItemBarcode->text();
 
   if ( itemBarcode.isEmpty() ) {
-	/* Should be equivilent to hitting the "OK" button */
-    lineEditIssuesItemBarcode->setFocus();
+    commitIssues();
   } else {
     listWidgetIssuesScannedBarcodes->addItem( itemBarcode );
     lineEditIssuesItemBarcode->clear();
@@ -106,13 +109,9 @@ void MainWindow::commitIssues() {
 	tableWidgetHistory->setItem(row, COLUMN_CARDNUMBER, borrowerCardnumber);
 	tableWidgetHistory->setItem(row, COLUMN_BARCODE, itemBarcode);
 	tableWidgetHistory->setItem(row, COLUMN_DATE, dateTime);
-/*
-    int row = filesTable->rowCount();
-    filesTable->insertRow(row);
-    filesTable->setItem(row, 0, fileNameItem);
-    filesTable->setItem(row, 1, sizeItem);
-*/
   }
+
+  cancelIssues();
 }
 
 void MainWindow::cancelIssues() {
@@ -128,8 +127,7 @@ void MainWindow::returnsAddItem() {
   QString itemBarcode = lineEditReturnsItemBarcode->text();
 
   if ( itemBarcode.isEmpty() ) {
-	/* Should be equivilent to hitting the "OK" button */
-    lineEditReturnsItemBarcode->setFocus();
+    commitReturns();
   } else {
     listWidgetReturnsScannedBarcodes->addItem( itemBarcode );
     lineEditReturnsItemBarcode->clear();
@@ -143,7 +141,20 @@ void MainWindow::returnsDeleteItemBarcode() {
 }
 
 void MainWindow::commitReturns() {
+  while ( QListWidgetItem *item = listWidgetReturnsScannedBarcodes->takeItem(0) ) {
+    QTableWidgetItem *type = new QTableWidgetItem("return");
+    QTableWidgetItem *dateTime = new QTableWidgetItem( QDateTime::currentDateTime().toString( DATETIME_FORMAT ) );
+    QTableWidgetItem *itemBarcode = new QTableWidgetItem( item->text() );
 
+    int row = tableWidgetHistory->rowCount();
+
+	tableWidgetHistory->insertRow(row);
+	tableWidgetHistory->setItem(row, COLUMN_TYPE, type);
+	tableWidgetHistory->setItem(row, COLUMN_BARCODE, itemBarcode);
+	tableWidgetHistory->setItem(row, COLUMN_DATE, dateTime);
+  }
+
+  cancelReturns();
 }
 
 void MainWindow::cancelReturns() {
@@ -151,6 +162,21 @@ void MainWindow::cancelReturns() {
   listWidgetReturnsScannedBarcodes->clear();
 
   lineEditReturnsItemBarcode->setFocus();
+}
+
+/* History Related Functions */
+void MainWindow::historyDeleteRow() {
+	QList<QTableWidgetItem *> selectedItems = tableWidgetHistory->selectedItems();
+
+	QListIterator<QTableWidgetItem *> i(selectedItems);
+	while ( i.hasNext() ) {
+		QTableWidgetItem *item = i.next();
+
+		if ( tableWidgetHistory->column(item) == COLUMN_DATE ) {
+			int row = tableWidgetHistory->row(item);
+			tableWidgetHistory->removeRow( row );
+		}
+	}
 }
 
 /* File Related Functions */

@@ -55,6 +55,11 @@ class MainWindow : public QMainWindow,
 
   private:
 	QString DATETIME_FORMAT;
+	int COLUMN_TYPE;
+	int COLUMN_CARDNUMBER;
+	int COLUMN_BARCODE;
+	int COLUMN_PAYMENT;
+	int COLUMN_DATE;
 };
 
 #endif // MAINWINDOW_H

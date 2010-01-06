@@ -5,6 +5,11 @@ MainWindow::MainWindow(QWidget *parent)
  : QMainWindow(parent)
 {
   DATETIME_FORMAT = "yyyy-MM-dd hh:mm:ss zzz";
+  COLUMN_TYPE = 0;
+  COLUMN_CARDNUMBER = 1;
+  COLUMN_BARCODE = 2;
+  COLUMN_PAYMENT = 3;
+  COLUMN_DATE = 4;
 
   setupUi(this);
   setupActions();
@@ -102,10 +107,10 @@ void MainWindow::commitIssues() {
     int row = tableWidgetHistory->rowCount();
 
 	tableWidgetHistory->insertRow(row);
-	tableWidgetHistory->setItem(row, 0, type);
-	tableWidgetHistory->setItem(row, 1, borrowerCardnumber);
-	tableWidgetHistory->setItem(row, 2, itemBarcode);
-	tableWidgetHistory->setItem(row, 4, dateTime);
+	tableWidgetHistory->setItem(row, COLUMN_TYPE, type);
+	tableWidgetHistory->setItem(row, COLUMN_CARDNUMBER, borrowerCardnumber);
+	tableWidgetHistory->setItem(row, COLUMN_BARCODE, itemBarcode);
+	tableWidgetHistory->setItem(row, COLUMN_DATE, dateTime);
 /*
     int row = filesTable->rowCount();
     filesTable->insertRow(row);

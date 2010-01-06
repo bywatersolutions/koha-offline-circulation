@@ -50,6 +50,9 @@ void MainWindow::setupActions()
   connect(buttonBoxIssues, SIGNAL(rejected()),
           this, SLOT(cancelIssues()));
 
+  connect(pushButtonPayFines, SIGNAL(clicked()),
+          this, SLOT(issuesPayFine()));
+
   /* Returns Tab Actions */
   connect(pushButtonReturnsAddItemBarcode, SIGNAL(clicked()),
           this, SLOT(returnsAddItem()));
@@ -120,6 +123,37 @@ void MainWindow::cancelIssues() {
   listWidgetIssuesScannedBarcodes->clear();
 
   lineEditIssuesBorrowerCardnumber->setFocus();
+}
+
+void MainWindow::issuesPayFine() {
+	bool ok;
+	QString paymentString = QInputDialog::getText(this, tr("Fine Payment: Amount To Pay"),
+                                             tr("Amount:"), QLineEdit::Normal,
+                                             "0.00", &ok);
+	if ( ok ) {
+		float finePayment = paymentString.toFloat(&ok);
+		if ( ok ) {
+			paymentString.sprintf("%.2f", round(finePayment*100)/100);
+
+			QTableWidgetItem *borrowerCardnumber = new QTableWidgetItem( lineEditIssuesBorrowerCardnumber->text() );
+	    	QTableWidgetItem *type = new QTableWidgetItem("payment");
+		    QTableWidgetItem *dateTime = new QTableWidgetItem( QDateTime::currentDateTime().toString( DATETIME_FORMAT ) );
+	    	QTableWidgetItem *payment = new QTableWidgetItem( paymentString );
+
+    		int row = tableWidgetHistory->rowCount();
+
+			tableWidgetHistory->insertRow(row);
+			tableWidgetHistory->setItem(row, COLUMN_TYPE, type);
+			tableWidgetHistory->setItem(row, COLUMN_CARDNUMBER, borrowerCardnumber);
+			tableWidgetHistory->setItem(row, COLUMN_PAYMENT, payment);
+			tableWidgetHistory->setItem(row, COLUMN_DATE, dateTime);
+		} else {
+			QMessageBox::warning(this, tr("Invalid Payment Amount"),
+                                    tr("The payment amount was not a valid number.\nPlease try again."),
+                                    QMessageBox::Ok);
+			issuesPayFine();
+		}
+	}
 }
 
 /* Returns Related Functions */

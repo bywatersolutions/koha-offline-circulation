@@ -41,6 +41,8 @@ class MainWindow : public QMainWindow,
 	void commitIssues();
 	void cancelIssues();
 
+	void issuesPayFine();
+
 	/* Returns Related */
     void returnsAddItem();
 

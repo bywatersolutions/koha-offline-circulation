@@ -132,6 +132,9 @@
               <layout class="QVBoxLayout" name="verticalLayout_3">
                <item>
                 <widget class="QListWidget" name="listWidgetIssuesScannedBarcodes">
+                 <property name="alternatingRowColors">
+                  <bool>true</bool>
+                 </property>
                  <property name="selectionMode">
                   <enum>QAbstractItemView::MultiSelection</enum>
                  </property>
@@ -454,6 +457,9 @@
               <layout class="QVBoxLayout" name="verticalLayout_4">
                <item>
                 <widget class="QListWidget" name="listWidgetReturnsScannedBarcodes">
+                 <property name="alternatingRowColors">
+                  <bool>true</bool>
+                 </property>
                  <property name="selectionMode">
                   <enum>QAbstractItemView::MultiSelection</enum>
                  </property>
@@ -565,6 +571,9 @@
        <layout class="QVBoxLayout" name="verticalLayout_7">
         <item>
          <widget class="QTableWidget" name="tableWidgetHistory">
+          <property name="alternatingRowColors">
+           <bool>true</bool>
+          </property>
           <column>
            <property name="text">
             <string>Type</string>

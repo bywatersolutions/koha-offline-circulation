@@ -52,6 +52,9 @@ class MainWindow : public QMainWindow,
   private:
     QString mFilePath;
     QLabel *mStatLabel;
+
+  private:
+	QString DATETIME_FORMAT;
 };
 
 #endif // MAINWINDOW_H

@@ -4,6 +4,8 @@
 MainWindow::MainWindow(QWidget *parent)
  : QMainWindow(parent)
 {
+  DATETIME_FORMAT = "yyyy-MM-dd hh:mm:ss zzz";
+
   setupUi(this);
   setupActions();
 
@@ -91,7 +93,26 @@ void MainWindow::issuesDeleteItemBarcode() {
 }
 
 void MainWindow::commitIssues() {
+  while ( QListWidgetItem *item = listWidgetIssuesScannedBarcodes->takeItem(0) ) {
+    QTableWidgetItem *borrowerCardnumber = new QTableWidgetItem( lineEditIssuesBorrowerCardnumber->text() );
+    QTableWidgetItem *type = new QTableWidgetItem("issue");
+    QTableWidgetItem *dateTime = new QTableWidgetItem( QDateTime::currentDateTime().toString( DATETIME_FORMAT ) );
+    QTableWidgetItem *itemBarcode = new QTableWidgetItem( item->text() );
 
+    int row = tableWidgetHistory->rowCount();
+
+	tableWidgetHistory->insertRow(row);
+	tableWidgetHistory->setItem(row, 0, type);
+	tableWidgetHistory->setItem(row, 1, borrowerCardnumber);
+	tableWidgetHistory->setItem(row, 2, itemBarcode);
+	tableWidgetHistory->setItem(row, 3, dateTime);
+/*
+    int row = filesTable->rowCount();
+    filesTable->insertRow(row);
+    filesTable->setItem(row, 0, fileNameItem);
+    filesTable->setItem(row, 1, sizeItem);
+*/
+  }
 }
 
 void MainWindow::cancelIssues() {

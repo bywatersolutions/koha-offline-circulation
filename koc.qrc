@@ -1,0 +1,15 @@
+<RCC>
+  <qresource prefix="icons" >
+    <file>images/icons/koha-logo.png</file>
+    <file>images/icons/program-quit.png</file>
+    <file>images/icons/document-close.png</file>
+    <file>images/icons/document-new.png</file>
+    <file>images/icons/document-open.png</file>
+    <file>images/icons/document-save-as.png</file>
+    <file>images/icons/document-save.png</file>
+  </qresource>
+  <qresource prefix="button-icons" >
+    <file>images/button-icons/edit-delete.png</file>
+    <file>images/button-icons/system-search.png</file>
+  </qresource>
+</RCC>

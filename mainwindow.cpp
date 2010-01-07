@@ -15,6 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
   mStatLabel = new QLabel;
   statusBar()->addPermanentWidget(mStatLabel);
 
+  this->showMaximized();
   lineEditIssuesBorrowerCardnumber->setFocus();
 }
 
@@ -367,7 +368,7 @@ void MainWindow::saveFile(const QString &name)
 void MainWindow::saveFileAs()
 {
   mFilePath = QFileDialog::getSaveFileName(this, tr("Save File"),
-                            "",
+                            QDateTime::currentDateTime().toString( DATETIME_FORMAT ) + ".koc",
                             tr("Koha Offline Circulation Files (*.koc)"));
   if ( mFilePath.isEmpty() ) return;
 

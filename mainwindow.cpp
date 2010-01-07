@@ -136,7 +136,7 @@ void MainWindow::cancelIssues() {
 
 void MainWindow::issuesPayFine() {
 	bool ok;
-	QString paymentString = QInputDialog::getText(this, tr("Fine Payment: Amount To Pay"),
+	QString paymentString = QInputDialog::getText(this, tr("Pay Fines") + " - " + TITLE,
                                              tr("Amount:"), QLineEdit::Normal,
                                              "0.00", &ok);
 	if ( ok ) {
@@ -367,7 +367,7 @@ void MainWindow::saveFile(const QString &name)
 
 void MainWindow::saveFileAs()
 {
-  mFilePath = QFileDialog::getSaveFileName(this, tr("Save File"),
+  mFilePath = QFileDialog::getSaveFileName(this, TITLE + " - " + tr("Save File"),
                             QDateTime::currentDateTime().toString( DATETIME_FORMAT ) + ".koc",
                             tr("Koha Offline Circulation Files (*.koc)"));
   if ( mFilePath.isEmpty() ) return;

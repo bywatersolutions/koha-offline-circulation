@@ -4,6 +4,9 @@
 MainWindow::MainWindow(QWidget *parent)
  : QMainWindow(parent)
 {
+  TITLE = "Koha Offline Circulation";
+  VERSION = "1.0";
+  FILE_VERSION = "1.0";
   DATETIME_FORMAT = "yyyy-MM-dd hh:mm:ss zzz";
 
   setupUi(this);
@@ -26,6 +29,10 @@ void MainWindow::setupActions()
           this, SLOT(saveFile()));
   connect(actionSaveAs, SIGNAL(triggered(bool)),
           this, SLOT(saveFileAs()));
+  connect(actionClose, SIGNAL(triggered(bool)),
+          this, SLOT(closeFile()));
+  connect(actionNew, SIGNAL(triggered(bool)),
+          this, SLOT(newFile()));
 
   /* Help Menu Actions */
   connect(actionAbout, SIGNAL(triggered(bool)),
@@ -115,6 +122,7 @@ void MainWindow::commitIssues() {
   }
 
   cancelIssues();
+  saveFile();
 }
 
 void MainWindow::cancelIssues() {
@@ -147,6 +155,8 @@ void MainWindow::issuesPayFine() {
 			tableWidgetHistory->setItem(row, COLUMN_CARDNUMBER, borrowerCardnumber);
 			tableWidgetHistory->setItem(row, COLUMN_PAYMENT, payment);
 			tableWidgetHistory->setItem(row, COLUMN_DATE, dateTime);
+
+			saveFile();
 		} else {
 			QMessageBox::warning(this, tr("Invalid Payment Amount"),
                                     tr("The payment amount was not a valid number.\nPlease try again."),
@@ -189,6 +199,7 @@ void MainWindow::commitReturns() {
   }
 
   cancelReturns();
+  saveFile();
 }
 
 void MainWindow::cancelReturns() {
@@ -213,19 +224,82 @@ void MainWindow::historyDeleteRow() {
 	}
 }
 
+void MainWindow::clearHistory() {
+	tableWidgetHistory->clear();
+
+	int rowCount = tableWidgetHistory->rowCount();
+	for ( int row = 0; row < rowCount; row++ ) {
+		tableWidgetHistory->removeRow( 0 );
+	}
+}
+
 /* File Related Functions */
 void MainWindow::newFile()
 {
+  closeFile();
+  saveFileAs();
+
+  statusBar()->showMessage(tr("Starting new file."), 3000);
+}
+
+void MainWindow::closeFile()
+{
   mFilePath = "";
+
+  clearHistory();
+  cancelReturns();
+  cancelIssues();
+
+  statusBar()->showMessage(tr("File closed."), 3000);
 }
 
 void MainWindow::loadFile()
 {
-  QString filename = QFileDialog::getOpenFileName(this);
+  closeFile();
+
+  QString filename = QFileDialog::getOpenFileName(this, tr("Open File"),
+                                                 "",
+                                                 tr("Koha Offline Circulation Files (*.koc)"));
   QFile file(filename);
   if (file.open(QIODevice::ReadOnly|QIODevice::Text)) {
     mFilePath = filename;
+
+	QTextStream stream( &file );
+	stream.readLine(); // Ignore the header line
+	
+	QString line = stream.readLine();
+	while( !line.isEmpty() ) {
+
+	    QStringList parts = line.split("\t");
+		QString date = parts.takeFirst();
+		QString type = parts.takeFirst();
+	
+	    int row = tableWidgetHistory->rowCount();
+		tableWidgetHistory->insertRow(row);
+		tableWidgetHistory->setItem(row, COLUMN_TYPE, new QTableWidgetItem(type));
+		tableWidgetHistory->setItem(row, COLUMN_DATE, new QTableWidgetItem(date));
+
+		if ( type == "issue" ) {
+			QString cardnumber = parts.takeFirst();
+			QString barcode = parts.takeFirst();
+			tableWidgetHistory->setItem(row, COLUMN_CARDNUMBER, new QTableWidgetItem(cardnumber));
+			tableWidgetHistory->setItem(row, COLUMN_BARCODE, new QTableWidgetItem(barcode));
+		} else if ( type == "return" ) {
+			QString barcode = parts.takeFirst();
+			tableWidgetHistory->setItem(row, COLUMN_BARCODE, new QTableWidgetItem(barcode));
+		} else if ( type == "payment" ) {
+			QString cardnumber = parts.takeFirst();
+			QString payment = parts.takeFirst();
+			tableWidgetHistory->setItem(row, COLUMN_CARDNUMBER, new QTableWidgetItem(cardnumber));
+			tableWidgetHistory->setItem(row, COLUMN_PAYMENT, new QTableWidgetItem(payment));
+		}
+
+		line = stream.readLine();
+	}
+
+	file.close();
     statusBar()->showMessage(tr("File successfully loaded."), 3000);
+	this->setWindowTitle( TITLE + " - " + mFilePath );
   }
 }
 
@@ -240,16 +314,67 @@ void MainWindow::saveFile()
 void MainWindow::saveFile(const QString &name)
 {
   QFile file(name);
-  if (file.open(QIODevice::WriteOnly|QIODevice::Text)) {
+
+  if ( file.open(QIODevice::WriteOnly|QIODevice::Text) ) {
+	QTextStream ts( &file );
+    ts << "Version=" << FILE_VERSION << "\tGenerator=kocQt4\tGeneratorVersion=" << VERSION << endl;
+
+	int rowCount = tableWidgetHistory->rowCount();
+
+	for ( int row = 0; row < rowCount; row++ ) {
+
+		QTableWidgetItem *type = tableWidgetHistory->item( row, COLUMN_TYPE );
+		QString typeText = type->text();
+
+		QTableWidgetItem *date = tableWidgetHistory->item( row, COLUMN_DATE );
+		QString dateText = date->text();
+
+
+		ts << dateText << "\t" << typeText << "\t";
+
+		if ( typeText == "issue" ) {
+			QTableWidgetItem *cardnumber = tableWidgetHistory->item( row, COLUMN_CARDNUMBER );
+			QString cardnumberText = cardnumber->text();
+
+			QTableWidgetItem *barcode = tableWidgetHistory->item( row, COLUMN_BARCODE );
+			QString barcodeText = barcode->text();
+
+			ts << cardnumberText << "\t" << barcodeText << endl;
+		} else if ( typeText == "return" ) {
+			QTableWidgetItem *barcode = tableWidgetHistory->item( row, COLUMN_BARCODE );
+			QString barcodeText = barcode->text();
+
+			ts << barcodeText << endl;
+		} else if ( typeText == "payment" ) {
+			QTableWidgetItem *cardnumber = tableWidgetHistory->item( row, COLUMN_CARDNUMBER );
+			QString cardnumberText = cardnumber->text();
+
+			QTableWidgetItem *payment = tableWidgetHistory->item( row, COLUMN_PAYMENT );
+			QString paymentText = payment->text();
+
+			ts << cardnumberText << "\t" << paymentText << endl;
+		}
+
+	}
+
+	file.close();
     statusBar()->showMessage(tr("File saved successfully."), 3000);
+  } else {
+    statusBar()->showMessage(tr("Failed to save file."), 3000);
   }
 }
 
 void MainWindow::saveFileAs()
 {
-  mFilePath = QFileDialog::getSaveFileName(this);
-  if(mFilePath.isEmpty())
-    return;
+  mFilePath = QFileDialog::getSaveFileName(this, tr("Save File"),
+                            "",
+                            tr("Koha Offline Circulation Files (*.koc)"));
+  if ( mFilePath.isEmpty() ) return;
+
+  if ( ! mFilePath.endsWith( ".koc" ) ) mFilePath += ".koc";
+
+  this->setWindowTitle( TITLE + " - " + mFilePath );
+
   saveFile(mFilePath);
 }
 
@@ -257,8 +382,10 @@ void MainWindow::saveFileAs()
 void MainWindow::about()
 {
   QMessageBox::about(this, tr("About Koha Offline Circulation"), 
-		tr("Koha Offline Circulation 1.0.\n"
-		   "(c) 2010 Kyle Hall, Mill Run Technology Solutions"));
+					tr(	"Koha Offline Circulation 1.0.\n"
+		   				"(c) 2010 Kyle Hall, Mill Run Technology Solutions"
+						)
+	);
 }
 
 /* Settings Related Functions */

@@ -17,16 +17,17 @@ class MainWindow : public QMainWindow,
   protected:
     void setupActions();
 
-  protected:
     void writeSettings();
     void readSettings();
 
-  protected:
     void saveFile(const QString&);
+
+	void clearHistory();
 
   protected slots:
 	/* File Related */
     void newFile();
+	void closeFile();
     void loadFile();
     void saveFile();
     void saveFileAs();
@@ -61,6 +62,10 @@ class MainWindow : public QMainWindow,
   /* Private Constants */
   private:
 	QString DATETIME_FORMAT;
+
+	QString TITLE;
+	QString VERSION;
+	QString FILE_VERSION;
 
 	static const int COLUMN_TYPE = 0;
 	static const int COLUMN_CARDNUMBER = 1;

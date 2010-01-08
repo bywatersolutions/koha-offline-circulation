@@ -44,6 +44,9 @@ class MainWindow : public QMainWindow,
 
 	void issuesPayFine();
 
+	void issuesSearchBorrowers();
+	void useBorrower( const QString & );
+
 	/* Returns Related */
     void returnsAddItem();
 

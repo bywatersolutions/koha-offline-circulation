@@ -1,5 +1,6 @@
 #include <QtGui>
 #include "mainwindow.h"
+#include "borrowersearch.h"
 
 MainWindow::MainWindow(QWidget *parent)
  : QMainWindow(parent)
@@ -60,6 +61,9 @@ void MainWindow::setupActions()
 
   connect(pushButtonPayFines, SIGNAL(clicked()),
           this, SLOT(issuesPayFine()));
+
+  connect(pushButtonIssuesSearchBorrowers, SIGNAL(clicked()),
+          this, SLOT(issuesSearchBorrowers()));
 
   /* Returns Tab Actions */
   connect(pushButtonReturnsAddItemBarcode, SIGNAL(clicked()),
@@ -167,6 +171,23 @@ void MainWindow::issuesPayFine() {
 	}
 }
 
+void MainWindow::issuesSearchBorrowers() {
+	BorrowerSearch *dialog = new BorrowerSearch( this );
+
+
+	connect( dialog, SIGNAL( useBorrower( const QString & ) ),
+		this, SLOT( useBorrower( const QString & ) ) );
+
+/*	dialog->setModel( true ); */
+	dialog->show();
+	dialog->raise();
+	dialog->activateWindow();
+}
+
+void MainWindow::useBorrower( const QString &borrowerCardnumber ) {
+	lineEditIssuesBorrowerCardnumber->setText( borrowerCardnumber );
+}
+
 /* Returns Related Functions */
 void MainWindow::returnsAddItem() {
   QString itemBarcode = lineEditReturnsItemBarcode->text();
@@ -226,8 +247,6 @@ void MainWindow::historyDeleteRow() {
 }
 
 void MainWindow::clearHistory() {
-	tableWidgetHistory->clear();
-
 	int rowCount = tableWidgetHistory->rowCount();
 	for ( int row = 0; row < rowCount; row++ ) {
 		tableWidgetHistory->removeRow( 0 );

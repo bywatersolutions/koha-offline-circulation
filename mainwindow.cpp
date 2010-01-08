@@ -1,4 +1,6 @@
 #include <QtGui>
+#include <QDebug>
+
 #include "mainwindow.h"
 #include "borrowersearch.h"
 
@@ -15,6 +17,8 @@ MainWindow::MainWindow(QWidget *parent)
 
   mStatLabel = new QLabel;
   statusBar()->addPermanentWidget(mStatLabel);
+
+  borrowerSearchDialog = new BorrowerSearch( this );
 
   this->showMaximized();
   lineEditIssuesBorrowerCardnumber->setFocus();
@@ -82,6 +86,10 @@ void MainWindow::setupActions()
   /* History Tab Actions */
   connect(pushButtonHistoryDeleteSelectedItem, SIGNAL(clicked()),
           this, SLOT(historyDeleteRow()));
+
+  /* Borrower Search Actions */
+  connect( borrowerSearchDialog, SIGNAL( useBorrower( const QString & ) ),
+          this, SLOT( useBorrower( const QString & ) ) );
 }
 
 MainWindow::~MainWindow()
@@ -172,16 +180,11 @@ void MainWindow::issuesPayFine() {
 }
 
 void MainWindow::issuesSearchBorrowers() {
-	BorrowerSearch *dialog = new BorrowerSearch( this );
 
-
-	connect( dialog, SIGNAL( useBorrower( const QString & ) ),
-		this, SLOT( useBorrower( const QString & ) ) );
-
-/*	dialog->setModel( true ); */
-	dialog->show();
-	dialog->raise();
-	dialog->activateWindow();
+/*	borrowerSearchDialog->setModel( true ); */
+	borrowerSearchDialog->show();
+	borrowerSearchDialog->raise();
+	borrowerSearchDialog->activateWindow();
 }
 
 void MainWindow::useBorrower( const QString &borrowerCardnumber ) {

@@ -151,7 +151,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QDialogButtonBox" name="buttonBox">
+       <widget class="QDialogButtonBox" name="searchButtonBox">
         <property name="standardButtons">
          <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
         </property>
@@ -167,7 +167,7 @@
   <tabstop>nameFirst</tabstop>
   <tabstop>searchBorrowersButton</tabstop>
   <tabstop>resultsTable</tabstop>
-  <tabstop>buttonBox</tabstop>
+  <tabstop>searchButtonBox</tabstop>
  </tabstops>
  <resources>
   <include location="../../../../kyle/kyle-home-new/qt4/KohaOfflineCirculation/koc.qrc"/>

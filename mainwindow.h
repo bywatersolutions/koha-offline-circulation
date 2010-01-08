@@ -2,7 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+
 #include "ui_mainwindow.h"
+#include "borrowersearch.h"
 
 class QLabel;
 
@@ -64,6 +66,9 @@ class MainWindow : public QMainWindow,
 
   /* Private Constants */
   private:
+	BorrowerSearch *borrowerSearchDialog;
+	bool borrowerSearchDialogOpen;
+
 	QString DATETIME_FORMAT;
 
 	QString TITLE;

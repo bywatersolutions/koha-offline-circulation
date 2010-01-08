@@ -22,9 +22,9 @@ void BorrowerSearch::setupActions() {
   connect(nameFirst, SIGNAL(returnPressed()),
           this, SLOT(searchBorrowers()));
 
-  connect(searchButtonBox, SIGNAL(accepted()),
+  connect(buttonBox, SIGNAL(accepted()),
           this, SLOT(acceptBorrower()));
-  connect(searchButtonBox, SIGNAL(rejected()),
+  connect(buttonBox, SIGNAL(rejected()),
           this, SLOT(cancelSearch()));
 
 }
@@ -55,7 +55,7 @@ void BorrowerSearch::searchBorrowers() {
 
 	QString borrowersQuery = "SELECT * FROM borrowers WHERE firstname LIKE '" 
 					+ firstnameSearch + "%' AND surname LIKE '" + lastnameSearch 
-					+ "%' ORDER BY firstname ASC, surname ASC";
+					+ "%' ORDER BY firstname ASC";
 	QSqlQuery query( borrowersQuery );
 
 	qDebug() << "Borrower Search SQL: " + borrowersQuery;
@@ -83,7 +83,6 @@ void BorrowerSearch::searchBorrowers() {
 
 void BorrowerSearch::acceptBorrower() {
 	emit useBorrower( "TestBorrower" );
-
 }
 
 void BorrowerSearch::cancelSearch() {

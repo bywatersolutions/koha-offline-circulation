@@ -114,6 +114,9 @@
       </item>
       <item>
        <widget class="QTableWidget" name="resultsTable">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
         <property name="selectionMode">
          <enum>QAbstractItemView::SingleSelection</enum>
         </property>
@@ -207,6 +210,8 @@
   <tabstop>nameFirst</tabstop>
   <tabstop>searchBorrowersButton</tabstop>
   <tabstop>resultsTable</tabstop>
+  <tabstop>pushButtonOK</tabstop>
+  <tabstop>pushButtonCancel</tabstop>
  </tabstops>
  <resources>
   <include location="../../../../kyle/kyle-home-new/qt4/KohaOfflineCirculation/koc.qrc"/>

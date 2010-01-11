@@ -24,6 +24,9 @@ void BorrowerSearch::setupActions() {
 
   connect(pushButtonOK, SIGNAL(clicked()),
           this, SLOT(acceptBorrower()));
+  connect(resultsTable, SIGNAL(itemDoubleClicked(QTableWidgetItem *)),
+          this, SLOT(acceptBorrower()));
+
   connect(pushButtonCancel, SIGNAL(clicked()),
           this, SLOT(cancelSearch()));
 }
@@ -81,8 +84,11 @@ void BorrowerSearch::searchBorrowers() {
 }
 
 void BorrowerSearch::acceptBorrower() {
+	QList<QTableWidgetItem *> itemList = resultsTable->selectedItems();
+	QTableWidgetItem *item = itemList.takeFirst();
+	QString cardnumber = item->text();
 
-	emit useBorrower( "TestBorrower" );
+	emit useBorrower( cardnumber );
 	this->hide();
 }
 

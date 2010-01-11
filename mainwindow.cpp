@@ -174,7 +174,6 @@ void MainWindow::issuesPayFine() {
 void MainWindow::issuesSearchBorrowers() {
 	BorrowerSearch *dialog = new BorrowerSearch( this );
 
-
 	connect( dialog, SIGNAL( useBorrower( const QString & ) ),
 		this, SLOT( useBorrower( const QString & ) ) );
 

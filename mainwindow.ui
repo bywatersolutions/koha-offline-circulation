@@ -726,7 +726,7 @@
     </iconset>
    </property>
    <property name="text">
-    <string>New</string>
+    <string>&amp;New</string>
    </property>
   </action>
   <action name="actionOpen">
@@ -736,7 +736,7 @@
     </iconset>
    </property>
    <property name="text">
-    <string>Open</string>
+    <string>&amp;Open</string>
    </property>
   </action>
   <action name="actionOpen_Recent">
@@ -751,7 +751,7 @@
     </iconset>
    </property>
    <property name="text">
-    <string>Save</string>
+    <string>&amp;Save</string>
    </property>
   </action>
   <action name="actionSaveAs">
@@ -761,7 +761,7 @@
     </iconset>
    </property>
    <property name="text">
-    <string>Save As...</string>
+    <string>Save &amp;As...</string>
    </property>
   </action>
   <action name="actionClose">
@@ -771,7 +771,7 @@
     </iconset>
    </property>
    <property name="text">
-    <string>Close</string>
+    <string>&amp;Close</string>
    </property>
   </action>
   <action name="actionQuit">
@@ -781,7 +781,7 @@
     </iconset>
    </property>
    <property name="text">
-    <string>Quit</string>
+    <string>&amp;Quit</string>
    </property>
   </action>
   <action name="actionAbout">

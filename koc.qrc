@@ -1,15 +1,18 @@
 <RCC>
   <qresource prefix="icons" >
-    <file>images/icons/koha-logo.png</file>
-    <file>images/icons/program-quit.png</file>
-    <file>images/icons/document-close.png</file>
-    <file>images/icons/document-new.png</file>
-    <file>images/icons/document-open.png</file>
-    <file>images/icons/document-save-as.png</file>
-    <file>images/icons/document-save.png</file>
-  </qresource>
-  <qresource prefix="button-icons" >
-    <file>images/button-icons/edit-delete.png</file>
-    <file>images/button-icons/system-search.png</file>
+    <file>images/icons/add.png</file>
+    <file>images/icons/dialog_ok_apply.png</file>
+    <file>images/icons/edit_add.png</file>
+    <file>images/icons/application_exit.png</file>
+    <file>images/icons/button_cancel.png</file>
+    <file>images/icons/button_ok.png</file>
+    <file>images/icons/editdelete.png</file>
+    <file>images/icons/fileclose.png</file>
+    <file>images/icons/filenew.png</file>
+    <file>images/icons/fileopen.png</file>
+    <file>images/icons/filesave.png</file>
+    <file>images/icons/filesaveas.png</file>
+    <file>images/icons/help_about.png</file>
+    <file>images/icons/system-search.png</file>
   </qresource>
 </RCC>

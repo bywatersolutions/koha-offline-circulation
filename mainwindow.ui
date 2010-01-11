@@ -14,7 +14,7 @@
    <string>Koha Offline Circulation</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="koc.qrc">
+   <iconset>
     <normaloff>:/icons/images/icons/koha-logo.png</normaloff>:/icons/images/icons/koha-logo.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
@@ -71,6 +71,11 @@
                  <property name="text">
                   <string>&amp;Accept</string>
                  </property>
+                 <property name="icon">
+                  <iconset>
+                   <normalon>:/icons/images/icons/button_ok.png</normalon>
+                  </iconset>
+                 </property>
                 </widget>
                </item>
                <item>
@@ -80,7 +85,7 @@
                  </property>
                  <property name="icon">
                   <iconset>
-                   <normalon>:/button-icons/images/button-icons/system-search.png</normalon>
+                   <normalon>:/icons/images/icons/system-search.png</normalon>
                   </iconset>
                  </property>
                 </widget>
@@ -114,6 +119,11 @@
                 <widget class="QPushButton" name="pushButtonAddItemBarcode">
                  <property name="text">
                   <string>Add &amp;Item</string>
+                 </property>
+                 <property name="icon">
+                  <iconset>
+                   <normalon>:/icons/images/icons/add.png</normalon>
+                  </iconset>
                  </property>
                 </widget>
                </item>
@@ -177,7 +187,7 @@
                    </property>
                    <property name="icon">
                     <iconset>
-                     <normalon>:/button-icons/images/button-icons/edit-delete.png</normalon>
+                     <normalon>:/icons/images/icons/editdelete.png</normalon>
                     </iconset>
                    </property>
                   </widget>
@@ -388,9 +398,6 @@
                     <attribute name="verticalHeaderShowSortIndicator" stdset="0">
                      <bool>false</bool>
                     </attribute>
-                    <attribute name="horizontalHeaderStretchLastSection">
-                     <bool>true</bool>
-                    </attribute>
                     <column>
                      <property name="text">
                       <string>Date Due</string>
@@ -450,6 +457,11 @@
                 <widget class="QPushButton" name="pushButtonReturnsAddItemBarcode">
                  <property name="text">
                   <string>&amp;Add Item</string>
+                 </property>
+                 <property name="icon">
+                  <iconset>
+                   <normalon>:/icons/images/icons/add.png</normalon>
+                  </iconset>
                  </property>
                 </widget>
                </item>
@@ -513,7 +525,7 @@
                    </property>
                    <property name="icon">
                     <iconset>
-                     <normalon>:/button-icons/images/button-icons/edit-delete.png</normalon>
+                     <normalon>:/icons/images/icons/editdelete.png</normalon>
                     </iconset>
                    </property>
                   </widget>
@@ -660,7 +672,7 @@
             </property>
             <property name="icon">
              <iconset>
-              <normalon>:/button-icons/images/button-icons/edit-delete.png</normalon>
+              <normalon>:/icons/images/icons/editdelete.png</normalon>
              </iconset>
             </property>
            </widget>
@@ -755,7 +767,7 @@
   <action name="actionClose">
    <property name="icon">
     <iconset>
-     <normalon>:/icons/images/icons/document-close.png</normalon>
+     <normalon>:/icons/images/icons/fileclose.png</normalon>
     </iconset>
    </property>
    <property name="text">
@@ -765,7 +777,7 @@
   <action name="actionQuit">
    <property name="icon">
     <iconset>
-     <normalon>:/icons/images/icons/program-quit.png</normalon>
+     <normalon>:/icons/images/icons/application_exit.png</normalon>
     </iconset>
    </property>
    <property name="text">

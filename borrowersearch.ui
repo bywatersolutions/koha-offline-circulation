@@ -14,7 +14,7 @@
    <string>Borrower Search - Koha Offline Circulation</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="../../../../kyle/kyle-home-new/qt4/KohaOfflineCirculation/koc.qrc">
+   <iconset>
     <normaloff>:/icons/images/icons/koha-logo.png</normaloff>:/icons/images/icons/koha-logo.png</iconset>
   </property>
   <property name="sizeGripEnabled">
@@ -104,7 +104,7 @@
             </property>
             <property name="icon">
              <iconset resource="../../../../kyle/kyle-home-new/qt4/KohaOfflineCirculation/koc.qrc">
-              <normaloff>:/button-icons/images/button-icons/system-search.png</normaloff>:/button-icons/images/button-icons/system-search.png</iconset>
+              <normaloff>:/icons/images/icons/system-search.png</normaloff>:/icons/images/icons/system-search.png</iconset>
             </property>
            </widget>
           </item>
@@ -176,12 +176,22 @@
           <property name="text">
            <string>&amp;Cancel</string>
           </property>
+          <property name="icon">
+           <iconset>
+            <normalon>:/icons/images/icons/button_cancel.png</normalon>
+           </iconset>
+          </property>
          </widget>
         </item>
         <item>
          <widget class="QPushButton" name="pushButtonOK">
           <property name="text">
            <string>&amp;OK</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normalon>:/icons/images/icons/dialog_ok_apply.png</normalon>
+           </iconset>
           </property>
          </widget>
         </item>

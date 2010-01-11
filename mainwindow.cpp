@@ -178,7 +178,7 @@ void MainWindow::issuesSearchBorrowers() {
 	connect( dialog, SIGNAL( useBorrower( const QString & ) ),
 		this, SLOT( useBorrower( const QString & ) ) );
 
-/*	dialog->setModel( true ); */
+//	dialog->setModal(true);
 	dialog->show();
 	dialog->raise();
 	dialog->activateWindow();

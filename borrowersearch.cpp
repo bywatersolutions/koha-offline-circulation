@@ -22,11 +22,10 @@ void BorrowerSearch::setupActions() {
   connect(nameFirst, SIGNAL(returnPressed()),
           this, SLOT(searchBorrowers()));
 
-  connect(buttonBox, SIGNAL(accepted()),
+  connect(pushButtonOK, SIGNAL(clicked()),
           this, SLOT(acceptBorrower()));
-  connect(buttonBox, SIGNAL(rejected()),
+  connect(pushButtonCancel, SIGNAL(clicked()),
           this, SLOT(cancelSearch()));
-
 }
 
 void BorrowerSearch::searchBorrowers() {
@@ -82,11 +81,13 @@ void BorrowerSearch::searchBorrowers() {
 }
 
 void BorrowerSearch::acceptBorrower() {
+
 	emit useBorrower( "TestBorrower" );
+	this->hide();
 }
 
 void BorrowerSearch::cancelSearch() {
-
+	this->hide();
 }
 
 void BorrowerSearch::addSearchResult( const QString & lastname, const QString & firstname, const QString & dateofbirth, const QString & address, const QString & cardnumber ) {

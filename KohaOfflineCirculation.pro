@@ -14,4 +14,6 @@ SOURCES += borrowersearch.cpp main.cpp mainwindow.cpp
 RESOURCES += koc.qrc
 QT += sql
 
-CONFIG += debug
+#CONFIG += debug
+CONFIG += release
+CONFIG += static

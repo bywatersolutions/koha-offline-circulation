@@ -498,7 +498,8 @@ void MainWindow::about()
 {
   QMessageBox::about(this, tr("About Koha Offline Circulation"), 
 					tr(	"Koha Offline Circulation 1.0.\n"
-		   				"(c) 2010 Kyle Hall, Mill Run Technology Solutions"
+                                                "(c) 2010 Kyle Hall, Mill Run Technology Solutions\n"
+                                                "http://millruntech.com/"
 						)
 	);
 }

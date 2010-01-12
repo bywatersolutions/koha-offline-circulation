@@ -723,9 +723,12 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionNew">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset>
-     <normalon>:/icons/images/icons/document-new.png</normalon>
+     <normalon>:/icons/images/icons/filenew.png</normalon>
     </iconset>
    </property>
    <property name="text">
@@ -735,7 +738,7 @@
   <action name="actionOpen">
    <property name="icon">
     <iconset>
-     <normalon>:/icons/images/icons/document-open.png</normalon>
+     <normalon>:/icons/images/icons/fileopen.png</normalon>
     </iconset>
    </property>
    <property name="text">
@@ -743,6 +746,9 @@
    </property>
   </action>
   <action name="actionOpen_Recent">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Open Recent</string>
    </property>
@@ -750,7 +756,7 @@
   <action name="actionSave">
    <property name="icon">
     <iconset>
-     <normalon>:/icons/images/icons/document-save.png</normalon>
+     <normalon>:/icons/images/icons/filesave.png</normalon>
     </iconset>
    </property>
    <property name="text">
@@ -760,7 +766,7 @@
   <action name="actionSaveAs">
    <property name="icon">
     <iconset>
-     <normalon>:/icons/images/icons/document-save-as.png</normalon>
+     <normalon>:/icons/images/icons/filesaveas.png</normalon>
     </iconset>
    </property>
    <property name="text">
@@ -790,7 +796,7 @@
   <action name="actionAbout">
    <property name="icon">
     <iconset>
-     <normalon>:/icons/images/icons/koha-logo.png</normalon>
+     <normalon>:/icons/images/icons/help_about.png</normalon>
     </iconset>
    </property>
    <property name="text">

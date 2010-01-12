@@ -42,6 +42,31 @@ void BorrowerSearch::searchBorrowers() {
 	db.setDatabaseName( "borrowers.db" );
 
 	if ( db.open() ) {
+		QString borrowersQuery = "SELECT * FROM borrowers WHERE firstname LIKE '" 
+						+ firstnameSearch + "%' AND surname LIKE '" + lastnameSearch 
+						+ "%' ORDER BY firstname ASC";
+		QSqlQuery query( borrowersQuery );
+	
+		qDebug() << "Borrower Search SQL: " + borrowersQuery;
+	
+		QSqlRecord record = query.record();
+		while (query.next()) {
+			QString lastname = query.value(record.indexOf("surname")).toString();
+			QString firstname = query.value(record.indexOf("firstname")).toString();
+			QString dateofbirth = query.value(record.indexOf("dateofbirth")).toString();
+			QString streetaddress = query.value(record.indexOf("address")).toString();
+			QString city = query.value(record.indexOf("city")).toString();
+			QString state = query.value(record.indexOf("state")).toString();
+			QString zipcode = query.value(record.indexOf("zipcode")).toString();
+			QString cardnumber = query.value(record.indexOf("cardnumber")).toString();
+			QString address = streetaddress + "\n" + city + ", " + state + "\n" + zipcode;
+	
+			qDebug() << query.at() << ":" << lastname << "," << firstname;
+	
+			addSearchResult( lastname, firstname, dateofbirth, address, cardnumber );
+		}
+
+		qDebug() << "Search Complete";
 
 	} else {
 		qDebug() << db.lastError();
@@ -54,32 +79,6 @@ void BorrowerSearch::searchBorrowers() {
 									"the same directory as this program.\n\n"),
                                    QMessageBox::Ok);
 	}
-
-	QString borrowersQuery = "SELECT * FROM borrowers WHERE firstname LIKE '" 
-					+ firstnameSearch + "%' AND surname LIKE '" + lastnameSearch 
-					+ "%' ORDER BY firstname ASC";
-	QSqlQuery query( borrowersQuery );
-
-	qDebug() << "Borrower Search SQL: " + borrowersQuery;
-
-	QSqlRecord record = query.record();
-	while (query.next()) {
-		QString lastname = query.value(record.indexOf("surname")).toString();
-		QString firstname = query.value(record.indexOf("firstname")).toString();
-		QString dateofbirth = query.value(record.indexOf("dateofbirth")).toString();
-		QString streetaddress = query.value(record.indexOf("streetaddress")).toString();
-		QString city = query.value(record.indexOf("city")).toString();
-		QString state = query.value(record.indexOf("state")).toString();
-		QString zipcode = query.value(record.indexOf("zipcode")).toString();
-		QString cardnumber = query.value(record.indexOf("cardnumber")).toString();
-		QString address = streetaddress + "\n" + city + ", " + state + "\n" + zipcode;
-
-		qDebug() << query.at() << ":" << lastname << "," << firstname;
-
-		addSearchResult( lastname, firstname, dateofbirth, address, cardnumber );
-	}
-
-	qDebug() << "Search Complete";
 
 }
 

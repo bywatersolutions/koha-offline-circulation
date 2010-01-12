@@ -264,7 +264,7 @@
                  </property>
                  <layout class="QHBoxLayout" name="horizontalLayout_5">
                   <item>
-                   <widget class="QLineEdit" name="lineEditName">
+                   <widget class="QLineEdit" name="borrowerDetailsName">
                     <property name="readOnly">
                      <bool>true</bool>
                     </property>
@@ -280,7 +280,7 @@
                  </property>
                  <layout class="QHBoxLayout" name="horizontalLayout_6">
                   <item>
-                   <widget class="QTextEdit" name="textEditAddress">
+                   <widget class="QTextEdit" name="borrowerDetailsAddress">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                       <horstretch>0</horstretch>
@@ -302,7 +302,7 @@
                  </property>
                  <layout class="QHBoxLayout" name="horizontalLayout_7">
                   <item>
-                   <widget class="QLineEdit" name="lineEditPhone">
+                   <widget class="QLineEdit" name="borrowerDetailsPhone">
                     <property name="readOnly">
                      <bool>true</bool>
                     </property>
@@ -318,7 +318,7 @@
                  </property>
                  <layout class="QHBoxLayout" name="horizontalLayout_8">
                   <item>
-                   <widget class="QLineEdit" name="lineEditDOB">
+                   <widget class="QLineEdit" name="borrowerDetailsDOB">
                     <property name="readOnly">
                      <bool>true</bool>
                     </property>
@@ -334,7 +334,7 @@
                  </property>
                  <layout class="QHBoxLayout" name="horizontalLayout_9">
                   <item>
-                   <widget class="QLineEdit" name="lineEditFine">
+                   <widget class="QLineEdit" name="borrowerDetailsFines">
                     <property name="readOnly">
                      <bool>true</bool>
                     </property>
@@ -364,7 +364,7 @@
                  </property>
                  <layout class="QHBoxLayout" name="horizontalLayout_10">
                   <item>
-                   <widget class="QTableWidget" name="tableWidgetCurrentIssues">
+                   <widget class="QTableWidget" name="borrowerDetailsCurrentIssues">
                     <property name="minimumSize">
                      <size>
                       <width>0</width>
@@ -608,6 +608,9 @@
        <layout class="QVBoxLayout" name="verticalLayout_7">
         <item>
          <widget class="QTableWidget" name="tableWidgetHistory">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
           <property name="alternatingRowColors">
            <bool>true</bool>
           </property>

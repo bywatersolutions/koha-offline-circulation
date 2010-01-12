@@ -24,6 +24,10 @@ class MainWindow : public QMainWindow,
 
 	void clearHistory();
 
+	void findBorrower();
+	void addBorrowerPreviousIssue( const QString & itemcallnumber, const QString & itemtype, const QString & title, const QString & datedue );
+	void clearBorrowerDetails();
+
   protected slots:
 	/* File Related */
     void newFile();
@@ -75,6 +79,11 @@ class MainWindow : public QMainWindow,
 	static const int COLUMN_BARCODE = 2;
 	static const int COLUMN_PAYMENT = 3;
 	static const int COLUMN_DATE = 4;
+
+	static const int COLUMN_DATEDUE = 0;
+	static const int COLUMN_TITLE = 1;
+	static const int COLUMN_ITEMTYPE = 2;
+	static const int COLUMN_CALLNUMBER = 3;
 };
 
 #endif // MAINWINDOW_H

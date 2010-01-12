@@ -1,4 +1,6 @@
 #include <QtGui>
+#include <QtSql>
+
 #include "mainwindow.h"
 #include "borrowersearch.h"
 
@@ -90,6 +92,7 @@ MainWindow::~MainWindow()
 
 /* Issues Related Functions */
 void MainWindow::issuesAcceptCardnumber() {
+  findBorrower();
   lineEditIssuesItemBarcode->setFocus();
 }
 
@@ -135,7 +138,23 @@ void MainWindow::cancelIssues() {
   lineEditIssuesBorrowerCardnumber->clear();
   listWidgetIssuesScannedBarcodes->clear();
 
+  clearBorrowerDetails();
+
   lineEditIssuesBorrowerCardnumber->setFocus();
+}
+
+void MainWindow::clearBorrowerDetails() {
+
+	borrowerDetailsName->setText( "" );
+	borrowerDetailsAddress->setText( "" );
+	borrowerDetailsPhone->setText( "" );
+	borrowerDetailsDOB->setText( "" );
+	borrowerDetailsFines->setText( "" );
+
+	int rowCount = borrowerDetailsCurrentIssues->rowCount();
+	for ( int row = 0; row < rowCount; row++ ) {
+		borrowerDetailsCurrentIssues->removeRow( 0 );
+	}
 }
 
 void MainWindow::issuesPayFine() {
@@ -185,6 +204,7 @@ void MainWindow::issuesSearchBorrowers() {
 
 void MainWindow::useBorrower( const QString &borrowerCardnumber ) {
 	lineEditIssuesBorrowerCardnumber->setText( borrowerCardnumber );
+	issuesAcceptCardnumber();
 }
 
 /* Returns Related Functions */
@@ -243,6 +263,8 @@ void MainWindow::historyDeleteRow() {
 			tableWidgetHistory->removeRow( row );
 		}
 	}
+
+	saveFile();
 }
 
 void MainWindow::clearHistory() {
@@ -395,6 +417,80 @@ void MainWindow::saveFileAs()
   this->setWindowTitle( TITLE + " - " + mFilePath );
 
   saveFile(mFilePath);
+}
+
+void MainWindow::findBorrower() {
+	qDebug() << "MainWindow::findBorrower()";
+
+	QSqlDatabase db = QSqlDatabase::addDatabase( "QSQLITE" );
+
+	db.setDatabaseName( "borrowers.db" );
+
+	if ( db.open() ) {
+		QString borrowerCardnumber = lineEditIssuesBorrowerCardnumber->text();
+
+		/* Get Borrower Details */	
+		QString borrowerQuery = "SELECT * FROM borrowers WHERE cardnumber = " + borrowerCardnumber;
+		QSqlQuery query( borrowerQuery );
+	
+		qDebug() << "Borrower Search SQL: " + borrowerQuery;
+	
+		QSqlRecord record = query.record();
+		query.next();
+		QString borrowernumber = query.value(record.indexOf("borrowernumber")).toString();
+		QString lastname = query.value(record.indexOf("surname")).toString();
+		QString firstname = query.value(record.indexOf("firstname")).toString();
+		QString dateofbirth = query.value(record.indexOf("dateofbirth")).toString();
+		QString phone = query.value(record.indexOf("phone")).toString();
+		QString streetaddress = query.value(record.indexOf("address")).toString();
+		QString city = query.value(record.indexOf("city")).toString();
+		QString state = query.value(record.indexOf("state")).toString();
+		QString zipcode = query.value(record.indexOf("zipcode")).toString();
+		QString total_fines = query.value(record.indexOf("total_fines")).toString();
+
+		QString name = firstname + " " + lastname;
+		QString address = streetaddress + "\n" + city + ", " + state + "\n" + zipcode;
+	
+		borrowerDetailsName->setText( name );
+		borrowerDetailsAddress->setText( address );
+		borrowerDetailsPhone->setText( phone );
+		borrowerDetailsDOB->setText( dateofbirth );
+		borrowerDetailsFines->setText( total_fines );
+
+		/* Get Borrower's Previous Issues */
+		QString issuesQuery = "SELECT * FROM issues WHERE borrowernumber = " + borrowernumber;
+		QSqlQuery query2( issuesQuery );
+	
+		qDebug() << "Borrower Issues Search SQL: " + issuesQuery;
+	
+		record = query2.record();
+		while (query2.next()) {
+			QString itemcallnumber = query2.value(record.indexOf("itemcallnumber")).toString();
+			QString itemtype = query2.value(record.indexOf("itemtype")).toString();
+			QString title = query2.value(record.indexOf("title")).toString();
+			QString date_due = query2.value(record.indexOf("date_due")).toString();
+
+			addBorrowerPreviousIssue( itemcallnumber, itemtype, title, date_due );
+		}
+
+	}
+}
+
+void MainWindow::addBorrowerPreviousIssue( const QString & itemcallnumber, const QString & itemtype, const QString & title, const QString & datedue ) {
+
+    QTableWidgetItem *itemcallnumberItem = new QTableWidgetItem( itemcallnumber );
+    QTableWidgetItem *itemtypeItem = new QTableWidgetItem( itemtype );
+    QTableWidgetItem *titleItem = new QTableWidgetItem( title );
+    QTableWidgetItem *datedueItem = new QTableWidgetItem( datedue );
+
+    int row = borrowerDetailsCurrentIssues->rowCount();
+
+	borrowerDetailsCurrentIssues->insertRow(row);
+	borrowerDetailsCurrentIssues->setItem(row, COLUMN_DATEDUE, datedueItem);
+	borrowerDetailsCurrentIssues->setItem(row, COLUMN_TITLE, titleItem);
+	borrowerDetailsCurrentIssues->setItem(row, COLUMN_ITEMTYPE, itemtypeItem);
+	borrowerDetailsCurrentIssues->setItem(row, COLUMN_CALLNUMBER, itemcallnumberItem);
+
 }
 
 /* Help Related Functions */

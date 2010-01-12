@@ -83,12 +83,16 @@ void BorrowerSearch::searchBorrowers() {
 }
 
 void BorrowerSearch::acceptBorrower() {
-	QList<QTableWidgetItem *> itemList = resultsTable->selectedItems();
-	QTableWidgetItem *item = itemList.takeFirst();
+    QList<QTableWidgetItem *> itemList = resultsTable->selectedItems();
+
+    if ( itemList.size() > 0 ) {
+        QTableWidgetItem *item = itemList.takeFirst();
 	QString cardnumber = item->text();
 
 	emit useBorrower( cardnumber );
-	this->hide();
+    }
+
+    this->hide();
 }
 
 void BorrowerSearch::cancelSearch() {

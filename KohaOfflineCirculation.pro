@@ -13,6 +13,7 @@ FORMS += borrowersearch.ui mainwindow.ui
 SOURCES += borrowersearch.cpp main.cpp mainwindow.cpp
 RESOURCES += koc.qrc
 QT += sql
+RC_FILE = koc.rc
 
 #CONFIG += debug
 CONFIG += release

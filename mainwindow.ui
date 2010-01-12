@@ -14,8 +14,8 @@
    <string>Koha Offline Circulation</string>
   </property>
   <property name="windowIcon">
-   <iconset>
-    <normaloff>:/icons/images/icons/koha-logo.png</normaloff>:/icons/images/icons/koha-logo.png</iconset>
+   <iconset resource="koc.qrc">
+    <normaloff>:/icons/images/icons/koha.png</normaloff>:/icons/images/icons/koha.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">

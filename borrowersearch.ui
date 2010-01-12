@@ -14,8 +14,8 @@
    <string>Borrower Search - Koha Offline Circulation</string>
   </property>
   <property name="windowIcon">
-   <iconset>
-    <normaloff>:/icons/images/icons/koha-logo.png</normaloff>:/icons/images/icons/koha-logo.png</iconset>
+   <iconset resource="../../../../kyle/kyle-home-new/qt4/KohaOfflineCirculation/koc.qrc">
+    <normaloff>:/icons/images/icons/koha.png</normaloff>:/icons/images/icons/koha.png</iconset>
   </property>
   <property name="sizeGripEnabled">
    <bool>true</bool>

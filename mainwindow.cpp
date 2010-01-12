@@ -27,16 +27,27 @@ void MainWindow::setupActions()
   /* File Menu Actions */
   connect(actionQuit, SIGNAL(triggered(bool)),
           qApp, SLOT(quit()));
+  actionQuit->setShortcut(tr("Ctrl+Q"));
+
   connect(actionOpen, SIGNAL(triggered(bool)),
           this, SLOT(loadFile()));
+  actionOpen->setShortcut(tr("Ctrl+O"));
+
   connect(actionSave, SIGNAL(triggered(bool)),
           this, SLOT(saveFile()));
+  actionSave->setShortcut(tr("Ctrl+S"));
+
   connect(actionSaveAs, SIGNAL(triggered(bool)),
           this, SLOT(saveFileAs()));
+  actionSaveAs->setShortcut(tr("Ctrl+A"));
+
   connect(actionClose, SIGNAL(triggered(bool)),
           this, SLOT(closeFile()));
+  actionClose->setShortcut(tr("Ctrl+C"));
+
   connect(actionNew, SIGNAL(triggered(bool)),
           this, SLOT(newFile()));
+  actionNew->setShortcut(tr("Ctrl+N"));
 
   /* Help Menu Actions */
   connect(actionAbout, SIGNAL(triggered(bool)),

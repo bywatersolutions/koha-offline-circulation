@@ -47,7 +47,7 @@
         <string/>
        </property>
        <attribute name="title">
-        <string>Issues</string>
+        <string>&amp;Issues</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
@@ -350,7 +350,7 @@
                   <item>
                    <widget class="QPushButton" name="pushButtonPayFines">
                     <property name="text">
-                     <string>Pay &amp;Fines</string>
+                     <string>&amp;Pay Fines</string>
                     </property>
                    </widget>
                   </item>
@@ -434,7 +434,7 @@
       </widget>
       <widget class="QWidget" name="tabReturns">
        <attribute name="title">
-        <string>Returns</string>
+        <string>&amp;Returns</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_6">
         <item>
@@ -603,7 +603,7 @@
       </widget>
       <widget class="QWidget" name="tabHistory">
        <attribute name="title">
-        <string>History</string>
+        <string>&amp;History</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_7">
         <item>
@@ -699,7 +699,7 @@
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
-     <string>File</string>
+     <string>&amp;File</string>
     </property>
     <addaction name="actionNew"/>
     <addaction name="actionOpen"/>
@@ -714,7 +714,7 @@
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
-     <string>Help</string>
+     <string>&amp;Help</string>
     </property>
     <addaction name="actionAbout"/>
    </widget>

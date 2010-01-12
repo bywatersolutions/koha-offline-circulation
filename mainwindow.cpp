@@ -508,8 +508,8 @@ void MainWindow::addBorrowerPreviousIssue( const QString & itemcallnumber, const
 void MainWindow::about()
 {
   QMessageBox::about(this, tr("About Koha Offline Circulation"), 
-					tr(	"Koha Offline Circulation 1.0.\n"
-                                                "(c) 2010 Kyle Hall, Mill Run Technology Solutions\n"
+					tr(	"Koha Offline Circulation 1.0.\n\n"
+                                                "(c) 2010 Kyle Hall, Mill Run Technology Solutions\n\n"
                                                 "http://millruntech.com/"
 						)
 	);

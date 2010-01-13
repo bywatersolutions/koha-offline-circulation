@@ -1,4 +1,6 @@
 /*
+* Copyright 2010 Kyle M Hall <kyle.m.hall@gmail.com>
+*
 * This file is part of Koha Offline Circulation.
 *
 * Koha Offline Circulation is free software: you can redistribute it and/or modify

@@ -722,7 +722,7 @@
     <property name="title">
      <string>Database</string>
     </property>
-    <addaction name="actionSelect_Borrowers_db"/>
+    <addaction name="actionSelectBorrowersDB"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuHelp"/>
@@ -810,13 +810,13 @@
     <string>About</string>
    </property>
   </action>
-  <action name="actionSelect_Borrowers_db">
+  <action name="actionSelectBorrowersDB">
    <property name="icon">
     <iconset resource="koc.qrc">
      <normaloff>:/icons/images/icons/database.png</normaloff>:/icons/images/icons/database.png</iconset>
    </property>
    <property name="text">
-    <string>Select Borrowers.db</string>
+    <string>Select Borrowers DB File</string>
    </property>
   </action>
  </widget>

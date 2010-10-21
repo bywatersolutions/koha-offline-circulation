@@ -28,66 +28,69 @@ class QLabel;
 class MainWindow : public QMainWindow, 
                    private Ui::MainWindow
 {
-  Q_OBJECT
-  public:
-    MainWindow(QWidget *parent = 0);
-    ~MainWindow();
+    Q_OBJECT
+    public:
+        MainWindow(QWidget *parent = 0);
+        ~MainWindow();
 
-  protected:
-    void setupActions();
+    protected:
+        void setupActions();
 
-    void writeSettings();
-    void readSettings();
+        void writeSettings();
+        void readSettings();
 
-    void saveFile(const QString&);
+        void saveFile(const QString&);
 
-	void clearHistory();
+        void clearHistory();
 
-	void findBorrower();
-	void addBorrowerPreviousIssue( const QString & itemcallnumber, const QString & itemtype, const QString & title, const QString & datedue );
-	void clearBorrowerDetails();
+        void findBorrower();
+        void addBorrowerPreviousIssue( const QString & itemcallnumber, const QString & itemtype, const QString & title, const QString & datedue );
+        void clearBorrowerDetails();
 
-  protected slots:
-	/* File Related */
-    void newFile();
-	void closeFile();
-    void loadFile();
-    void saveFile();
-    void saveFileAs();
-    void about();
+    protected slots:
+        /* File Related */
+        void newFile();
+        void closeFile();
+        void loadFile();
+        void saveFile();
+        void saveFileAs();
+        void selectBorrowersDbFile();
+        void about();
 
-	/* Issues Related */
-    void issuesAcceptCardnumber();
-    void issuesAddItem();
+        /* Issues Related */
+        void issuesAcceptCardnumber();
+        void issuesAddItem();
 
-	void issuesDeleteItemBarcode();
+        void issuesDeleteItemBarcode();
 
-	void commitIssues();
-	void cancelIssues();
+        void commitIssues();
+        void cancelIssues();
 
-	void issuesPayFine();
+        void issuesPayFine();
 
-	void issuesSearchBorrowers();
-	void useBorrower( const QString & );
+        void issuesSearchBorrowers();
+        void useBorrower( const QString & );
 
-	/* Returns Related */
-    void returnsAddItem();
+        /* Returns Related */
+        void returnsAddItem();
 
-	void returnsDeleteItemBarcode();
+        void returnsDeleteItemBarcode();
 
-	void commitReturns();
-	void cancelReturns();
+        void commitReturns();
+        void cancelReturns();
 
-	/* History Related */
-	void historyDeleteRow();
+        /* History Related */
+        void historyDeleteRow();
 
-  private:
-    QString mFilePath;
-    QLabel *mStatLabel;
+    private:
+        QString mFilePath;
+        QLabel *mStatLabel;
 
-  /* Private Constants */
-  private:
-	QString DATETIME_FORMAT;
+        QString borrowersDbFilePath;
+
+    /* Private Constants */
+    private:
+        QString DATETIME_FORMAT;
 
 	QString TITLE;
 	QString VERSION;

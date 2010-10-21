@@ -39,6 +39,9 @@ MainWindow::MainWindow(QWidget *parent)
 
   this->showMaximized();
   lineEditIssuesBorrowerCardnumber->setFocus();
+
+  QSettings settings;
+  borrowersDbFilePath = settings.value("borrowersDbFilePath").toString();
 }
 
 void MainWindow::setupActions()
@@ -66,6 +69,11 @@ void MainWindow::setupActions()
 
   connect(actionNew, SIGNAL(triggered(bool)),
           this, SLOT(newFile()));
+  actionNew->setShortcut(tr("Ctrl+N"));
+
+  /* Database Menu Actions */
+  connect(actionSelectBorrowersDB, SIGNAL(triggered(bool)),
+          this, SLOT(selectBorrowersDbFile()));
   actionNew->setShortcut(tr("Ctrl+N"));
 
   /* Help Menu Actions */
@@ -449,18 +457,35 @@ void MainWindow::saveFileAs()
   saveFile(mFilePath);
 }
 
+void MainWindow::selectBorrowersDbFile() {
+    qDebug() << "MainWindow::selectBorrowersDbFile()";
+
+    borrowersDbFilePath = QFileDialog::getOpenFileName(this, tr("Open File"),
+                                                       "",
+                                                       tr("KOC Borrowers DB Files (*.db)"));
+
+    QSettings settings;
+    settings.setValue("borrowersDbFilePath", borrowersDbFilePath);
+
+    qDebug() << "Borrowers DB File Select: " + borrowersDbFilePath;
+
+    statusBar()->showMessage(tr("Borrowers DB File Selected: ") + borrowersDbFilePath, 3000);
+}
+
+
 void MainWindow::findBorrower() {
-	qDebug() << "MainWindow::findBorrower()";
+    qDebug() << "MainWindow::findBorrower()";
+    qDebug() << "Using Borrowers DB File: " + borrowersDbFilePath;
 
-	QSqlDatabase db = QSqlDatabase::addDatabase( "QSQLITE" );
+    QSqlDatabase db = QSqlDatabase::addDatabase( "QSQLITE" );
 
-	db.setDatabaseName( "borrowers.db" );
+    db.setDatabaseName( borrowersDbFilePath );
 
 	if ( db.open() ) {
 		QString borrowerCardnumber = lineEditIssuesBorrowerCardnumber->text();
 
 		/* Get Borrower Details */	
-		QString borrowerQuery = "SELECT * FROM borrowers WHERE cardnumber = " + borrowerCardnumber;
+                QString borrowerQuery = "SELECT * FROM borrowers WHERE cardnumber = '" + borrowerCardnumber + "'";
 		QSqlQuery query( borrowerQuery );
 	
 		qDebug() << "Borrower Search SQL: " + borrowerQuery;

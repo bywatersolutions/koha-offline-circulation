@@ -51,6 +51,9 @@ void BorrowerSearch::setupActions() {
 }
 
 void BorrowerSearch::searchBorrowers() {
+        QSettings settings;
+        QString borrowersDbFilePath = settings.value("borrowersDbFilePath").toString();
+
 	clearResults();
 
 	QString lastnameSearch = nameLast->text();
@@ -58,7 +61,7 @@ void BorrowerSearch::searchBorrowers() {
 
 	QSqlDatabase db = QSqlDatabase::addDatabase( "QSQLITE" );
 
-	db.setDatabaseName( "borrowers.db" );
+        db.setDatabaseName( borrowersDbFilePath );
 
 	if ( db.open() ) {
 		QString borrowersQuery = "SELECT * FROM borrowers WHERE firstname LIKE '" 

@@ -725,8 +725,8 @@
     <addaction name="actionSelectBorrowersDB"/>
    </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuHelp"/>
    <addaction name="menuDatabase"/>
+   <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionNew">

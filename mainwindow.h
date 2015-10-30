@@ -55,6 +55,7 @@ class MainWindow : public QMainWindow,
         void saveFile();
         void saveFileAs();
         void selectBorrowersDbFile();
+        void selectDefaultKocSavePath();
         void about();
 
         /* Issues Related */
@@ -84,6 +85,7 @@ class MainWindow : public QMainWindow,
 
     private:
         QString mFilePath;
+        QString defaultKocSavePath;
         QLabel *mStatLabel;
 
         QString borrowersDbFilePath;

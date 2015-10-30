@@ -29,7 +29,7 @@ MainWindow::MainWindow(QWidget *parent)
   TITLE = "Koha Offline Circulation";
   VERSION = "1.3";
   FILE_VERSION = "1.3";
-  DATETIME_FORMAT = "yyyy-MM-dd hh:mm:ss zzz";
+  DATETIME_FORMAT = "yyyy-MM-dd hh-mm-ss zzz";
 
   setupUi(this);
   setupActions();
@@ -42,6 +42,11 @@ MainWindow::MainWindow(QWidget *parent)
 
   QSettings settings;
   borrowersDbFilePath = settings.value("borrowersDbFilePath").toString();
+  defaultKocSavePath = settings.value("defaultKocSavePath").toString();
+  if ( ! defaultKocSavePath.isEmpty() ) {
+      mFilePath = defaultKocSavePath + "/" + QDateTime::currentDateTime().toString( DATETIME_FORMAT ) + ".koc";
+      this->setWindowTitle( TITLE + " - " + mFilePath );
+  }
 }
 
 void MainWindow::setupActions()
@@ -71,10 +76,11 @@ void MainWindow::setupActions()
           this, SLOT(newFile()));
   actionNew->setShortcut(tr("Ctrl+N"));
 
-  /* Database Menu Actions */
+  /* Settings Menu Actions */
   connect(actionSelectBorrowersDB, SIGNAL(triggered(bool)),
           this, SLOT(selectBorrowersDbFile()));
-  actionNew->setShortcut(tr("Ctrl+N"));
+  connect(actionSet_Default_KOC_Save_Path, SIGNAL(triggered(bool)),
+          this, SLOT(selectDefaultKocSavePath()));
 
   /* Help Menu Actions */
   connect(actionAbout, SIGNAL(triggered(bool)),
@@ -468,6 +474,21 @@ void MainWindow::selectBorrowersDbFile() {
     qDebug() << "Borrowers DB File Select: " + borrowersDbFilePath;
 
     statusBar()->showMessage(tr("Borrowers DB File Selected: ") + borrowersDbFilePath, 3000);
+}
+
+void MainWindow::selectDefaultKocSavePath() {
+    qDebug() << "MainWindow::selectDefaultKocSavePath()";
+
+    defaultKocSavePath = QFileDialog::getExistingDirectory(this, tr("Select Directory"),
+                                                       "/home",
+                                                       QFileDialog::ShowDirsOnly);
+
+    QSettings settings;
+    settings.setValue("defaultKocSavePath", defaultKocSavePath);
+
+    qDebug() << "Default KOC Save Path: " + defaultKocSavePath;
+
+    statusBar()->showMessage(tr("Default KOC Save Path Selected: ") + defaultKocSavePath, 3000);
 }
 
 

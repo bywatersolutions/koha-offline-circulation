@@ -439,7 +439,16 @@
        <layout class="QVBoxLayout" name="verticalLayout_6">
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
-          <property name="margin">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
            <number>0</number>
           </property>
           <item>
@@ -694,7 +703,7 @@
      <x>0</x>
      <y>0</y>
      <width>897</width>
-     <height>25</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -720,9 +729,10 @@
    </widget>
    <widget class="QMenu" name="menuDatabase">
     <property name="title">
-     <string>Database</string>
+     <string>Settings</string>
     </property>
     <addaction name="actionSelectBorrowersDB"/>
+    <addaction name="actionSet_Default_KOC_Save_Path"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuDatabase"/>
@@ -817,6 +827,15 @@
    </property>
    <property name="text">
     <string>Select Borrowers DB File</string>
+   </property>
+  </action>
+  <action name="actionSet_Default_KOC_Save_Path">
+   <property name="icon">
+    <iconset resource="koc.qrc">
+     <normaloff>:/icons/images/icons/filesave.png</normaloff>:/icons/images/icons/filesave.png</iconset>
+   </property>
+   <property name="text">
+    <string>Set Default KOC Save Path</string>
    </property>
   </action>
  </widget>

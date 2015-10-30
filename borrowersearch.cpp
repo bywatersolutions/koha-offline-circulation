@@ -57,7 +57,7 @@ void BorrowerSearch::searchBorrowers() {
         // If borrowersDbFilePath is not set,
         // Default to APP_DIR/borrowers.db so the program does not crash.
         if ( borrowersDbFilePath.isEmpty() ) {
-            borrowersDbFilePath = 'borrowers.db';
+            borrowersDbFilePath = "borrowers.db";
         }
 
 	clearResults();

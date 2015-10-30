@@ -3,7 +3,7 @@
 ######################################################################
 
 TEMPLATE = app
-TARGET = 
+TARGET = KohaOfflineCirculation
 DEPENDPATH += .
 INCLUDEPATH += .
 
@@ -13,6 +13,7 @@ FORMS += borrowersearch.ui mainwindow.ui
 SOURCES += borrowersearch.cpp main.cpp mainwindow.cpp
 RESOURCES += koc.qrc
 QT += sql
+QT += widgets
 RC_FILE = koc.rc
 
 #CONFIG += debug

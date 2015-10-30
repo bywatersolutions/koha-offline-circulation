@@ -20,7 +20,7 @@
 #ifndef BORROWERSEARCH_H
 #define BORROWERSEARCH_H
 
-#include <QDialog>
+#include <QtWidgets>
 
 #include "ui_borrowersearch.h"
 

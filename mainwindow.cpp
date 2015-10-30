@@ -27,8 +27,8 @@ MainWindow::MainWindow(QWidget *parent)
  : QMainWindow(parent)
 {
   TITLE = "Koha Offline Circulation";
-  VERSION = "1.0";
-  FILE_VERSION = "1.0";
+  VERSION = "1.3";
+  FILE_VERSION = "1.3";
   DATETIME_FORMAT = "yyyy-MM-dd hh:mm:ss zzz";
 
   setupUi(this);
@@ -124,9 +124,7 @@ void MainWindow::setupActions()
           this, SLOT(historyDeleteRow()));
 }
 
-MainWindow::~MainWindow()
-{
-}
+MainWindow::~MainWindow(){}
 
 /* Issues Related Functions */
 void MainWindow::issuesAcceptCardnumber() {

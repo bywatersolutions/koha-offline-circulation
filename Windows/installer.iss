@@ -15,6 +15,7 @@ AllowNoIcons=yes
 Source: "KohaOfflineCirculation.exe"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0.0,5.0
 
 Source: "platforms\qwindows.dll"; DestDir: "{app}\platforms"; Flags: ignoreversion; MinVersion: 0.0,5.0
+Source: "sqldrivers\qsqlite.dll"; DestDir: "{app}\sqldrivers"
 Source: "icudt52.dll"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0.0,5.0
 Source: "icuin52.dll"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0.0,5.0
 Source: "icuuc52.dll"; DestDir: "{app}"; Flags: ignoreversion; MinVersion: 0.0,5.0

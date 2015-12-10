@@ -28,7 +28,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
   TITLE = "Koha Offline Circulation";
   VERSION = "1.3";
-  FILE_VERSION = "1.3";
+  FILE_VERSION = "1.0";
   DATETIME_FORMAT = "yyyy-MM-dd hh-mm-ss zzz";
 
   setupUi(this);

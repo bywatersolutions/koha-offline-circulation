@@ -400,7 +400,7 @@ void MainWindow::saveFile(const QString &name)
 
   if ( file.open(QIODevice::WriteOnly|QIODevice::Text) ) {
 	QTextStream ts( &file );
-    ts << "Version=" << FILE_VERSION << "\tGenerator=kocQt4\tGeneratorVersion=" << VERSION << endl;
+    ts << "Version=" << FILE_VERSION << "\tGenerator=kocDesktop\tGeneratorVersion=" << VERSION << endl;
 
 	int rowCount = tableWidgetHistory->rowCount();
 

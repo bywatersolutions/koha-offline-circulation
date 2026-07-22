@@ -25,6 +25,7 @@
 
 class QLabel;
 class QCloseEvent;
+class QMenu;
 
 class MainWindow : public QMainWindow, 
                    private Ui::MainWindow
@@ -45,6 +46,10 @@ class MainWindow : public QMainWindow,
         void closeEvent(QCloseEvent *event);
 
         void saveFile(const QString&);
+        void loadFile(const QString&);
+
+        void addRecentFile( const QString & path );
+        void updateRecentFilesMenu();
 
         void clearHistory();
 
@@ -59,6 +64,7 @@ class MainWindow : public QMainWindow,
         void loadFile();
         void saveFile();
         void saveFileAs();
+        void openRecentFile();
         void selectBorrowersDbFile();
         void selectDefaultKocSavePath();
         void about();
@@ -92,6 +98,7 @@ class MainWindow : public QMainWindow,
         QString mFilePath;
         QString defaultKocSavePath;
         QLabel *mStatLabel;
+        QMenu *mRecentFilesMenu;
 
         QString borrowersDbFilePath;
 

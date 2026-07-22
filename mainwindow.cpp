@@ -38,6 +38,10 @@ MainWindow::MainWindow(QWidget *parent)
   buttonBoxIssues->button( QDialogButtonBox::Ok )->setText( tr("Commit") );
   buttonBoxReturns->button( QDialogButtonBox::Ok )->setText( tr("Commit") );
 
+  mRecentFilesMenu = new QMenu( this );
+  actionOpen_Recent->setMenu( mRecentFilesMenu );
+  updateRecentFilesMenu();
+
   mStatLabel = new QLabel;
   statusBar()->addPermanentWidget(mStatLabel);
 
@@ -386,11 +390,18 @@ bool MainWindow::closeFile()
 
 void MainWindow::loadFile()
 {
-  if ( ! closeFile() ) return;
-
   QString filename = QFileDialog::getOpenFileName(this, tr("Open File"),
                                                  "",
                                                  tr("Koha Offline Circulation Files (*.koc)"));
+  if ( filename.isEmpty() ) return;
+
+  loadFile( filename );
+}
+
+void MainWindow::loadFile(const QString &filename)
+{
+  if ( ! closeFile() ) return;
+
   QFile file(filename);
   if (file.open(QIODevice::ReadOnly|QIODevice::Text)) {
     mFilePath = filename;
@@ -431,6 +442,8 @@ void MainWindow::loadFile()
 	file.close();
     statusBar()->showMessage(tr("File successfully loaded."), 3000);
 	this->setWindowTitle( TITLE + " - " + mFilePath );
+
+	addRecentFile( filename );
   }
 }
 
@@ -519,7 +532,64 @@ void MainWindow::saveFileAs()
 
   this->setWindowTitle( TITLE + " - " + mFilePath );
 
+  addRecentFile( mFilePath );
+
   saveFile(mFilePath);
+}
+
+void MainWindow::addRecentFile( const QString &path )
+{
+  QSettings settings;
+  QStringList recentFiles = settings.value("recentFiles").toStringList();
+
+  recentFiles.removeAll( path );
+  recentFiles.prepend( path );
+  while ( recentFiles.count() > 10 ) recentFiles.removeLast();
+
+  settings.setValue("recentFiles", recentFiles);
+
+  updateRecentFilesMenu();
+}
+
+void MainWindow::updateRecentFilesMenu()
+{
+  QSettings settings;
+  QStringList recentFiles = settings.value("recentFiles").toStringList();
+
+  mRecentFilesMenu->clear();
+  for ( const QString &path : recentFiles ) {
+      QAction *action = mRecentFilesMenu->addAction( path );
+      action->setData( path );
+      connect( action, SIGNAL(triggered(bool)),
+               this, SLOT(openRecentFile()) );
+  }
+
+  actionOpen_Recent->setEnabled( ! recentFiles.isEmpty() );
+}
+
+void MainWindow::openRecentFile()
+{
+  QAction *action = qobject_cast<QAction *>( sender() );
+  if ( ! action ) return;
+
+  QString path = action->data().toString();
+
+  if ( ! QFile::exists( path ) ) {
+      QMessageBox::warning(this, tr("File Not Found"),
+                           tr("This file no longer exists:\n%1").arg( path ),
+                           QMessageBox::Ok);
+
+      QSettings settings;
+      QStringList recentFiles = settings.value("recentFiles").toStringList();
+      recentFiles.removeAll( path );
+      settings.setValue("recentFiles", recentFiles);
+
+      updateRecentFilesMenu();
+
+      return;
+  }
+
+  loadFile( path );
 }
 
 void MainWindow::selectBorrowersDbFile() {

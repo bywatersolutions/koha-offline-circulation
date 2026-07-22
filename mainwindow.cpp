@@ -23,6 +23,8 @@
 #include "mainwindow.h"
 #include "borrowersearch.h"
 #include "kocfile.h"
+#include "kohadownload.h"
+#include "kohasettingsdialog.h"
 
 MainWindow::MainWindow(QWidget *parent)
  : QMainWindow(parent)
@@ -42,6 +44,15 @@ MainWindow::MainWindow(QWidget *parent)
   mRecentFilesMenu = new QMenu( this );
   actionOpen_Recent->setMenu( mRecentFilesMenu );
   updateRecentFilesMenu();
+
+  mKohaDownload = new KohaDownload( this );
+  connect( mKohaDownload, SIGNAL( progress( const QString & ) ),
+           this, SLOT( kohaDownloadProgress( const QString & ) ) );
+  connect( mKohaDownload, SIGNAL( finished( bool, const QString & ) ),
+           this, SLOT( kohaDownloadFinished( bool, const QString & ) ) );
+  mDownloadProgress = 0;
+  mDownloadRunning = false;
+  mDownloadInteractive = false;
 
   mStatLabel = new QLabel;
   statusBar()->addPermanentWidget(mStatLabel);
@@ -94,6 +105,10 @@ void MainWindow::setupActions()
           this, SLOT(selectBorrowersDbFile()));
   connect(actionSet_Default_KOC_Save_Path, SIGNAL(triggered(bool)),
           this, SLOT(selectDefaultKocSavePath()));
+  connect(actionKohaConnectionSettings, SIGNAL(triggered(bool)),
+          this, SLOT(showKohaSettings()));
+  connect(actionDownloadBorrowersDB, SIGNAL(triggered(bool)),
+          this, SLOT(downloadBorrowersDb()));
 
   /* Help Menu Actions */
   connect(actionAbout, SIGNAL(triggered(bool)),
@@ -619,6 +634,113 @@ void MainWindow::selectDefaultKocSavePath() {
     qDebug() << "Default KOC Save Path: " + defaultKocSavePath;
 
     statusBar()->showMessage(tr("Default KOC Save Path Selected: ") + defaultKocSavePath, 3000);
+}
+
+void MainWindow::showKohaSettings() {
+    KohaSettingsDialog dialog( this );
+    dialog.exec();
+}
+
+void MainWindow::downloadBorrowersDb() {
+    startKohaDownload( true );
+}
+
+void MainWindow::startKohaDownload( bool interactive )
+{
+    if ( mDownloadRunning ) return;
+
+    QSettings settings;
+
+    KohaDownload::Config config;
+    config.baseUrl = settings.value("kohaBaseUrl").toString();
+    config.userid = settings.value("kohaUserid").toString();
+    config.password = settings.value("kohaPassword").toString();
+    config.useReports = settings.value("kohaUseReports", true).toBool();
+    config.borrowersReportId = settings.value("kohaBorrowersReportId").toInt();
+    config.issuesReportId = settings.value("kohaIssuesReportId").toInt();
+
+    bool configured = ! config.baseUrl.isEmpty() && ! config.userid.isEmpty()
+        && ( ! config.useReports || ( config.borrowersReportId > 0 && config.issuesReportId > 0 ) );
+
+    if ( ! configured ) {
+        if ( interactive ) {
+            QMessageBox::information(this, tr("Koha Connection Not Configured"),
+                                     tr("Set the Koha staff URL, credentials, and download method first."));
+            showKohaSettings();
+        }
+        return;
+    }
+
+    mDownloadRunning = true;
+    mDownloadInteractive = interactive;
+    mDownloadTargetPath = borrowersDbTargetPath();
+
+    if ( interactive ) {
+        // Range 0,0 shows a busy indicator, there's no meaningful total
+        mDownloadProgress = new QProgressDialog( tr("Contacting Koha..."), QString(), 0, 0, this );
+        mDownloadProgress->setWindowModality( Qt::WindowModal );
+        mDownloadProgress->setMinimumDuration( 0 );
+        mDownloadProgress->setValue( 0 );
+    }
+
+    statusBar()->showMessage( tr("Downloading borrowers database from Koha...") );
+
+    mKohaDownload->start( config, mDownloadTargetPath );
+}
+
+QString MainWindow::borrowersDbTargetPath()
+{
+    if ( ! borrowersDbFilePath.isEmpty() ) return borrowersDbFilePath;
+
+    QString dir = QStandardPaths::writableLocation( QStandardPaths::AppDataLocation );
+    QDir().mkpath( dir );
+
+    return dir + "/borrowers.db";
+}
+
+void MainWindow::kohaDownloadProgress( const QString & message )
+{
+    if ( mDownloadProgress ) mDownloadProgress->setLabelText( message );
+
+    statusBar()->showMessage( message );
+}
+
+void MainWindow::kohaDownloadFinished( bool ok, const QString & message )
+{
+    mDownloadRunning = false;
+
+    if ( mDownloadProgress ) {
+        mDownloadProgress->close();
+        mDownloadProgress->deleteLater();
+        mDownloadProgress = 0;
+    }
+
+    if ( ok ) {
+        // Remember the path so the lookups and the search dialog find it
+        if ( borrowersDbFilePath.isEmpty() ) {
+            borrowersDbFilePath = mDownloadTargetPath;
+            QSettings settings;
+            settings.setValue("borrowersDbFilePath", borrowersDbFilePath);
+        }
+
+        // The lookup connection may still have the replaced file open,
+        // close it so the next lookup reopens the fresh database
+        if ( QSqlDatabase::contains() ) {
+            QSqlDatabase::database( QSqlDatabase::defaultConnection, false ).close();
+        }
+
+        updateSettingsDisplay();
+
+        statusBar()->showMessage( message, 5000 );
+        if ( mDownloadInteractive ) {
+            QMessageBox::information(this, tr("Download Complete"), message);
+        }
+    } else {
+        statusBar()->showMessage( tr("Koha download failed."), 5000 );
+        if ( mDownloadInteractive ) {
+            QMessageBox::critical(this, tr("Download Failed"), message);
+        }
+    }
 }
 
 

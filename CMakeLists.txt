@@ -12,6 +12,7 @@ qt_add_executable(KohaOfflineCirculation
     kocfile.cpp kocfile.h
     borrowersdb.cpp borrowersdb.h
     kohadownload.cpp kohadownload.h
+    kohasettingsdialog.cpp kohasettingsdialog.h kohasettingsdialog.ui
     koc.qrc
 )
 

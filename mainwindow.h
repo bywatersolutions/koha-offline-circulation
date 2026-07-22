@@ -26,6 +26,8 @@
 class QLabel;
 class QCloseEvent;
 class QMenu;
+class QProgressDialog;
+class KohaDownload;
 
 class MainWindow : public QMainWindow, 
                    private Ui::MainWindow
@@ -51,6 +53,9 @@ class MainWindow : public QMainWindow,
         void addRecentFile( const QString & path );
         void updateRecentFilesMenu();
 
+        void startKohaDownload( bool interactive );
+        QString borrowersDbTargetPath();
+
         void clearHistory();
 
         void findBorrower();
@@ -67,6 +72,10 @@ class MainWindow : public QMainWindow,
         void openRecentFile();
         void selectBorrowersDbFile();
         void selectDefaultKocSavePath();
+        void showKohaSettings();
+        void downloadBorrowersDb();
+        void kohaDownloadProgress( const QString & message );
+        void kohaDownloadFinished( bool ok, const QString & message );
         void about();
 
         /* Issues Related */
@@ -99,6 +108,12 @@ class MainWindow : public QMainWindow,
         QString defaultKocSavePath;
         QLabel *mStatLabel;
         QMenu *mRecentFilesMenu;
+
+        KohaDownload *mKohaDownload;
+        QProgressDialog *mDownloadProgress;
+        QString mDownloadTargetPath;
+        bool mDownloadRunning;
+        bool mDownloadInteractive;
 
         QString borrowersDbFilePath;
 

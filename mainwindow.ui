@@ -769,6 +769,9 @@
     </property>
     <addaction name="actionSelectBorrowersDB"/>
     <addaction name="actionSet_Default_KOC_Save_Path"/>
+    <addaction name="separator"/>
+    <addaction name="actionKohaConnectionSettings"/>
+    <addaction name="actionDownloadBorrowersDB"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuDatabase"/>
@@ -872,6 +875,20 @@
    </property>
    <property name="text">
     <string>Set Default KOC Save Path</string>
+   </property>
+  </action>
+  <action name="actionKohaConnectionSettings">
+   <property name="text">
+    <string>Koha Connection Settings</string>
+   </property>
+  </action>
+  <action name="actionDownloadBorrowersDB">
+   <property name="icon">
+    <iconset resource="koc.qrc">
+     <normaloff>:/icons/images/icons/database.png</normaloff>:/icons/images/icons/database.png</iconset>
+   </property>
+   <property name="text">
+    <string>Download Borrowers DB from Koha</string>
    </property>
   </action>
  </widget>

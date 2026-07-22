@@ -34,6 +34,10 @@ MainWindow::MainWindow(QWidget *parent)
   setupUi(this);
   setupActions();
 
+  // The stock "OK" label doesn't say what these buttons do
+  buttonBoxIssues->button( QDialogButtonBox::Ok )->setText( tr("Commit") );
+  buttonBoxReturns->button( QDialogButtonBox::Ok )->setText( tr("Commit") );
+
   mStatLabel = new QLabel;
   statusBar()->addPermanentWidget(mStatLabel);
 
@@ -47,6 +51,8 @@ MainWindow::MainWindow(QWidget *parent)
       mFilePath = defaultKocSavePath + "/" + QDateTime::currentDateTime().toString( DATETIME_FORMAT ) + ".koc";
       this->setWindowTitle( TITLE + " - " + mFilePath );
   }
+
+  updateSettingsDisplay();
 }
 
 void MainWindow::setupActions()
@@ -68,11 +74,11 @@ void MainWindow::setupActions()
 
   connect(actionSaveAs, SIGNAL(triggered(bool)),
           this, SLOT(saveFileAs()));
-  actionSaveAs->setShortcut(tr("Ctrl+A"));
+  actionSaveAs->setShortcut(tr("Ctrl+Shift+S"));
 
   connect(actionClose, SIGNAL(triggered(bool)),
           this, SLOT(closeFile()));
-  actionClose->setShortcut(tr("Ctrl+C"));
+  actionClose->setShortcut(tr("Ctrl+W"));
 
   connect(actionNew, SIGNAL(triggered(bool)),
           this, SLOT(newFile()));
@@ -283,12 +289,16 @@ void MainWindow::returnsAddItem() {
     listWidgetReturnsScannedBarcodes->addItem( itemBarcode );
     lineEditReturnsItemBarcode->clear();
     lineEditReturnsItemBarcode->setFocus();
+
+    updateReturnsCount();
   }
 }
 
 void MainWindow::returnsDeleteItemBarcode() {
   qDeleteAll(listWidgetReturnsScannedBarcodes->selectedItems());
   lineEditReturnsItemBarcode->setFocus();
+
+  updateReturnsCount();
 }
 
 void MainWindow::commitReturns() {
@@ -312,6 +322,8 @@ void MainWindow::commitReturns() {
 void MainWindow::cancelReturns() {
   lineEditReturnsItemBarcode->clear();
   listWidgetReturnsScannedBarcodes->clear();
+
+  updateReturnsCount();
 
   lineEditReturnsItemBarcode->setFocus();
 }
@@ -525,6 +537,8 @@ void MainWindow::selectBorrowersDbFile() {
     QSettings settings;
     settings.setValue("borrowersDbFilePath", borrowersDbFilePath);
 
+    updateSettingsDisplay();
+
     qDebug() << "Borrowers DB File Select: " + borrowersDbFilePath;
 
     statusBar()->showMessage(tr("Borrowers DB File Selected: ") + borrowersDbFilePath, 3000);
@@ -545,6 +559,8 @@ void MainWindow::selectDefaultKocSavePath() {
 
     QSettings settings;
     settings.setValue("defaultKocSavePath", defaultKocSavePath);
+
+    updateSettingsDisplay();
 
     // Use the new path immediately if the current file has never been saved,
     // otherwise it wouldn't take effect until the next launch
@@ -699,5 +715,18 @@ void MainWindow::closeEvent(QCloseEvent *event)
   writeSettings();
 
   QMainWindow::closeEvent(event);
+}
+
+void MainWindow::updateReturnsCount()
+{
+  labelReturnsCount->setText( tr("Items scanned: %1").arg( listWidgetReturnsScannedBarcodes->count() ) );
+}
+
+void MainWindow::updateSettingsDisplay()
+{
+  QString kocPath = defaultKocSavePath.isEmpty() ? tr("not set") : defaultKocSavePath;
+  QString dbPath = borrowersDbFilePath.isEmpty() ? tr("not set") : borrowersDbFilePath;
+
+  mStatLabel->setText( tr("KOC save path: %1  |  Borrowers DB: %2").arg( kocPath, dbPath ) );
 }
 

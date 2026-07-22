@@ -39,6 +39,8 @@ class MainWindow : public QMainWindow,
 
         void writeSettings();
         void readSettings();
+        void updateSettingsDisplay();
+        void updateReturnsCount();
 
         void closeEvent(QCloseEvent *event);
 

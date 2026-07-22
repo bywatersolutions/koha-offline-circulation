@@ -78,6 +78,12 @@ jobs:
   macos:
     needs: version
     runs-on: macos-latest
+    env:
+      # True when the Developer ID signing secrets are configured, forks
+      # and unconfigured clones fall back to ad-hoc signing. Same secret
+      # names as the Olorin companion app so they can be shared as
+      # organization secrets.
+      SIGNING_AVAILABLE: ${{ secrets.APPLE_CERTIFICATE_P12 != '' && secrets.APPLE_ID != '' }}
     steps:
       - uses: actions/checkout@v4
       - name: Install Qt
@@ -90,10 +96,46 @@ jobs:
           cmake --build build
       - name: Run tests
         run: ctest --test-dir build --output-on-failure
+      - name: Deploy Qt frameworks
+        run: macdeployqt build/KohaOfflineCirculation.app
+      - name: Import signing certificate
+        if: env.SIGNING_AVAILABLE == 'true'
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      - name: Sign, notarize, and staple
+        if: env.SIGNING_AVAILABLE == 'true'
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          IDENTITY=$(security find-identity -v -p codesigning | sed -n 's/.*"\(Developer ID Application:[^"]*\)".*/\1/p' | head -1)
+          [ -n "$IDENTITY" ] || { echo "No Developer ID Application identity found in the imported certificate"; exit 1; }
+          codesign --force --deep --options runtime --timestamp --sign "$IDENTITY" build/KohaOfflineCirculation.app
+          ditto -c -k --keepParent build/KohaOfflineCirculation.app "$RUNNER_TEMP/KohaOfflineCirculation.zip"
+          xcrun notarytool submit "$RUNNER_TEMP/KohaOfflineCirculation.zip" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_APP_SPECIFIC_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --wait
+          xcrun stapler staple build/KohaOfflineCirculation.app
+      - name: Verify signature and notarization
+        if: env.SIGNING_AVAILABLE == 'true'
+        run: |
+          codesign --verify --deep --strict --verbose=2 build/KohaOfflineCirculation.app
+          xcrun stapler validate build/KohaOfflineCirculation.app
+          spctl -a -vv build/KohaOfflineCirculation.app
+      - name: Ad-hoc sign
+        if: env.SIGNING_AVAILABLE != 'true'
+        run: codesign --force --deep --sign - build/KohaOfflineCirculation.app
       - name: Package DMG
         run: |
-          macdeployqt build/KohaOfflineCirculation.app -codesign=- -dmg
-          mv build/KohaOfflineCirculation.dmg "KohaOfflineCirculation-${{ needs.version.outputs.version }}-macos.dmg"
+          hdiutil create -volname "Koha Offline Circulation" \
+            -srcfolder build/KohaOfflineCirculation.app \
+            -ov -format UDBZ \
+            "KohaOfflineCirculation-${{ needs.version.outputs.version }}-macos.dmg"
       - uses: actions/upload-artifact@v4
         with:
           name: macos

@@ -28,7 +28,9 @@ Windows 7/8, use the old
 
 ### macOS Gatekeeper note
 
-The app is not notarized with Apple, so the first launch will be blocked. To open it:
+This only applies to releases built without code signing (see the macOS code
+signing section below) — signed and notarized releases open normally. For an
+unsigned build, the first launch will be blocked. To open it:
 open System Settings → Privacy & Security, scroll down, and click **Open Anyway**
 next to the message about KohaOfflineCirculation. Alternatively, from a terminal:
 
@@ -73,6 +75,26 @@ Packages are built and published automatically by GitHub Actions:
 
 Every push and pull request also runs the full build and packaging on all three
 platforms, so packaging breakage shows up before release time.
+
+## macOS code signing
+
+Builds are signed, notarized, and stapled automatically when these Actions
+secrets are configured (Settings → Secrets and variables → Actions). They
+are the same secrets, with the same names, used by the Olorin companion
+app, so they can be shared as organization secrets. Without them the build
+falls back to ad-hoc signing and users hit the Gatekeeper flow described
+above.
+
+| Secret | Contents |
+|--------|----------|
+| `APPLE_CERTIFICATE_P12` | The "Developer ID Application" certificate exported from Keychain Access as a .p12, base64 encoded (`base64 -i cert.p12 \| pbcopy`) |
+| `APPLE_CERTIFICATE_PASSWORD` | The password chosen for that .p12 export |
+| `APPLE_ID` | The Apple Account email of the enrolled developer |
+| `APPLE_APP_SPECIFIC_PASSWORD` | An app-specific password generated at account.apple.com (Sign-In and Security → App-Specific Passwords) |
+| `APPLE_TEAM_ID` | The 10-character Team ID from the developer account's membership page |
+
+The app itself is stapled before the DMG is built, so a signed release
+passes Gatekeeper even on machines with no internet access.
 
 ## The .koc file format
 

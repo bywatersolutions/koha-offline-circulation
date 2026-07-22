@@ -19,3 +19,4 @@ CMakeLists.txt.user*
 .DS_Store
 .vscode/
 .idea/
+.cache/

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Koha Offline Circulation
+Comment=Offline circulation client for the Koha ILS
+Exec=KohaOfflineCirculation
+Icon=koha
+Categories=Office;Database;
+Terminal=false

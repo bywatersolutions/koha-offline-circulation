@@ -10,6 +10,7 @@ qt_add_executable(KohaOfflineCirculation
     mainwindow.cpp mainwindow.h mainwindow.ui
     borrowersearch.cpp borrowersearch.h borrowersearch.ui
     kocfile.cpp kocfile.h
+    borrowersdb.cpp borrowersdb.h
     koc.qrc
 )
 

@@ -54,4 +54,10 @@ if(BUILD_TESTING)
     target_link_libraries(tst_kocfile PRIVATE Qt6::Core Qt6::Test)
 
     add_test(NAME kocfile COMMAND tst_kocfile)
+
+    qt_add_executable(tst_borrowersdb tests/tst_borrowersdb.cpp borrowersdb.cpp borrowersdb.h)
+    target_include_directories(tst_borrowersdb PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+    target_link_libraries(tst_borrowersdb PRIVATE Qt6::Core Qt6::Sql Qt6::Test)
+
+    add_test(NAME borrowersdb COMMAND tst_borrowersdb)
 endif()

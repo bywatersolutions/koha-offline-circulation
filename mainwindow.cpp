@@ -17,7 +17,7 @@
 * along with Koha Offline Circulation.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <QtGui>
+#include <QtWidgets>
 #include <QtSql>
 
 #include "mainwindow.h"
@@ -27,7 +27,7 @@ MainWindow::MainWindow(QWidget *parent)
  : QMainWindow(parent)
 {
   TITLE = "Koha Offline Circulation";
-  VERSION = "1.3";
+  VERSION = KOC_VERSION;
   FILE_VERSION = "1.0";
   DATETIME_FORMAT = "yyyy-MM-dd hh-mm-ss zzz";
 
@@ -207,7 +207,7 @@ void MainWindow::issuesPayFine() {
 	if ( ok ) {
 		float finePayment = paymentString.toFloat(&ok);
 		if ( ok ) {
-			paymentString.sprintf("%.2f", round(finePayment*100)/100);
+			paymentString = QString::number(finePayment, 'f', 2);
 
 			QTableWidgetItem *borrowerCardnumber = new QTableWidgetItem( lineEditIssuesBorrowerCardnumber->text() );
 	    	QTableWidgetItem *type = new QTableWidgetItem("payment");
@@ -400,7 +400,7 @@ void MainWindow::saveFile(const QString &name)
 
   if ( file.open(QIODevice::WriteOnly|QIODevice::Text) ) {
 	QTextStream ts( &file );
-    ts << "Version=" << FILE_VERSION << "\tGenerator=kocDesktop\tGeneratorVersion=" << VERSION << endl;
+    ts << "Version=" << FILE_VERSION << "\tGenerator=kocDesktop\tGeneratorVersion=" << VERSION << Qt::endl;
 
 	int rowCount = tableWidgetHistory->rowCount();
 
@@ -422,12 +422,12 @@ void MainWindow::saveFile(const QString &name)
 			QTableWidgetItem *barcode = tableWidgetHistory->item( row, COLUMN_BARCODE );
 			QString barcodeText = barcode->text();
 
-			ts << cardnumberText << "\t" << barcodeText << endl;
+			ts << cardnumberText << "\t" << barcodeText << Qt::endl;
 		} else if ( typeText == "return" ) {
 			QTableWidgetItem *barcode = tableWidgetHistory->item( row, COLUMN_BARCODE );
 			QString barcodeText = barcode->text();
 
-			ts << barcodeText << endl;
+			ts << barcodeText << Qt::endl;
 		} else if ( typeText == "payment" ) {
 			QTableWidgetItem *cardnumber = tableWidgetHistory->item( row, COLUMN_CARDNUMBER );
 			QString cardnumberText = cardnumber->text();
@@ -435,7 +435,7 @@ void MainWindow::saveFile(const QString &name)
 			QTableWidgetItem *payment = tableWidgetHistory->item( row, COLUMN_PAYMENT );
 			QString paymentText = payment->text();
 
-			ts << cardnumberText << "\t" << paymentText << endl;
+			ts << cardnumberText << "\t" << paymentText << Qt::endl;
 		}
 
 	}
@@ -570,11 +570,10 @@ void MainWindow::addBorrowerPreviousIssue( const QString & itemcallnumber, const
 /* Help Related Functions */
 void MainWindow::about()
 {
-  QMessageBox::about(this, tr("About Koha Offline Circulation"), 
-                                        tr(	"Koha Offline Circulation 1.3.\n\n"
+  QMessageBox::about(this, tr("About Koha Offline Circulation"),
+                                        TITLE + " " + VERSION + ".\n\n"
                                                 "(c) 2010 Kyle M Hall\n\n"
                                                 "http://kylehall.info/"
-						)
 	);
 }
 

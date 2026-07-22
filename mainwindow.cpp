@@ -54,6 +54,16 @@ MainWindow::MainWindow(QWidget *parent)
   mDownloadRunning = false;
   mDownloadInteractive = false;
 
+  // Check once a minute whether the configured nightly download time
+  // has arrived
+  mScheduleTimer = new QTimer( this );
+  connect( mScheduleTimer, SIGNAL( timeout() ),
+           this, SLOT( checkScheduledDownload() ) );
+  mScheduleTimer->start( 60000 );
+
+  // Give the window a moment to appear before a startup download
+  QTimer::singleShot( 2000, this, SLOT( checkStartupDownload() ) );
+
   mStatLabel = new QLabel;
   statusBar()->addPermanentWidget(mStatLabel);
 
@@ -741,6 +751,34 @@ void MainWindow::kohaDownloadFinished( bool ok, const QString & message )
             QMessageBox::critical(this, tr("Download Failed"), message);
         }
     }
+}
+
+void MainWindow::checkScheduledDownload()
+{
+    QSettings settings;
+    if ( ! settings.value("kohaNightlyEnabled", false).toBool() ) return;
+
+    if ( QTime::currentTime().toString( "HH:mm" ) != settings.value("kohaNightlyTime", "22:00").toString() ) return;
+
+    // Only fire once for the scheduled minute, not once per timer tick
+    QString today = QDate::currentDate().toString( "yyyy-MM-dd" );
+    if ( mLastAutoDownloadDate == today ) return;
+    mLastAutoDownloadDate = today;
+
+    startKohaDownload( false );
+}
+
+void MainWindow::checkStartupDownload()
+{
+    QSettings settings;
+    if ( ! settings.value("kohaDownloadOnLaunch", false).toBool() ) return;
+
+    // Deep Freeze machines lose the nightly download on reboot, so
+    // refresh at startup when the database is missing or stale
+    QFileInfo info( borrowersDbTargetPath() );
+    if ( info.exists() && info.lastModified() > QDateTime::currentDateTime().addSecs( -24 * 60 * 60 ) ) return;
+
+    startKohaDownload( false );
 }
 
 

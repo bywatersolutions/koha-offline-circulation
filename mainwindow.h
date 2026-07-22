@@ -27,6 +27,7 @@ class QLabel;
 class QCloseEvent;
 class QMenu;
 class QProgressDialog;
+class QTimer;
 class KohaDownload;
 
 class MainWindow : public QMainWindow, 
@@ -76,6 +77,8 @@ class MainWindow : public QMainWindow,
         void downloadBorrowersDb();
         void kohaDownloadProgress( const QString & message );
         void kohaDownloadFinished( bool ok, const QString & message );
+        void checkScheduledDownload();
+        void checkStartupDownload();
         void about();
 
         /* Issues Related */
@@ -114,6 +117,8 @@ class MainWindow : public QMainWindow,
         QString mDownloadTargetPath;
         bool mDownloadRunning;
         bool mDownloadInteractive;
+        QTimer *mScheduleTimer;
+        QString mLastAutoDownloadDate;
 
         QString borrowersDbFilePath;
 

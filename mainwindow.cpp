@@ -932,7 +932,14 @@ void MainWindow::updateReturnsCount()
 void MainWindow::updateSettingsDisplay()
 {
   QString kocPath = defaultKocSavePath.isEmpty() ? tr("not set") : defaultKocSavePath;
+
   QString dbPath = borrowersDbFilePath.isEmpty() ? tr("not set") : borrowersDbFilePath;
+
+  // Offline patron data is stale by definition, show how stale
+  QFileInfo dbInfo( borrowersDbFilePath );
+  if ( ! borrowersDbFilePath.isEmpty() && dbInfo.exists() ) {
+      dbPath += tr(" (updated %1)").arg( dbInfo.lastModified().toString( "yyyy-MM-dd hh:mm" ) );
+  }
 
   mStatLabel->setText( tr("KOC save path: %1  |  Borrowers DB: %2").arg( kocPath, dbPath ) );
 }

@@ -47,6 +47,63 @@ xattr -cr "/Applications/Koha Offline Circulation.app"
 - **Settings → Select Borrowers DB File** points the app at a `borrowers.db` SQLite
   file for offline patron lookup.
 
+## Downloading patron data from Koha
+
+The app can build its own `borrowers.db` directly from your Koha server:
+**Settings → Koha Connection Settings** to configure, then **Settings →
+Download Borrowers DB from Koha** to run it. The settings dialog can also
+schedule a nightly download and refresh automatically at startup when the
+database is more than a day old — recommended for machines that wipe their
+drives on reboot (Deep Freeze and similar).
+
+Two download methods are supported:
+
+### Saved reports (recommended)
+
+The fastest option, and the account only needs the `catalogue` permission.
+One-time setup on the Koha server:
+
+1. Raise the **`SvcMaxReportRows`** system preference (default is only 10)
+   to a value above your patron count, e.g. 1000000.
+2. Create two saved SQL reports and note their report IDs. The column
+   order matters — use this SQL as-is:
+
+   Borrowers report:
+
+   ```sql
+   SELECT b.borrowernumber, b.cardnumber, b.surname, b.firstname,
+          b.address, b.city, b.phone, b.dateofbirth,
+          COALESCE( ( SELECT SUM(a.amountoutstanding)
+                      FROM accountlines a
+                      WHERE a.borrowernumber = b.borrowernumber ), 0 ) AS total_fines
+   FROM borrowers b
+   ```
+
+   Issues report:
+
+   ```sql
+   SELECT i.borrowernumber, i.date_due, it.itemcallnumber, bib.title,
+          COALESCE( it.itype, bi.itemtype ) AS itemtype
+   FROM issues i
+   JOIN items it ON it.itemnumber = i.itemnumber
+   JOIN biblio bib ON bib.biblionumber = it.biblionumber
+   JOIN biblioitems bi ON bi.biblionumber = bib.biblionumber
+   ```
+
+3. Optionally set a cache expiry on both reports (e.g. an hour) — with
+   memcached active, a whole fleet of circulation computers downloading at
+   the same time costs the server a single SQL run.
+
+### REST API
+
+No reports needed: enable the **`RESTBasicAuth`** system preference and use
+an account with the `borrowers` and `circulate` permissions. The app pages
+through `/api/v1/patrons` and `/api/v1/checkouts`, which is heavier on the
+server than report mode but requires no other setup.
+
+Koha's `misc/cronjobs/create_koc_db.pl` remains a fine alternative for very
+large systems — the app reads the file it produces the same way.
+
 ## Building from source
 
 Requires Qt 6.5+ and CMake 3.22+.

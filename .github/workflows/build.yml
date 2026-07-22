@@ -49,6 +49,8 @@ jobs:
         run: |
           cmake -S . -B build -A x64
           cmake --build build --config Release
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure -C Release
       - name: Deploy Qt runtime
         shell: pwsh
         run: |
@@ -86,6 +88,8 @@ jobs:
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release "-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64"
           cmake --build build
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure
       - name: Package DMG
         run: |
           macdeployqt build/KohaOfflineCirculation.app -codesign=- -dmg
@@ -112,6 +116,8 @@ jobs:
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
           cmake --build build
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure
       - name: Build AppImage
         env:
           APPIMAGE_EXTRACT_AND_RUN: 1

@@ -9,6 +9,7 @@ qt_add_executable(KohaOfflineCirculation
     main.cpp
     mainwindow.cpp mainwindow.h mainwindow.ui
     borrowersearch.cpp borrowersearch.h borrowersearch.ui
+    kocfile.cpp kocfile.h
     koc.qrc
 )
 
@@ -42,3 +43,14 @@ install(TARGETS KohaOfflineCirculation
     BUNDLE  DESTINATION .
     RUNTIME DESTINATION bin
 )
+
+include(CTest)
+if(BUILD_TESTING)
+    find_package(Qt6 6.5 REQUIRED COMPONENTS Test)
+
+    qt_add_executable(tst_kocfile tests/tst_kocfile.cpp kocfile.cpp kocfile.h)
+    target_include_directories(tst_kocfile PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+    target_link_libraries(tst_kocfile PRIVATE Qt6::Core Qt6::Test)
+
+    add_test(NAME kocfile COMMAND tst_kocfile)
+endif()

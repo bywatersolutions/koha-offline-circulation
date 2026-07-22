@@ -22,6 +22,7 @@
 
 #include "mainwindow.h"
 #include "borrowersearch.h"
+#include "kocfile.h"
 
 MainWindow::MainWindow(QWidget *parent)
  : QMainWindow(parent)
@@ -241,7 +242,7 @@ void MainWindow::issuesPayFine() {
 	if ( ok ) {
 		float finePayment = paymentString.toFloat(&ok);
 		if ( ok ) {
-			paymentString = QString::number(finePayment, 'f', 2);
+			paymentString = KocFile::formatPayment( finePayment );
 
 			QTableWidgetItem *borrowerCardnumber = new QTableWidgetItem( lineEditIssuesBorrowerCardnumber->text() );
 	    	QTableWidgetItem *type = new QTableWidgetItem("payment");
@@ -412,28 +413,21 @@ void MainWindow::loadFile(const QString &filename)
 	QString line = stream.readLine();
 	while( !line.isEmpty() ) {
 
-	    QStringList parts = line.split("\t");
-		QString date = parts.takeFirst();
-		QString type = parts.takeFirst();
-	
+		KocTransaction transaction = KocFile::parseLine( line );
+
 	    int row = tableWidgetHistory->rowCount();
 		tableWidgetHistory->insertRow(row);
-		tableWidgetHistory->setItem(row, COLUMN_TYPE, new QTableWidgetItem(type));
-		tableWidgetHistory->setItem(row, COLUMN_DATE, new QTableWidgetItem(date));
+		tableWidgetHistory->setItem(row, COLUMN_TYPE, new QTableWidgetItem(transaction.type));
+		tableWidgetHistory->setItem(row, COLUMN_DATE, new QTableWidgetItem(transaction.date));
 
-		if ( type == "issue" ) {
-			QString cardnumber = parts.takeFirst();
-			QString barcode = parts.takeFirst();
-			tableWidgetHistory->setItem(row, COLUMN_CARDNUMBER, new QTableWidgetItem(cardnumber));
-			tableWidgetHistory->setItem(row, COLUMN_BARCODE, new QTableWidgetItem(barcode));
-		} else if ( type == "return" ) {
-			QString barcode = parts.takeFirst();
-			tableWidgetHistory->setItem(row, COLUMN_BARCODE, new QTableWidgetItem(barcode));
-		} else if ( type == "payment" ) {
-			QString cardnumber = parts.takeFirst();
-			QString payment = parts.takeFirst();
-			tableWidgetHistory->setItem(row, COLUMN_CARDNUMBER, new QTableWidgetItem(cardnumber));
-			tableWidgetHistory->setItem(row, COLUMN_PAYMENT, new QTableWidgetItem(payment));
+		if ( transaction.type == "issue" ) {
+			tableWidgetHistory->setItem(row, COLUMN_CARDNUMBER, new QTableWidgetItem(transaction.cardnumber));
+			tableWidgetHistory->setItem(row, COLUMN_BARCODE, new QTableWidgetItem(transaction.barcode));
+		} else if ( transaction.type == "return" ) {
+			tableWidgetHistory->setItem(row, COLUMN_BARCODE, new QTableWidgetItem(transaction.barcode));
+		} else if ( transaction.type == "payment" ) {
+			tableWidgetHistory->setItem(row, COLUMN_CARDNUMBER, new QTableWidgetItem(transaction.cardnumber));
+			tableWidgetHistory->setItem(row, COLUMN_PAYMENT, new QTableWidgetItem(transaction.payment));
 		}
 
 		line = stream.readLine();
@@ -461,44 +455,27 @@ void MainWindow::saveFile(const QString &name)
 
   if ( file.open(QIODevice::WriteOnly|QIODevice::Text) ) {
 	QTextStream ts( &file );
-    ts << "Version=" << FILE_VERSION << "\tGenerator=kocDesktop\tGeneratorVersion=" << VERSION << Qt::endl;
+    ts << KocFile::headerLine( FILE_VERSION, VERSION ) << Qt::endl;
 
 	int rowCount = tableWidgetHistory->rowCount();
 
 	for ( int row = 0; row < rowCount; row++ ) {
 
-		QTableWidgetItem *type = tableWidgetHistory->item( row, COLUMN_TYPE );
-		QString typeText = type->text();
+		KocTransaction transaction;
+		transaction.type = tableWidgetHistory->item( row, COLUMN_TYPE )->text();
+		transaction.date = tableWidgetHistory->item( row, COLUMN_DATE )->text();
 
-		QTableWidgetItem *date = tableWidgetHistory->item( row, COLUMN_DATE );
-		QString dateText = date->text();
-
-
-		ts << dateText << "\t" << typeText << "\t";
-
-		if ( typeText == "issue" ) {
-			QTableWidgetItem *cardnumber = tableWidgetHistory->item( row, COLUMN_CARDNUMBER );
-			QString cardnumberText = cardnumber->text();
-
-			QTableWidgetItem *barcode = tableWidgetHistory->item( row, COLUMN_BARCODE );
-			QString barcodeText = barcode->text();
-
-			ts << cardnumberText << "\t" << barcodeText << Qt::endl;
-		} else if ( typeText == "return" ) {
-			QTableWidgetItem *barcode = tableWidgetHistory->item( row, COLUMN_BARCODE );
-			QString barcodeText = barcode->text();
-
-			ts << barcodeText << Qt::endl;
-		} else if ( typeText == "payment" ) {
-			QTableWidgetItem *cardnumber = tableWidgetHistory->item( row, COLUMN_CARDNUMBER );
-			QString cardnumberText = cardnumber->text();
-
-			QTableWidgetItem *payment = tableWidgetHistory->item( row, COLUMN_PAYMENT );
-			QString paymentText = payment->text();
-
-			ts << cardnumberText << "\t" << paymentText << Qt::endl;
+		if ( transaction.type == "issue" ) {
+			transaction.cardnumber = tableWidgetHistory->item( row, COLUMN_CARDNUMBER )->text();
+			transaction.barcode = tableWidgetHistory->item( row, COLUMN_BARCODE )->text();
+		} else if ( transaction.type == "return" ) {
+			transaction.barcode = tableWidgetHistory->item( row, COLUMN_BARCODE )->text();
+		} else if ( transaction.type == "payment" ) {
+			transaction.cardnumber = tableWidgetHistory->item( row, COLUMN_CARDNUMBER )->text();
+			transaction.payment = tableWidgetHistory->item( row, COLUMN_PAYMENT )->text();
 		}
 
+		ts << KocFile::serializeLine( transaction ) << Qt::endl;
 	}
 
 	file.close();

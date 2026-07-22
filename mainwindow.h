@@ -24,6 +24,7 @@
 #include "ui_mainwindow.h"
 
 class QLabel;
+class QCloseEvent;
 
 class MainWindow : public QMainWindow, 
                    private Ui::MainWindow
@@ -39,6 +40,8 @@ class MainWindow : public QMainWindow,
         void writeSettings();
         void readSettings();
 
+        void closeEvent(QCloseEvent *event);
+
         void saveFile(const QString&);
 
         void clearHistory();
@@ -50,7 +53,7 @@ class MainWindow : public QMainWindow,
     protected slots:
         /* File Related */
         void newFile();
-        void closeFile();
+        bool closeFile();
         void loadFile();
         void saveFile();
         void saveFileAs();

@@ -37,7 +37,7 @@ MainWindow::MainWindow(QWidget *parent)
   mStatLabel = new QLabel;
   statusBar()->addPermanentWidget(mStatLabel);
 
-  this->showMaximized();
+  readSettings();
   lineEditIssuesBorrowerCardnumber->setFocus();
 
   QSettings settings;
@@ -52,8 +52,10 @@ MainWindow::MainWindow(QWidget *parent)
 void MainWindow::setupActions()
 {
   /* File Menu Actions */
+  // Quit via close() rather than qApp->quit() so closeEvent fires
+  // and the window geometry gets saved
   connect(actionQuit, SIGNAL(triggered(bool)),
-          qApp, SLOT(quit()));
+          this, SLOT(close()));
   actionQuit->setShortcut(tr("Ctrl+Q"));
 
   connect(actionOpen, SIGNAL(triggered(bool)),
@@ -156,6 +158,18 @@ void MainWindow::issuesDeleteItemBarcode() {
 }
 
 void MainWindow::commitIssues() {
+  // Refuse to commit scanned items without a cardnumber, Koha can't
+  // process transactions that have no borrower
+  if ( lineEditIssuesBorrowerCardnumber->text().isEmpty()
+       && listWidgetIssuesScannedBarcodes->count() > 0 ) {
+    QMessageBox::warning(this, tr("No Borrower Cardnumber"),
+                         tr("These items cannot be committed without a borrower cardnumber.\n"
+                            "Enter or search for the borrower's cardnumber first."),
+                         QMessageBox::Ok);
+    lineEditIssuesBorrowerCardnumber->setFocus();
+    return;
+  }
+
   while ( QListWidgetItem *item = listWidgetIssuesScannedBarcodes->takeItem(0) ) {
     QTableWidgetItem *borrowerCardnumber = new QTableWidgetItem( lineEditIssuesBorrowerCardnumber->text() );
     QTableWidgetItem *type = new QTableWidgetItem("issue");
@@ -200,6 +214,16 @@ void MainWindow::clearBorrowerDetails() {
 }
 
 void MainWindow::issuesPayFine() {
+	// A payment without a cardnumber can't be processed by Koha
+	if ( lineEditIssuesBorrowerCardnumber->text().isEmpty() ) {
+		QMessageBox::warning(this, tr("No Borrower Cardnumber"),
+							tr("A payment cannot be recorded without a borrower cardnumber.\n"
+								"Enter or search for the borrower's cardnumber first."),
+							QMessageBox::Ok);
+		lineEditIssuesBorrowerCardnumber->setFocus();
+		return;
+	}
+
 	bool ok;
 	QString paymentString = QInputDialog::getText(this, tr("Pay Fines") + " - " + TITLE,
                                              tr("Amount:"), QLineEdit::Normal,
@@ -319,14 +343,24 @@ void MainWindow::clearHistory() {
 /* File Related Functions */
 void MainWindow::newFile()
 {
-  closeFile();
+  if ( ! closeFile() ) return;
+
   saveFileAs();
 
   statusBar()->showMessage(tr("Starting new file."), 3000);
 }
 
-void MainWindow::closeFile()
+bool MainWindow::closeFile()
 {
+  // Transactions are saved to disk as they're committed, but confirm
+  // anyway in case the last save failed
+  if ( tableWidgetHistory->rowCount() > 0 ) {
+      int ret = QMessageBox::question(this, tr("Close File"),
+                                      tr("Close the current file? The transaction list will be cleared."),
+                                      QMessageBox::Yes | QMessageBox::No);
+      if ( ret != QMessageBox::Yes ) return false;
+  }
+
   mFilePath = "";
 
   clearHistory();
@@ -334,11 +368,13 @@ void MainWindow::closeFile()
   cancelIssues();
 
   statusBar()->showMessage(tr("File closed."), 3000);
+
+  return true;
 }
 
 void MainWindow::loadFile()
 {
-  closeFile();
+  if ( ! closeFile() ) return;
 
   QString filename = QFileDialog::getOpenFileName(this, tr("Open File"),
                                                  "",
@@ -444,13 +480,26 @@ void MainWindow::saveFile(const QString &name)
     statusBar()->showMessage(tr("File saved successfully."), 3000);
   } else {
     statusBar()->showMessage(tr("Failed to save file."), 3000);
+
+    QMessageBox::critical(this, tr("Failed to Save File"),
+                          tr("Could not write the file:\n%1\n\n%2\n\n"
+                             "Transactions are not being saved! "
+                             "Check the drive and use File, Save As to pick a working location.")
+                              .arg(name, file.errorString()));
   }
 }
 
 void MainWindow::saveFileAs()
 {
+  // Start the dialog in the default KOC save path if one is set,
+  // otherwise it opens in the working directory ( Program Files on Windows )
+  QString suggestedFilePath = QDateTime::currentDateTime().toString( DATETIME_FORMAT ) + ".koc";
+  if ( ! defaultKocSavePath.isEmpty() ) {
+      suggestedFilePath = defaultKocSavePath + "/" + suggestedFilePath;
+  }
+
   mFilePath = QFileDialog::getSaveFileName(this, TITLE + " - " + tr("Save File"),
-                            QDateTime::currentDateTime().toString( DATETIME_FORMAT ) + ".koc",
+                            suggestedFilePath,
                             tr("Koha Offline Circulation Files (*.koc)"));
   if ( mFilePath.isEmpty() ) return;
 
@@ -464,9 +513,14 @@ void MainWindow::saveFileAs()
 void MainWindow::selectBorrowersDbFile() {
     qDebug() << "MainWindow::selectBorrowersDbFile()";
 
-    borrowersDbFilePath = QFileDialog::getOpenFileName(this, tr("Open File"),
+    QString selectedFile = QFileDialog::getOpenFileName(this, tr("Open File"),
                                                        "",
                                                        tr("KOC Borrowers DB Files (*.db)"));
+
+    // Cancelling the dialog returns an empty string, don't wipe out the stored path
+    if ( selectedFile.isEmpty() ) return;
+
+    borrowersDbFilePath = selectedFile;
 
     QSettings settings;
     settings.setValue("borrowersDbFilePath", borrowersDbFilePath);
@@ -479,12 +533,25 @@ void MainWindow::selectBorrowersDbFile() {
 void MainWindow::selectDefaultKocSavePath() {
     qDebug() << "MainWindow::selectDefaultKocSavePath()";
 
-    defaultKocSavePath = QFileDialog::getExistingDirectory(this, tr("Select Directory"),
-                                                       "/home",
+    QString startPath = defaultKocSavePath.isEmpty() ? QDir::homePath() : defaultKocSavePath;
+    QString selectedPath = QFileDialog::getExistingDirectory(this, tr("Select Directory"),
+                                                       startPath,
                                                        QFileDialog::ShowDirsOnly);
+
+    // Cancelling the dialog returns an empty string, don't wipe out the stored path
+    if ( selectedPath.isEmpty() ) return;
+
+    defaultKocSavePath = selectedPath;
 
     QSettings settings;
     settings.setValue("defaultKocSavePath", defaultKocSavePath);
+
+    // Use the new path immediately if the current file has never been saved,
+    // otherwise it wouldn't take effect until the next launch
+    if ( mFilePath.isEmpty() || ! QFile::exists( mFilePath ) ) {
+        mFilePath = defaultKocSavePath + "/" + QDateTime::currentDateTime().toString( DATETIME_FORMAT ) + ".koc";
+        this->setWindowTitle( TITLE + " - " + mFilePath );
+    }
 
     qDebug() << "Default KOC Save Path: " + defaultKocSavePath;
 
@@ -496,21 +563,38 @@ void MainWindow::findBorrower() {
     qDebug() << "MainWindow::findBorrower()";
     qDebug() << "Using Borrowers DB File: " + borrowersDbFilePath;
 
-    QSqlDatabase db = QSqlDatabase::addDatabase( "QSQLITE" );
+    // Clear the previous borrower first so a failed lookup can't leave
+    // the last borrower's details displayed next to the new cardnumber
+    clearBorrowerDetails();
 
-    db.setDatabaseName( borrowersDbFilePath );
+    // Reuse the existing connection, calling addDatabase repeatedly
+    // adds a duplicate connection and Qt warns about it every time
+    QSqlDatabase db = QSqlDatabase::contains()
+        ? QSqlDatabase::database( QSqlDatabase::defaultConnection, false )
+        : QSqlDatabase::addDatabase( "QSQLITE" );
 
-	if ( db.open() ) {
+    if ( db.databaseName() != borrowersDbFilePath ) {
+        db.close();
+        db.setDatabaseName( borrowersDbFilePath );
+    }
+
+	if ( db.isOpen() || db.open() ) {
 		QString borrowerCardnumber = lineEditIssuesBorrowerCardnumber->text();
 
-		/* Get Borrower Details */	
-                QString borrowerQuery = "SELECT * FROM borrowers WHERE cardnumber = '" + borrowerCardnumber + "'";
-		QSqlQuery query( borrowerQuery );
-	
-		qDebug() << "Borrower Search SQL: " + borrowerQuery;
-	
+		/* Get Borrower Details */
+		// Bind the cardnumber rather than concatenating it into the SQL,
+		// values containing a quote broke the query
+		QSqlQuery query( db );
+		query.prepare( "SELECT * FROM borrowers WHERE cardnumber = ?" );
+		query.addBindValue( borrowerCardnumber );
+		query.exec();
+
 		QSqlRecord record = query.record();
-		query.next();
+		if ( ! query.next() ) {
+			borrowerDetailsName->setText( tr("( no borrower found )") );
+			statusBar()->showMessage( tr("No borrower found with cardnumber ") + borrowerCardnumber, 5000 );
+			return;
+		}
 		QString borrowernumber = query.value(record.indexOf("borrowernumber")).toString();
 		QString lastname = query.value(record.indexOf("surname")).toString();
 		QString firstname = query.value(record.indexOf("firstname")).toString();
@@ -523,7 +607,17 @@ void MainWindow::findBorrower() {
 		QString total_fines = query.value(record.indexOf("total_fines")).toString();
 
 		QString name = firstname + " " + lastname;
-		QString address = streetaddress + "\n" + city + ", " + state + "\n" + zipcode;
+
+		// Koha's create_koc_db.pl doesn't export state or zipcode, skip
+		// empty parts so the address doesn't show dangling separators
+		QString cityLine = city;
+		if ( ! state.isEmpty() ) cityLine += ", " + state;
+
+		QStringList addressParts;
+		if ( ! streetaddress.isEmpty() ) addressParts << streetaddress;
+		if ( ! cityLine.isEmpty() ) addressParts << cityLine;
+		if ( ! zipcode.isEmpty() ) addressParts << zipcode;
+		QString address = addressParts.join( "\n" );
 	
 		borrowerDetailsName->setText( name );
 		borrowerDetailsAddress->setText( address );
@@ -532,11 +626,11 @@ void MainWindow::findBorrower() {
 		borrowerDetailsFines->setText( total_fines );
 
 		/* Get Borrower's Previous Issues */
-		QString issuesQuery = "SELECT * FROM issues WHERE borrowernumber = " + borrowernumber;
-		QSqlQuery query2( issuesQuery );
-	
-		qDebug() << "Borrower Issues Search SQL: " + issuesQuery;
-	
+		QSqlQuery query2( db );
+		query2.prepare( "SELECT * FROM issues WHERE borrowernumber = ?" );
+		query2.addBindValue( borrowernumber );
+		query2.exec();
+
 		record = query2.record();
 		while (query2.next()) {
 			QString itemcallnumber = query2.value(record.indexOf("itemcallnumber")).toString();
@@ -581,14 +675,29 @@ void MainWindow::about()
 void MainWindow::writeSettings()
 {
   QSettings settings;
-  settings.setValue("MainWindow/Size", size());
+  settings.setValue("MainWindow/Geometry", saveGeometry());
   settings.setValue("MainWindow/Properties", saveState());
 }
 
 void MainWindow::readSettings()
 {
   QSettings settings;
-  resize(settings.value("MainWindow/Size", sizeHint()).toSize());
+
+  // Restore the window size and position from the last run,
+  // fall back to maximized on the first run
+  if ( settings.contains("MainWindow/Geometry") ) {
+      restoreGeometry(settings.value("MainWindow/Geometry").toByteArray());
+  } else {
+      this->showMaximized();
+  }
+
   restoreState(settings.value("MainWindow/Properties").toByteArray());
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+  writeSettings();
+
+  QMainWindow::closeEvent(event);
 }
 

@@ -17,27 +17,36 @@
 * along with Koha Offline Circulation.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <QtGui>
+#include <QtWidgets>
 #include <QtSql>
 
 #include "mainwindow.h"
 #include "borrowersearch.h"
+#include "kocfile.h"
 
 MainWindow::MainWindow(QWidget *parent)
  : QMainWindow(parent)
 {
   TITLE = "Koha Offline Circulation";
-  VERSION = "1.3";
+  VERSION = KOC_VERSION;
   FILE_VERSION = "1.0";
   DATETIME_FORMAT = "yyyy-MM-dd hh-mm-ss zzz";
 
   setupUi(this);
   setupActions();
 
+  // The stock "OK" label doesn't say what these buttons do
+  buttonBoxIssues->button( QDialogButtonBox::Ok )->setText( tr("Commit") );
+  buttonBoxReturns->button( QDialogButtonBox::Ok )->setText( tr("Commit") );
+
+  mRecentFilesMenu = new QMenu( this );
+  actionOpen_Recent->setMenu( mRecentFilesMenu );
+  updateRecentFilesMenu();
+
   mStatLabel = new QLabel;
   statusBar()->addPermanentWidget(mStatLabel);
 
-  this->showMaximized();
+  readSettings();
   lineEditIssuesBorrowerCardnumber->setFocus();
 
   QSettings settings;
@@ -47,13 +56,17 @@ MainWindow::MainWindow(QWidget *parent)
       mFilePath = defaultKocSavePath + "/" + QDateTime::currentDateTime().toString( DATETIME_FORMAT ) + ".koc";
       this->setWindowTitle( TITLE + " - " + mFilePath );
   }
+
+  updateSettingsDisplay();
 }
 
 void MainWindow::setupActions()
 {
   /* File Menu Actions */
+  // Quit via close() rather than qApp->quit() so closeEvent fires
+  // and the window geometry gets saved
   connect(actionQuit, SIGNAL(triggered(bool)),
-          qApp, SLOT(quit()));
+          this, SLOT(close()));
   actionQuit->setShortcut(tr("Ctrl+Q"));
 
   connect(actionOpen, SIGNAL(triggered(bool)),
@@ -66,11 +79,11 @@ void MainWindow::setupActions()
 
   connect(actionSaveAs, SIGNAL(triggered(bool)),
           this, SLOT(saveFileAs()));
-  actionSaveAs->setShortcut(tr("Ctrl+A"));
+  actionSaveAs->setShortcut(tr("Ctrl+Shift+S"));
 
   connect(actionClose, SIGNAL(triggered(bool)),
           this, SLOT(closeFile()));
-  actionClose->setShortcut(tr("Ctrl+C"));
+  actionClose->setShortcut(tr("Ctrl+W"));
 
   connect(actionNew, SIGNAL(triggered(bool)),
           this, SLOT(newFile()));
@@ -156,6 +169,18 @@ void MainWindow::issuesDeleteItemBarcode() {
 }
 
 void MainWindow::commitIssues() {
+  // Refuse to commit scanned items without a cardnumber, Koha can't
+  // process transactions that have no borrower
+  if ( lineEditIssuesBorrowerCardnumber->text().isEmpty()
+       && listWidgetIssuesScannedBarcodes->count() > 0 ) {
+    QMessageBox::warning(this, tr("No Borrower Cardnumber"),
+                         tr("These items cannot be committed without a borrower cardnumber.\n"
+                            "Enter or search for the borrower's cardnumber first."),
+                         QMessageBox::Ok);
+    lineEditIssuesBorrowerCardnumber->setFocus();
+    return;
+  }
+
   while ( QListWidgetItem *item = listWidgetIssuesScannedBarcodes->takeItem(0) ) {
     QTableWidgetItem *borrowerCardnumber = new QTableWidgetItem( lineEditIssuesBorrowerCardnumber->text() );
     QTableWidgetItem *type = new QTableWidgetItem("issue");
@@ -200,6 +225,16 @@ void MainWindow::clearBorrowerDetails() {
 }
 
 void MainWindow::issuesPayFine() {
+	// A payment without a cardnumber can't be processed by Koha
+	if ( lineEditIssuesBorrowerCardnumber->text().isEmpty() ) {
+		QMessageBox::warning(this, tr("No Borrower Cardnumber"),
+							tr("A payment cannot be recorded without a borrower cardnumber.\n"
+								"Enter or search for the borrower's cardnumber first."),
+							QMessageBox::Ok);
+		lineEditIssuesBorrowerCardnumber->setFocus();
+		return;
+	}
+
 	bool ok;
 	QString paymentString = QInputDialog::getText(this, tr("Pay Fines") + " - " + TITLE,
                                              tr("Amount:"), QLineEdit::Normal,
@@ -207,7 +242,7 @@ void MainWindow::issuesPayFine() {
 	if ( ok ) {
 		float finePayment = paymentString.toFloat(&ok);
 		if ( ok ) {
-			paymentString.sprintf("%.2f", round(finePayment*100)/100);
+			paymentString = KocFile::formatPayment( finePayment );
 
 			QTableWidgetItem *borrowerCardnumber = new QTableWidgetItem( lineEditIssuesBorrowerCardnumber->text() );
 	    	QTableWidgetItem *type = new QTableWidgetItem("payment");
@@ -259,12 +294,16 @@ void MainWindow::returnsAddItem() {
     listWidgetReturnsScannedBarcodes->addItem( itemBarcode );
     lineEditReturnsItemBarcode->clear();
     lineEditReturnsItemBarcode->setFocus();
+
+    updateReturnsCount();
   }
 }
 
 void MainWindow::returnsDeleteItemBarcode() {
   qDeleteAll(listWidgetReturnsScannedBarcodes->selectedItems());
   lineEditReturnsItemBarcode->setFocus();
+
+  updateReturnsCount();
 }
 
 void MainWindow::commitReturns() {
@@ -288,6 +327,8 @@ void MainWindow::commitReturns() {
 void MainWindow::cancelReturns() {
   lineEditReturnsItemBarcode->clear();
   listWidgetReturnsScannedBarcodes->clear();
+
+  updateReturnsCount();
 
   lineEditReturnsItemBarcode->setFocus();
 }
@@ -319,14 +360,24 @@ void MainWindow::clearHistory() {
 /* File Related Functions */
 void MainWindow::newFile()
 {
-  closeFile();
+  if ( ! closeFile() ) return;
+
   saveFileAs();
 
   statusBar()->showMessage(tr("Starting new file."), 3000);
 }
 
-void MainWindow::closeFile()
+bool MainWindow::closeFile()
 {
+  // Transactions are saved to disk as they're committed, but confirm
+  // anyway in case the last save failed
+  if ( tableWidgetHistory->rowCount() > 0 ) {
+      int ret = QMessageBox::question(this, tr("Close File"),
+                                      tr("Close the current file? The transaction list will be cleared."),
+                                      QMessageBox::Yes | QMessageBox::No);
+      if ( ret != QMessageBox::Yes ) return false;
+  }
+
   mFilePath = "";
 
   clearHistory();
@@ -334,15 +385,24 @@ void MainWindow::closeFile()
   cancelIssues();
 
   statusBar()->showMessage(tr("File closed."), 3000);
+
+  return true;
 }
 
 void MainWindow::loadFile()
 {
-  closeFile();
-
   QString filename = QFileDialog::getOpenFileName(this, tr("Open File"),
                                                  "",
                                                  tr("Koha Offline Circulation Files (*.koc)"));
+  if ( filename.isEmpty() ) return;
+
+  loadFile( filename );
+}
+
+void MainWindow::loadFile(const QString &filename)
+{
+  if ( ! closeFile() ) return;
+
   QFile file(filename);
   if (file.open(QIODevice::ReadOnly|QIODevice::Text)) {
     mFilePath = filename;
@@ -353,28 +413,21 @@ void MainWindow::loadFile()
 	QString line = stream.readLine();
 	while( !line.isEmpty() ) {
 
-	    QStringList parts = line.split("\t");
-		QString date = parts.takeFirst();
-		QString type = parts.takeFirst();
-	
+		KocTransaction transaction = KocFile::parseLine( line );
+
 	    int row = tableWidgetHistory->rowCount();
 		tableWidgetHistory->insertRow(row);
-		tableWidgetHistory->setItem(row, COLUMN_TYPE, new QTableWidgetItem(type));
-		tableWidgetHistory->setItem(row, COLUMN_DATE, new QTableWidgetItem(date));
+		tableWidgetHistory->setItem(row, COLUMN_TYPE, new QTableWidgetItem(transaction.type));
+		tableWidgetHistory->setItem(row, COLUMN_DATE, new QTableWidgetItem(transaction.date));
 
-		if ( type == "issue" ) {
-			QString cardnumber = parts.takeFirst();
-			QString barcode = parts.takeFirst();
-			tableWidgetHistory->setItem(row, COLUMN_CARDNUMBER, new QTableWidgetItem(cardnumber));
-			tableWidgetHistory->setItem(row, COLUMN_BARCODE, new QTableWidgetItem(barcode));
-		} else if ( type == "return" ) {
-			QString barcode = parts.takeFirst();
-			tableWidgetHistory->setItem(row, COLUMN_BARCODE, new QTableWidgetItem(barcode));
-		} else if ( type == "payment" ) {
-			QString cardnumber = parts.takeFirst();
-			QString payment = parts.takeFirst();
-			tableWidgetHistory->setItem(row, COLUMN_CARDNUMBER, new QTableWidgetItem(cardnumber));
-			tableWidgetHistory->setItem(row, COLUMN_PAYMENT, new QTableWidgetItem(payment));
+		if ( transaction.type == "issue" ) {
+			tableWidgetHistory->setItem(row, COLUMN_CARDNUMBER, new QTableWidgetItem(transaction.cardnumber));
+			tableWidgetHistory->setItem(row, COLUMN_BARCODE, new QTableWidgetItem(transaction.barcode));
+		} else if ( transaction.type == "return" ) {
+			tableWidgetHistory->setItem(row, COLUMN_BARCODE, new QTableWidgetItem(transaction.barcode));
+		} else if ( transaction.type == "payment" ) {
+			tableWidgetHistory->setItem(row, COLUMN_CARDNUMBER, new QTableWidgetItem(transaction.cardnumber));
+			tableWidgetHistory->setItem(row, COLUMN_PAYMENT, new QTableWidgetItem(transaction.payment));
 		}
 
 		line = stream.readLine();
@@ -383,6 +436,8 @@ void MainWindow::loadFile()
 	file.close();
     statusBar()->showMessage(tr("File successfully loaded."), 3000);
 	this->setWindowTitle( TITLE + " - " + mFilePath );
+
+	addRecentFile( filename );
   }
 }
 
@@ -400,57 +455,53 @@ void MainWindow::saveFile(const QString &name)
 
   if ( file.open(QIODevice::WriteOnly|QIODevice::Text) ) {
 	QTextStream ts( &file );
-    ts << "Version=" << FILE_VERSION << "\tGenerator=kocDesktop\tGeneratorVersion=" << VERSION << endl;
+    ts << KocFile::headerLine( FILE_VERSION, VERSION ) << Qt::endl;
 
 	int rowCount = tableWidgetHistory->rowCount();
 
 	for ( int row = 0; row < rowCount; row++ ) {
 
-		QTableWidgetItem *type = tableWidgetHistory->item( row, COLUMN_TYPE );
-		QString typeText = type->text();
+		KocTransaction transaction;
+		transaction.type = tableWidgetHistory->item( row, COLUMN_TYPE )->text();
+		transaction.date = tableWidgetHistory->item( row, COLUMN_DATE )->text();
 
-		QTableWidgetItem *date = tableWidgetHistory->item( row, COLUMN_DATE );
-		QString dateText = date->text();
-
-
-		ts << dateText << "\t" << typeText << "\t";
-
-		if ( typeText == "issue" ) {
-			QTableWidgetItem *cardnumber = tableWidgetHistory->item( row, COLUMN_CARDNUMBER );
-			QString cardnumberText = cardnumber->text();
-
-			QTableWidgetItem *barcode = tableWidgetHistory->item( row, COLUMN_BARCODE );
-			QString barcodeText = barcode->text();
-
-			ts << cardnumberText << "\t" << barcodeText << endl;
-		} else if ( typeText == "return" ) {
-			QTableWidgetItem *barcode = tableWidgetHistory->item( row, COLUMN_BARCODE );
-			QString barcodeText = barcode->text();
-
-			ts << barcodeText << endl;
-		} else if ( typeText == "payment" ) {
-			QTableWidgetItem *cardnumber = tableWidgetHistory->item( row, COLUMN_CARDNUMBER );
-			QString cardnumberText = cardnumber->text();
-
-			QTableWidgetItem *payment = tableWidgetHistory->item( row, COLUMN_PAYMENT );
-			QString paymentText = payment->text();
-
-			ts << cardnumberText << "\t" << paymentText << endl;
+		if ( transaction.type == "issue" ) {
+			transaction.cardnumber = tableWidgetHistory->item( row, COLUMN_CARDNUMBER )->text();
+			transaction.barcode = tableWidgetHistory->item( row, COLUMN_BARCODE )->text();
+		} else if ( transaction.type == "return" ) {
+			transaction.barcode = tableWidgetHistory->item( row, COLUMN_BARCODE )->text();
+		} else if ( transaction.type == "payment" ) {
+			transaction.cardnumber = tableWidgetHistory->item( row, COLUMN_CARDNUMBER )->text();
+			transaction.payment = tableWidgetHistory->item( row, COLUMN_PAYMENT )->text();
 		}
 
+		ts << KocFile::serializeLine( transaction ) << Qt::endl;
 	}
 
 	file.close();
     statusBar()->showMessage(tr("File saved successfully."), 3000);
   } else {
     statusBar()->showMessage(tr("Failed to save file."), 3000);
+
+    QMessageBox::critical(this, tr("Failed to Save File"),
+                          tr("Could not write the file:\n%1\n\n%2\n\n"
+                             "Transactions are not being saved! "
+                             "Check the drive and use File, Save As to pick a working location.")
+                              .arg(name, file.errorString()));
   }
 }
 
 void MainWindow::saveFileAs()
 {
+  // Start the dialog in the default KOC save path if one is set,
+  // otherwise it opens in the working directory ( Program Files on Windows )
+  QString suggestedFilePath = QDateTime::currentDateTime().toString( DATETIME_FORMAT ) + ".koc";
+  if ( ! defaultKocSavePath.isEmpty() ) {
+      suggestedFilePath = defaultKocSavePath + "/" + suggestedFilePath;
+  }
+
   mFilePath = QFileDialog::getSaveFileName(this, TITLE + " - " + tr("Save File"),
-                            QDateTime::currentDateTime().toString( DATETIME_FORMAT ) + ".koc",
+                            suggestedFilePath,
                             tr("Koha Offline Circulation Files (*.koc)"));
   if ( mFilePath.isEmpty() ) return;
 
@@ -458,18 +509,82 @@ void MainWindow::saveFileAs()
 
   this->setWindowTitle( TITLE + " - " + mFilePath );
 
+  addRecentFile( mFilePath );
+
   saveFile(mFilePath);
+}
+
+void MainWindow::addRecentFile( const QString &path )
+{
+  QSettings settings;
+  QStringList recentFiles = settings.value("recentFiles").toStringList();
+
+  recentFiles.removeAll( path );
+  recentFiles.prepend( path );
+  while ( recentFiles.count() > 10 ) recentFiles.removeLast();
+
+  settings.setValue("recentFiles", recentFiles);
+
+  updateRecentFilesMenu();
+}
+
+void MainWindow::updateRecentFilesMenu()
+{
+  QSettings settings;
+  QStringList recentFiles = settings.value("recentFiles").toStringList();
+
+  mRecentFilesMenu->clear();
+  for ( const QString &path : recentFiles ) {
+      QAction *action = mRecentFilesMenu->addAction( path );
+      action->setData( path );
+      connect( action, SIGNAL(triggered(bool)),
+               this, SLOT(openRecentFile()) );
+  }
+
+  actionOpen_Recent->setEnabled( ! recentFiles.isEmpty() );
+}
+
+void MainWindow::openRecentFile()
+{
+  QAction *action = qobject_cast<QAction *>( sender() );
+  if ( ! action ) return;
+
+  QString path = action->data().toString();
+
+  if ( ! QFile::exists( path ) ) {
+      QMessageBox::warning(this, tr("File Not Found"),
+                           tr("This file no longer exists:\n%1").arg( path ),
+                           QMessageBox::Ok);
+
+      QSettings settings;
+      QStringList recentFiles = settings.value("recentFiles").toStringList();
+      recentFiles.removeAll( path );
+      settings.setValue("recentFiles", recentFiles);
+
+      updateRecentFilesMenu();
+
+      return;
+  }
+
+  loadFile( path );
 }
 
 void MainWindow::selectBorrowersDbFile() {
     qDebug() << "MainWindow::selectBorrowersDbFile()";
 
-    borrowersDbFilePath = QFileDialog::getOpenFileName(this, tr("Open File"),
+    QString selectedFile = QFileDialog::getOpenFileName(this, tr("Open File"),
                                                        "",
                                                        tr("KOC Borrowers DB Files (*.db)"));
 
+    // Cancelling the dialog returns an empty string, don't wipe out the stored path
+    if ( selectedFile.isEmpty() ) return;
+
+    borrowersDbFilePath = selectedFile;
+
     QSettings settings;
     settings.setValue("borrowersDbFilePath", borrowersDbFilePath);
+
+    updateSettingsDisplay();
 
     qDebug() << "Borrowers DB File Select: " + borrowersDbFilePath;
 
@@ -479,12 +594,27 @@ void MainWindow::selectBorrowersDbFile() {
 void MainWindow::selectDefaultKocSavePath() {
     qDebug() << "MainWindow::selectDefaultKocSavePath()";
 
-    defaultKocSavePath = QFileDialog::getExistingDirectory(this, tr("Select Directory"),
-                                                       "/home",
+    QString startPath = defaultKocSavePath.isEmpty() ? QDir::homePath() : defaultKocSavePath;
+    QString selectedPath = QFileDialog::getExistingDirectory(this, tr("Select Directory"),
+                                                       startPath,
                                                        QFileDialog::ShowDirsOnly);
+
+    // Cancelling the dialog returns an empty string, don't wipe out the stored path
+    if ( selectedPath.isEmpty() ) return;
+
+    defaultKocSavePath = selectedPath;
 
     QSettings settings;
     settings.setValue("defaultKocSavePath", defaultKocSavePath);
+
+    updateSettingsDisplay();
+
+    // Use the new path immediately if the current file has never been saved,
+    // otherwise it wouldn't take effect until the next launch
+    if ( mFilePath.isEmpty() || ! QFile::exists( mFilePath ) ) {
+        mFilePath = defaultKocSavePath + "/" + QDateTime::currentDateTime().toString( DATETIME_FORMAT ) + ".koc";
+        this->setWindowTitle( TITLE + " - " + mFilePath );
+    }
 
     qDebug() << "Default KOC Save Path: " + defaultKocSavePath;
 
@@ -496,21 +626,38 @@ void MainWindow::findBorrower() {
     qDebug() << "MainWindow::findBorrower()";
     qDebug() << "Using Borrowers DB File: " + borrowersDbFilePath;
 
-    QSqlDatabase db = QSqlDatabase::addDatabase( "QSQLITE" );
+    // Clear the previous borrower first so a failed lookup can't leave
+    // the last borrower's details displayed next to the new cardnumber
+    clearBorrowerDetails();
 
-    db.setDatabaseName( borrowersDbFilePath );
+    // Reuse the existing connection, calling addDatabase repeatedly
+    // adds a duplicate connection and Qt warns about it every time
+    QSqlDatabase db = QSqlDatabase::contains()
+        ? QSqlDatabase::database( QSqlDatabase::defaultConnection, false )
+        : QSqlDatabase::addDatabase( "QSQLITE" );
 
-	if ( db.open() ) {
+    if ( db.databaseName() != borrowersDbFilePath ) {
+        db.close();
+        db.setDatabaseName( borrowersDbFilePath );
+    }
+
+	if ( db.isOpen() || db.open() ) {
 		QString borrowerCardnumber = lineEditIssuesBorrowerCardnumber->text();
 
-		/* Get Borrower Details */	
-                QString borrowerQuery = "SELECT * FROM borrowers WHERE cardnumber = '" + borrowerCardnumber + "'";
-		QSqlQuery query( borrowerQuery );
-	
-		qDebug() << "Borrower Search SQL: " + borrowerQuery;
-	
+		/* Get Borrower Details */
+		// Bind the cardnumber rather than concatenating it into the SQL,
+		// values containing a quote broke the query
+		QSqlQuery query( db );
+		query.prepare( "SELECT * FROM borrowers WHERE cardnumber = ?" );
+		query.addBindValue( borrowerCardnumber );
+		query.exec();
+
 		QSqlRecord record = query.record();
-		query.next();
+		if ( ! query.next() ) {
+			borrowerDetailsName->setText( tr("( no borrower found )") );
+			statusBar()->showMessage( tr("No borrower found with cardnumber ") + borrowerCardnumber, 5000 );
+			return;
+		}
 		QString borrowernumber = query.value(record.indexOf("borrowernumber")).toString();
 		QString lastname = query.value(record.indexOf("surname")).toString();
 		QString firstname = query.value(record.indexOf("firstname")).toString();
@@ -523,7 +670,17 @@ void MainWindow::findBorrower() {
 		QString total_fines = query.value(record.indexOf("total_fines")).toString();
 
 		QString name = firstname + " " + lastname;
-		QString address = streetaddress + "\n" + city + ", " + state + "\n" + zipcode;
+
+		// Koha's create_koc_db.pl doesn't export state or zipcode, skip
+		// empty parts so the address doesn't show dangling separators
+		QString cityLine = city;
+		if ( ! state.isEmpty() ) cityLine += ", " + state;
+
+		QStringList addressParts;
+		if ( ! streetaddress.isEmpty() ) addressParts << streetaddress;
+		if ( ! cityLine.isEmpty() ) addressParts << cityLine;
+		if ( ! zipcode.isEmpty() ) addressParts << zipcode;
+		QString address = addressParts.join( "\n" );
 	
 		borrowerDetailsName->setText( name );
 		borrowerDetailsAddress->setText( address );
@@ -532,11 +689,11 @@ void MainWindow::findBorrower() {
 		borrowerDetailsFines->setText( total_fines );
 
 		/* Get Borrower's Previous Issues */
-		QString issuesQuery = "SELECT * FROM issues WHERE borrowernumber = " + borrowernumber;
-		QSqlQuery query2( issuesQuery );
-	
-		qDebug() << "Borrower Issues Search SQL: " + issuesQuery;
-	
+		QSqlQuery query2( db );
+		query2.prepare( "SELECT * FROM issues WHERE borrowernumber = ?" );
+		query2.addBindValue( borrowernumber );
+		query2.exec();
+
 		record = query2.record();
 		while (query2.next()) {
 			QString itemcallnumber = query2.value(record.indexOf("itemcallnumber")).toString();
@@ -570,11 +727,10 @@ void MainWindow::addBorrowerPreviousIssue( const QString & itemcallnumber, const
 /* Help Related Functions */
 void MainWindow::about()
 {
-  QMessageBox::about(this, tr("About Koha Offline Circulation"), 
-                                        tr(	"Koha Offline Circulation 1.3.\n\n"
+  QMessageBox::about(this, tr("About Koha Offline Circulation"),
+                                        TITLE + " " + VERSION + ".\n\n"
                                                 "(c) 2010 Kyle M Hall\n\n"
                                                 "http://kylehall.info/"
-						)
 	);
 }
 
@@ -582,14 +738,42 @@ void MainWindow::about()
 void MainWindow::writeSettings()
 {
   QSettings settings;
-  settings.setValue("MainWindow/Size", size());
+  settings.setValue("MainWindow/Geometry", saveGeometry());
   settings.setValue("MainWindow/Properties", saveState());
 }
 
 void MainWindow::readSettings()
 {
   QSettings settings;
-  resize(settings.value("MainWindow/Size", sizeHint()).toSize());
+
+  // Restore the window size and position from the last run,
+  // fall back to maximized on the first run
+  if ( settings.contains("MainWindow/Geometry") ) {
+      restoreGeometry(settings.value("MainWindow/Geometry").toByteArray());
+  } else {
+      this->showMaximized();
+  }
+
   restoreState(settings.value("MainWindow/Properties").toByteArray());
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+  writeSettings();
+
+  QMainWindow::closeEvent(event);
+}
+
+void MainWindow::updateReturnsCount()
+{
+  labelReturnsCount->setText( tr("Items scanned: %1").arg( listWidgetReturnsScannedBarcodes->count() ) );
+}
+
+void MainWindow::updateSettingsDisplay()
+{
+  QString kocPath = defaultKocSavePath.isEmpty() ? tr("not set") : defaultKocSavePath;
+  QString dbPath = borrowersDbFilePath.isEmpty() ? tr("not set") : borrowersDbFilePath;
+
+  mStatLabel->setText( tr("KOC save path: %1  |  Borrowers DB: %2").arg( kocPath, dbPath ) );
 }
 

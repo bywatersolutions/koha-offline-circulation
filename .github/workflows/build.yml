@@ -1,0 +1,159 @@
+name: Build
+
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+# 6.11 changed the Windows download repository to a layout aqtinstall
+# doesn't understand yet, bump this when aqtinstall supports it
+env:
+  QT_VERSION: '6.10.*'
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        name: Read version from CMakeLists.txt
+        run: |
+          V=$(sed -nE 's/^project\(.* VERSION ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' CMakeLists.txt)
+          [ -n "$V" ] || { echo "Could not parse version from CMakeLists.txt"; exit 1; }
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+      - name: Verify tag matches project version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          case "${GITHUB_REF_NAME#v}" in
+            "${{ steps.v.outputs.version }}"|"${{ steps.v.outputs.version }}-"*) ;;
+            *) echo "Tag ${GITHUB_REF_NAME} does not match CMake version ${{ steps.v.outputs.version }}"; exit 1 ;;
+          esac
+
+  windows:
+    needs: version
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          arch: win64_msvc2022_64
+      - name: Configure and build
+        # No -G pin, use whatever Visual Studio the runner image ships.
+        # MSVC is binary compatible with the msvc2022_64 Qt kit.
+        run: |
+          cmake -S . -B build -A x64
+          cmake --build build --config Release
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure -C Release
+      - name: Deploy Qt runtime
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory deploy | Out-Null
+          Copy-Item build/Release/KohaOfflineCirculation.exe deploy/
+          windeployqt --release --compiler-runtime --no-translations deploy/KohaOfflineCirculation.exe
+      - name: Create portable zip
+        shell: pwsh
+        run: Compress-Archive -Path deploy/* -DestinationPath "KohaOfflineCirculation-${{ needs.version.outputs.version }}-windows-portable.zip"
+      - name: Build installer
+        shell: pwsh
+        run: |
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" `
+            /DAppVersion=${{ needs.version.outputs.version }} `
+            /DDeployDir="$PWD\deploy" `
+            /O"$PWD" `
+            packaging\windows\installer.iss
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: |
+            KohaOfflineCirculation-*-setup.exe
+            KohaOfflineCirculation-*-windows-portable.zip
+
+  macos:
+    needs: version
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+      - name: Configure and build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release "-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64"
+          cmake --build build
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure
+      - name: Package DMG
+        run: |
+          macdeployqt build/KohaOfflineCirculation.app -codesign=- -dmg
+          mv build/KohaOfflineCirculation.dmg "KohaOfflineCirculation-${{ needs.version.outputs.version }}-macos.dmg"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: KohaOfflineCirculation-*.dmg
+
+  linux:
+    needs: version
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+      - name: Configure and build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure
+      - name: Build AppImage
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: 1
+          EXTRA_QT_PLUGINS: sqldrivers
+          OUTPUT: KohaOfflineCirculation-${{ needs.version.outputs.version }}-x86_64.AppImage
+        run: |
+          # Keep only the sqlite driver, the other drivers depend on client
+          # libraries that aren't installed and linuxdeploy fails on them
+          find "$QT_ROOT_DIR/plugins/sqldrivers" -type f ! -name 'libqsqlite*' -delete
+          curl -fLO https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          curl -fLO https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+          chmod +x linuxdeploy-x86_64.AppImage linuxdeploy-plugin-qt-x86_64.AppImage
+          ./linuxdeploy-x86_64.AppImage --appdir AppDir \
+            --executable build/KohaOfflineCirculation \
+            --desktop-file packaging/linux/kohaofflinecirculation.desktop \
+            --icon-file images/icons/koha.png \
+            --plugin qt \
+            --output appimage
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: KohaOfflineCirculation-*.AppImage
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [version, windows, macos, linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: KohaOfflineCirculation-*
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          generate_release_notes: true

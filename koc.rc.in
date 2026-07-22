@@ -1,0 +1,28 @@
+#include <windows.h>
+
+IDI_ICON1 ICON "@CMAKE_CURRENT_SOURCE_DIR@/images/icons/koha.ico"
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION @PROJECT_VERSION_MAJOR@,@PROJECT_VERSION_MINOR@,@PROJECT_VERSION_PATCH@,0
+ PRODUCTVERSION @PROJECT_VERSION_MAJOR@,@PROJECT_VERSION_MINOR@,@PROJECT_VERSION_PATCH@,0
+ FILEOS VOS_NT_WINDOWS32
+ FILETYPE VFT_APP
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904E4"
+    BEGIN
+      VALUE "CompanyName", "ByWater Solutions"
+      VALUE "FileDescription", "Koha Offline Circulation"
+      VALUE "FileVersion", "@PROJECT_VERSION@"
+      VALUE "ProductName", "Koha Offline Circulation"
+      VALUE "ProductVersion", "@PROJECT_VERSION@"
+      VALUE "LegalCopyright", "(c) 2010 Kyle M Hall, GPLv3"
+      VALUE "OriginalFilename", "KohaOfflineCirculation.exe"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x409, 1252
+  END
+END

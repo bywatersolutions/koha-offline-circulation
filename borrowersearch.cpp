@@ -17,7 +17,7 @@
 * along with Koha Offline Circulation.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <QtGui>
+#include <QtWidgets>
 #include <QtSql>
 #include <QDebug>
 
@@ -65,18 +65,37 @@ void BorrowerSearch::searchBorrowers() {
 	QString lastnameSearch = nameLast->text();
 	QString firstnameSearch = nameFirst->text();
 
-	QSqlDatabase db = QSqlDatabase::addDatabase( "QSQLITE" );
+	// SQLite creates a missing database file on open, so check the file
+	// exists first, otherwise a bad path just returns no search results
+	if ( ! QFile::exists( borrowersDbFilePath ) ) {
+		QMessageBox::warning(this, tr("Cannot Open Borrowers File"),
+                                   tr("The borrowers database file does not exist:\n%1\n\n"
+									"This file is needed in order to search for borrowers. "
+									"Set its location via Settings, Select Borrowers DB File.").arg(borrowersDbFilePath),
+                                   QMessageBox::Ok);
+		return;
+	}
 
-        db.setDatabaseName( borrowersDbFilePath );
+	// Reuse the existing connection, calling addDatabase repeatedly
+	// adds a duplicate connection and Qt warns about it every time
+	QSqlDatabase db = QSqlDatabase::contains()
+		? QSqlDatabase::database( QSqlDatabase::defaultConnection, false )
+		: QSqlDatabase::addDatabase( "QSQLITE" );
 
-	if ( db.open() ) {
-		QString borrowersQuery = "SELECT * FROM borrowers WHERE firstname LIKE '" 
-						+ firstnameSearch + "%' AND surname LIKE '" + lastnameSearch 
-						+ "%' ORDER BY firstname ASC";
-		QSqlQuery query( borrowersQuery );
-	
-		qDebug() << "Borrower Search SQL: " + borrowersQuery;
-	
+	if ( db.databaseName() != borrowersDbFilePath ) {
+		db.close();
+		db.setDatabaseName( borrowersDbFilePath );
+	}
+
+	if ( db.isOpen() || db.open() ) {
+		// Bind the search terms rather than concatenating them into the
+		// SQL, names containing an apostrophe broke the search
+		QSqlQuery query( db );
+		query.prepare( "SELECT * FROM borrowers WHERE firstname LIKE ? AND surname LIKE ? ORDER BY firstname ASC" );
+		query.addBindValue( firstnameSearch + "%" );
+		query.addBindValue( lastnameSearch + "%" );
+		query.exec();
+
 		QSqlRecord record = query.record();
 		while (query.next()) {
 			QString lastname = query.value(record.indexOf("surname")).toString();
@@ -87,7 +106,17 @@ void BorrowerSearch::searchBorrowers() {
 			QString state = query.value(record.indexOf("state")).toString();
 			QString zipcode = query.value(record.indexOf("zipcode")).toString();
 			QString cardnumber = query.value(record.indexOf("cardnumber")).toString();
-			QString address = streetaddress + "\n" + city + ", " + state + "\n" + zipcode;
+
+			// Koha's create_koc_db.pl doesn't export state or zipcode, skip
+			// empty parts so the address doesn't show dangling separators
+			QString cityLine = city;
+			if ( ! state.isEmpty() ) cityLine += ", " + state;
+
+			QStringList addressParts;
+			if ( ! streetaddress.isEmpty() ) addressParts << streetaddress;
+			if ( ! cityLine.isEmpty() ) addressParts << cityLine;
+			if ( ! zipcode.isEmpty() ) addressParts << zipcode;
+			QString address = addressParts.join( "\n" );
 	
 			qDebug() << query.at() << ":" << lastname << "," << firstname;
 	
@@ -98,13 +127,11 @@ void BorrowerSearch::searchBorrowers() {
 
 	} else {
 		qDebug() << db.lastError();
-		qFatal( "Failed to connect." );
 
-		QMessageBox::warning(this, tr("Cannot Borrowers File"),
-                                   tr("Unable to open the file borrowers.db.\n"
-									"This file is needed in order to search for borrowers."
-									"Please create the borrowers.db file and place it in"
-									"the same directory as this program.\n\n"),
+		QMessageBox::warning(this, tr("Cannot Open Borrowers File"),
+                                   tr("Unable to open the borrowers database file:\n%1\n\n"
+									"This file is needed in order to search for borrowers. "
+									"Set its location via Settings, Select Borrowers DB File.").arg(borrowersDbFilePath),
                                    QMessageBox::Ok);
 	}
 

@@ -1,0 +1,22 @@
+# Build output
+build/
+build-*/
+deploy/
+dist/
+AppDir/
+
+# qmake / generated leftovers
+Makefile*
+*.o
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
+.qmake.stash
+
+# IDE / OS
+*.user
+CMakeLists.txt.user*
+.DS_Store
+.vscode/
+.idea/
+.cache/

@@ -14,7 +14,7 @@
    <string>Borrower Search - Koha Offline Circulation</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="../../../../kyle/kyle-home-new/qt4/KohaOfflineCirculation/koc.qrc">
+   <iconset resource="koc.qrc">
     <normaloff>:/icons/images/icons/koha.png</normaloff>:/icons/images/icons/koha.png</iconset>
   </property>
   <property name="sizeGripEnabled">
@@ -103,7 +103,7 @@
              <string>Search Borrowers</string>
             </property>
             <property name="icon">
-             <iconset resource="../../../../kyle/kyle-home-new/qt4/KohaOfflineCirculation/koc.qrc">
+             <iconset resource="koc.qrc">
               <normaloff>:/icons/images/icons/system-search.png</normaloff>:/icons/images/icons/system-search.png</iconset>
             </property>
            </widget>
@@ -189,7 +189,7 @@
         <item>
          <widget class="QPushButton" name="pushButtonOK">
           <property name="text">
-           <string>&amp;OK</string>
+           <string>&amp;Use Selected Borrower</string>
           </property>
           <property name="icon">
            <iconset>
@@ -214,7 +214,7 @@
   <tabstop>pushButtonCancel</tabstop>
  </tabstops>
  <resources>
-  <include location="../../../../kyle/kyle-home-new/qt4/KohaOfflineCirculation/koc.qrc"/>
+  <include location="koc.qrc"/>
  </resources>
  <connections/>
 </ui>

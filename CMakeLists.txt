@@ -62,4 +62,11 @@ if(BUILD_TESTING)
     target_link_libraries(tst_borrowersdb PRIVATE Qt6::Core Qt6::Sql Qt6::Test)
 
     add_test(NAME borrowersdb COMMAND tst_borrowersdb)
+
+    qt_add_executable(tst_kohadownload tests/tst_kohadownload.cpp
+        kohadownload.cpp kohadownload.h borrowersdb.cpp borrowersdb.h)
+    target_include_directories(tst_kohadownload PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+    target_link_libraries(tst_kohadownload PRIVATE Qt6::Core Qt6::Sql Qt6::Network Qt6::Test)
+
+    add_test(NAME kohadownload COMMAND tst_kohadownload)
 endif()

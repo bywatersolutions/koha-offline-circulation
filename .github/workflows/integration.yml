@@ -41,9 +41,10 @@ jobs:
           export LOCAL_USER_ID="$(id -u)"
           export KOHA_IMAGE=main
           export KOHA_MARC_FLAVOUR=marc21
-          # The same compose stack a plain ktd up uses
-          docker compose -f compose/base.yml -f compose/db-mariadb.yml pull --quiet
-          docker compose -f compose/base.yml -f compose/db-mariadb.yml -p koha up --detach
+          # The same compose stack a plain ktd up uses, plus published
+          # ports, which the ktd compose files no longer provide
+          docker compose -f compose/base.yml -f compose/db-mariadb.yml -f "$GITHUB_WORKSPACE/tests/integration/ports.yml" pull --quiet
+          docker compose -f compose/base.yml -f compose/db-mariadb.yml -f "$GITHUB_WORKSPACE/tests/integration/ports.yml" -p koha up --detach
       - name: Wait for Koha to be ready
         # First boot loads the whole sample database, which takes well
         # over ten minutes on the small hosted runners

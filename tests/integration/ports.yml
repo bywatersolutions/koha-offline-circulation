@@ -1,0 +1,9 @@
+# koha-testing-docker's compose files no longer publish ports, routing
+# is normally done through its Traefik proxy. The integration test just
+# needs the staff interface reachable from the runner host, so this
+# override adds the port mappings back.
+services:
+    koha:
+        ports:
+            - "8080:8080"
+            - "8081:8081"

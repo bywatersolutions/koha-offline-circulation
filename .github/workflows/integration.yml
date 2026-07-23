@@ -45,13 +45,17 @@ jobs:
           docker compose -f compose/base.yml -f compose/db-mariadb.yml pull --quiet
           docker compose -f compose/base.yml -f compose/db-mariadb.yml -p koha up --detach
       - name: Wait for Koha to be ready
+        # First boot loads the whole sample database, which takes well
+        # over ten minutes on the small hosted runners
         run: |
-          for i in $(seq 1 60); do
-            if curl -sf -o /dev/null http://127.0.0.1:8081; then
-              echo "Koha is up after about $((i * 10)) seconds"
-              exit 0
+          for i in $(seq 1 120); do
+            if docker logs koha-koha-1 2>&1 | grep -q 'ready to be enjoyed'; then
+              if curl -sf -o /dev/null http://127.0.0.1:8081; then
+                echo "Koha is up after about $((i * 15)) seconds"
+                exit 0
+              fi
             fi
-            sleep 10
+            sleep 15
           done
           echo "Koha did not come up in time"
           docker logs koha-koha-1 2>&1 | tail -50

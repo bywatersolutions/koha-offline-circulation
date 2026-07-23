@@ -30,6 +30,13 @@ jobs:
           git clone --depth 1 https://github.com/Koha-Community/Koha.git "$GITHUB_WORKSPACE/kohaclone"
           git clone --depth 1 https://gitlab.com/koha-community/koha-testing-docker.git ktd
           cd ktd
+          # The documented ktd setup, plus a copy where compose resolves
+          # the relative env_file path from
+          cp env/defaults.env .env
+          cp env/defaults.env compose/.env
+          set -a
+          . ./.env
+          set +a
           export SYNC_REPO="$GITHUB_WORKSPACE/kohaclone"
           export LOCAL_USER_ID="$(id -u)"
           export KOHA_IMAGE=main

@@ -126,6 +126,20 @@ where a duplicate would double-charge the patron. Rejected rows (unknown
 barcode, unknown patron) show Koha's reason and stay eligible for retry.
 The account needs the `circulate` permission to upload.
 
+## Translating
+
+The interface is translatable with Qt Linguist. The `translations/`
+directory holds a `.ts` file per language (Spanish and French to start —
+ask for more, adding one is a one-line change). To contribute a
+translation, open the file in Qt Linguist, translate, and submit the
+result; translations are embedded into the app at build time and picked
+automatically from the system language. After changing translatable
+strings in the source, refresh the `.ts` files with:
+
+```
+cmake --build build --target update_translations
+```
+
 ## Building from source
 
 Requires Qt 6.5+ and CMake 3.22+.

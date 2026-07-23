@@ -18,15 +18,22 @@
 */
 
 #include <QApplication>
+#include <QLocale>
+#include <QTranslator>
 #include "mainwindow.h"
 
 int main(int argc, char *argv[])
 {
   QApplication app(argc, argv);
-    
+
   QCoreApplication::setOrganizationName("Kyle M Hall");
   QCoreApplication::setOrganizationDomain("kylehall.info");
   QCoreApplication::setApplicationName("Koha Offline Circulation");
+
+  QTranslator translator;
+  if ( translator.load( QLocale(), "koc", "_", ":/i18n" ) ) {
+      app.installTranslator( &translator );
+  }
   MainWindow mainWindow;
   mainWindow.show();
                         

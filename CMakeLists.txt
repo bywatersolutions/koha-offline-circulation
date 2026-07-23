@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 project(KohaOfflineCirculation VERSION 2.1.0 LANGUAGES CXX)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Widgets Sql Network)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Widgets Sql Network LinguistTools)
 qt_standard_project_setup()
 set(CMAKE_AUTORCC ON)
 
@@ -22,6 +22,11 @@ target_link_libraries(KohaOfflineCirculation PRIVATE Qt6::Widgets Qt6::Sql Qt6::
 
 # Single source of truth for the app version is the project() line above
 target_compile_definitions(KohaOfflineCirculation PRIVATE KOC_VERSION="${PROJECT_VERSION}")
+
+# Translations are embedded under :/i18n and loaded in main.cpp; run
+# the update_translations target after changing translatable strings
+qt_add_translations(TARGETS KohaOfflineCirculation
+    TS_FILES translations/koc_es.ts translations/koc_fr.ts)
 
 if(WIN32)
     configure_file(koc.rc.in "${CMAKE_CURRENT_BINARY_DIR}/koc.rc" @ONLY)

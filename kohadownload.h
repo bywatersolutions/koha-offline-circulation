@@ -49,6 +49,10 @@ class KohaDownload : public QObject
             bool useReports = false;
             int borrowersReportId = 0;
             int issuesReportId = 0;
+
+            // REST mode only: fetch just the patrons changed since this
+            // ISO timestamp and merge them into the existing database
+            QString updatedSince;
         };
 
         explicit KohaDownload( QObject *parent = 0 );

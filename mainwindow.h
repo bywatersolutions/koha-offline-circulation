@@ -20,6 +20,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QDateTime>
 #include <QMainWindow>
 #include "ui_mainwindow.h"
 
@@ -129,6 +130,8 @@ class MainWindow : public QMainWindow,
         QString mDownloadTargetPath;
         bool mDownloadRunning;
         bool mDownloadInteractive;
+        bool mDownloadWasIncremental;
+        QDateTime mDownloadStartTime;
         QTimer *mScheduleTimer;
         QString mLastAutoDownloadDate;
         UpdateCheck *mUpdateCheck;

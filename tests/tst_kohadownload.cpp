@@ -37,6 +37,7 @@ class TestKohaDownload : public QObject
 
     private slots:
         void restMode();
+        void restIncrementalMode();
         void restAuthFailureHint();
         void reportMode();
         void reportTruncationDetected();
@@ -132,6 +133,59 @@ void TestKohaDownload::restMode()
     QVERIFY( server.requestHeaders.first().value( "authorization" ).startsWith( "Basic " ) );
     QCOMPARE( server.requestHeaders.first().value( "x-koha-embed" ), QByteArray( "account_balance" ) );
     QCOMPARE( server.requestHeaders.last().value( "x-koha-embed" ), QByteArray( "item,item.biblio" ) );
+}
+
+void TestKohaDownload::restIncrementalMode()
+{
+    MockHttpServer server;
+    QVERIFY( server.listen() );
+
+    server.handler = []( const QUrl & url, int * status, QByteArray * body ) {
+        Q_UNUSED( status )
+        QJsonArray rows;
+        if ( url.path() == "/api/v1/patrons" ) {
+            QJsonObject patron;
+            patron.insert( "patron_id", 1000 );
+            patron.insert( "cardnumber", "NEWCARD" );
+            patron.insert( "surname", "New" );
+            rows.append( patron );
+        }
+        *body = QJsonDocument( rows ).toJson( QJsonDocument::Compact );
+    };
+
+    // Seed an existing database the incremental download merges into
+    QTemporaryDir dir;
+    QString dbPath = dir.filePath( "borrowers.db" );
+
+    KohaPatron existing;
+    existing.borrowernumber = "1";
+    existing.cardnumber = "OLDCARD";
+    QString error;
+    QVERIFY2( BorrowersDb::write( dbPath, { existing }, {}, &error ), qPrintable( error ) );
+
+    KohaDownload download;
+    QSignalSpy finishedSpy( &download, SIGNAL( finished( bool, QString ) ) );
+
+    KohaDownload::Config config;
+    config.baseUrl = server.baseUrl();
+    config.userid = "koha";
+    config.password = "koha";
+    config.useReports = false;
+    config.updatedSince = "2026-07-01T00:00:00";
+
+    download.start( config, dbPath );
+    QVERIFY( finishedSpy.wait( 10000 ) );
+    QVERIFY2( finishedSpy.first().at( 0 ).toBool(),
+              qPrintable( finishedSpy.first().at( 1 ).toString() ) );
+
+    // The old patron survives the merge alongside the changed one
+    QCOMPARE( countRows( dbPath, "borrowers" ), 2 );
+
+    // Only the patrons request carries the updated_on filter
+    QUrlQuery patronsQuery( server.requests.first() );
+    QVERIFY( patronsQuery.queryItemValue( "q", QUrl::FullyDecoded ).contains( "updated_on" ) );
+    QUrlQuery checkoutsQuery( server.requests.last() );
+    QVERIFY( ! checkoutsQuery.hasQueryItem( "q" ) );
 }
 
 void TestKohaDownload::restAuthFailureHint()

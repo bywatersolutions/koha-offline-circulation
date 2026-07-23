@@ -203,3 +203,81 @@ bool BorrowersDb::write( const QString & filePath, const QList<KohaPatron> & pat
 
     return ok;
 }
+
+bool BorrowersDb::merge( const QString & filePath, const QList<KohaPatron> & patrons,
+                         const QList<KohaCheckout> & checkouts, QString * errorMessage )
+{
+    bool ok = true;
+    QString error;
+
+    {
+        QSqlDatabase db = QSqlDatabase::addDatabase( "QSQLITE", "borrowersdb_merge" );
+        db.setDatabaseName( filePath );
+
+        if ( ! QFile::exists( filePath ) ) {
+            ok = false;
+            error = filePath + " does not exist";
+        } else if ( ! db.open() ) {
+            ok = false;
+            error = db.lastError().text();
+        }
+
+        if ( ok ) {
+            QSqlQuery query( db );
+
+            db.transaction();
+
+            // Changed patrons replace their existing rows, new ones are
+            // added; patrons deleted in Koha stay until a full download
+            query.prepare( "INSERT OR REPLACE INTO borrowers ( borrowernumber, cardnumber, surname, firstname, "
+                           "address, city, phone, dateofbirth, total_fines ) "
+                           "VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? )" );
+            for ( const KohaPatron & patron : patrons ) {
+                query.addBindValue( patron.borrowernumber );
+                query.addBindValue( patron.cardnumber );
+                query.addBindValue( patron.surname );
+                query.addBindValue( patron.firstname );
+                query.addBindValue( patron.address );
+                query.addBindValue( patron.city );
+                query.addBindValue( patron.phone );
+                query.addBindValue( patron.dateofbirth );
+                query.addBindValue( patron.total_fines );
+                if ( ! query.exec() ) { ok = false; break; }
+            }
+
+            // Checkouts are always fetched in full, replace them
+            if ( ok ) {
+                ok = query.exec( "DELETE FROM issues" );
+            }
+
+            if ( ok ) {
+                query.prepare( "INSERT INTO issues ( borrowernumber, date_due, itemcallnumber, title, itemtype ) "
+                               "VALUES ( ?, ?, ?, ?, ? )" );
+                for ( const KohaCheckout & checkout : checkouts ) {
+                    query.addBindValue( checkout.borrowernumber );
+                    query.addBindValue( checkout.date_due );
+                    query.addBindValue( checkout.itemcallnumber );
+                    query.addBindValue( checkout.title );
+                    query.addBindValue( checkout.itemtype );
+                    if ( ! query.exec() ) { ok = false; break; }
+                }
+            }
+
+            if ( ok ) {
+                ok = db.commit();
+            }
+
+            if ( ! ok && error.isEmpty() ) {
+                error = query.lastError().text();
+                db.rollback();
+            }
+
+            db.close();
+        }
+    }
+    QSqlDatabase::removeDatabase( "borrowersdb_merge" );
+
+    if ( ! ok && errorMessage ) *errorMessage = error;
+
+    return ok;
+}

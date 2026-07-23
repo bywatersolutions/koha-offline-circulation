@@ -62,6 +62,8 @@ namespace BorrowersDb {
 
     bool write( const QString & filePath, const QList<KohaPatron> & patrons,
                 const QList<KohaCheckout> & checkouts, QString * errorMessage );
+    bool merge( const QString & filePath, const QList<KohaPatron> & patrons,
+                const QList<KohaCheckout> & checkouts, QString * errorMessage );
 }
 
 #endif // BORROWERSDB_H

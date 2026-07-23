@@ -99,7 +99,9 @@ One-time setup on the Koha server:
 No reports needed: enable the **`RESTBasicAuth`** system preference and use
 an account with the `borrowers` and `circulate` permissions. The app pages
 through `/api/v1/patrons` and `/api/v1/checkouts`, which is heavier on the
-server than report mode but requires no other setup.
+server than report mode but requires no other setup. After the first full
+download, REST mode only fetches the patrons changed since the last sync
+and does a fresh full download weekly to pick up deletions.
 
 Koha's `misc/cronjobs/create_koc_db.pl` remains a fine alternative for very
 large systems — the app reads the file it produces the same way.

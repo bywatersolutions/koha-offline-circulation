@@ -744,6 +744,24 @@ void MainWindow::startKohaDownload( bool interactive )
     mDownloadInteractive = interactive;
     mDownloadTargetPath = borrowersDbTargetPath();
 
+    // In REST mode, fetch only the patrons changed since the last sync
+    // when there's a recent full download to merge into. A weekly full
+    // download picks up patrons deleted in Koha, and the hour of overlap
+    // absorbs clock drift, reapplying a patron update is harmless.
+    mDownloadWasIncremental = false;
+    if ( ! config.useReports ) {
+        QDateTime lastSync = QDateTime::fromString( settings.value("kohaLastSyncTime").toString(), Qt::ISODate );
+        QDateTime lastFull = QDateTime::fromString( settings.value("kohaLastFullSyncTime").toString(), Qt::ISODate );
+
+        if ( lastSync.isValid() && lastFull.isValid()
+             && lastFull.secsTo( QDateTime::currentDateTime() ) < 7 * 24 * 3600
+             && QFile::exists( mDownloadTargetPath ) ) {
+            config.updatedSince = lastSync.addSecs( -3600 ).toString( Qt::ISODate );
+            mDownloadWasIncremental = true;
+        }
+    }
+    mDownloadStartTime = QDateTime::currentDateTime();
+
     if ( interactive ) {
         // Range 0,0 shows a busy indicator, there's no meaningful total
         mDownloadProgress = new QProgressDialog( tr("Contacting Koha..."), QString(), 0, 0, this );
@@ -785,10 +803,16 @@ void MainWindow::kohaDownloadFinished( bool ok, const QString & message )
     }
 
     if ( ok ) {
+        QSettings settings;
+
+        settings.setValue( "kohaLastSyncTime", mDownloadStartTime.toString( Qt::ISODate ) );
+        if ( ! mDownloadWasIncremental ) {
+            settings.setValue( "kohaLastFullSyncTime", mDownloadStartTime.toString( Qt::ISODate ) );
+        }
+
         // Remember the path so the lookups and the search dialog find it
         if ( borrowersDbFilePath.isEmpty() ) {
             borrowersDbFilePath = mDownloadTargetPath;
-            QSettings settings;
             settings.setValue("borrowersDbFilePath", borrowersDbFilePath);
         }
 

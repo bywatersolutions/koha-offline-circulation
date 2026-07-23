@@ -94,6 +94,9 @@ void KohaDownload::requestRestPage( const QString & path, const QString & embed 
     QUrlQuery query;
     query.addQueryItem( "_per_page", QString::number( REST_PAGE_SIZE ) );
     query.addQueryItem( "_page", QString::number( mPage ) );
+    if ( path == "/api/v1/patrons" && ! mConfig.updatedSince.isEmpty() ) {
+        query.addQueryItem( "q", "{\"updated_on\":{\">=\":\"" + mConfig.updatedSince + "\"}}" );
+    }
     url.setQuery( query );
 
     QNetworkRequest request( url );
@@ -217,9 +220,17 @@ void KohaDownload::writeDatabase()
     emit progress( tr("Writing borrowers database...") );
 
     QString error;
-    if ( BorrowersDb::write( mOutputPath, mPatrons, mCheckouts, &error ) ) {
-        emit finished( true, tr("Downloaded %1 borrowers and %2 checkouts.")
-                                 .arg( mPatrons.count() ).arg( mCheckouts.count() ) );
+    bool ok;
+    if ( mConfig.updatedSince.isEmpty() ) {
+        ok = BorrowersDb::write( mOutputPath, mPatrons, mCheckouts, &error );
+    } else {
+        ok = BorrowersDb::merge( mOutputPath, mPatrons, mCheckouts, &error );
+    }
+
+    if ( ok ) {
+        emit finished( true, mConfig.updatedSince.isEmpty()
+            ? tr("Downloaded %1 borrowers and %2 checkouts.").arg( mPatrons.count() ).arg( mCheckouts.count() )
+            : tr("Updated %1 changed borrowers, %2 current checkouts.").arg( mPatrons.count() ).arg( mCheckouts.count() ) );
     } else {
         fail( error );
     }

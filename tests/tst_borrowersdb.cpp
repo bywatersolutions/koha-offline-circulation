@@ -37,6 +37,7 @@ class TestBorrowersDb : public QObject
         void patronFromReportRow();
         void checkoutFromReportRow();
         void write();
+        void merge();
 };
 
 void TestBorrowersDb::patronFromApi()
@@ -177,6 +178,71 @@ void TestBorrowersDb::write()
         db.close();
     }
     QSqlDatabase::removeDatabase( "borrowersdb_test" );
+}
+
+void TestBorrowersDb::merge()
+{
+    QTemporaryDir dir;
+    QVERIFY( dir.isValid() );
+    QString path = dir.filePath( "borrowers.db" );
+
+    KohaPatron patron1;
+    patron1.borrowernumber = "1";
+    patron1.cardnumber = "CARD1";
+    patron1.surname = "Unchanged";
+
+    KohaPatron patron2;
+    patron2.borrowernumber = "2";
+    patron2.cardnumber = "CARD2";
+    patron2.surname = "Before";
+
+    KohaCheckout oldCheckout;
+    oldCheckout.borrowernumber = "1";
+    oldCheckout.title = "Old Title";
+
+    QString error;
+    QVERIFY2( BorrowersDb::write( path, { patron1, patron2 }, { oldCheckout }, &error ), qPrintable( error ) );
+
+    // Patron 2 changed, patron 3 is new, and the checkouts are replaced
+    patron2.surname = "After";
+
+    KohaPatron patron3;
+    patron3.borrowernumber = "3";
+    patron3.cardnumber = "CARD3";
+    patron3.surname = "New";
+
+    KohaCheckout newCheckout;
+    newCheckout.borrowernumber = "3";
+    newCheckout.title = "New Title";
+
+    QVERIFY2( BorrowersDb::merge( path, { patron2, patron3 }, { newCheckout }, &error ), qPrintable( error ) );
+
+    {
+        QSqlDatabase db = QSqlDatabase::addDatabase( "QSQLITE", "borrowersdb_test" );
+        db.setDatabaseName( path );
+        QVERIFY( db.open() );
+
+        QSqlQuery query( db );
+        QVERIFY( query.exec( "SELECT COUNT(*) FROM borrowers" ) );
+        QVERIFY( query.next() );
+        QCOMPARE( query.value( 0 ).toInt(), 3 );
+
+        QVERIFY( query.exec( "SELECT surname FROM borrowers WHERE borrowernumber = 2" ) );
+        QVERIFY( query.next() );
+        QCOMPARE( query.value( 0 ).toString(), QString( "After" ) );
+
+        QVERIFY( query.exec( "SELECT title FROM issues" ) );
+        QVERIFY( query.next() );
+        QCOMPARE( query.value( 0 ).toString(), QString( "New Title" ) );
+        QVERIFY( ! query.next() );
+
+        db.close();
+    }
+    QSqlDatabase::removeDatabase( "borrowersdb_test" );
+
+    // Merging into a missing database fails rather than creating an
+    // empty one
+    QVERIFY( ! BorrowersDb::merge( dir.filePath( "missing.db" ), { patron3 }, {}, &error ) );
 }
 
 QTEST_GUILESS_MAIN(TestBorrowersDb)

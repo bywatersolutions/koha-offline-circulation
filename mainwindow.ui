@@ -761,6 +761,7 @@
     <property name="title">
      <string>&amp;Help</string>
     </property>
+    <addaction name="actionCheckForUpdates"/>
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menuDatabase">
@@ -875,6 +876,11 @@
    </property>
    <property name="text">
     <string>Set Default KOC Save Path</string>
+   </property>
+  </action>
+  <action name="actionCheckForUpdates">
+   <property name="text">
+    <string>Check for Updates</string>
    </property>
   </action>
   <action name="actionKohaConnectionSettings">

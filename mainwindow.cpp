@@ -25,6 +25,7 @@
 #include "kocfile.h"
 #include "kohadownload.h"
 #include "kohasettingsdialog.h"
+#include "updatecheck.h"
 
 MainWindow::MainWindow(QWidget *parent)
  : QMainWindow(parent)
@@ -64,6 +65,10 @@ MainWindow::MainWindow(QWidget *parent)
 
   // Give the window a moment to appear before a startup download
   QTimer::singleShot( 2000, this, SLOT( checkStartupDownload() ) );
+
+  mUpdateCheck = new UpdateCheck( this );
+  connect( mUpdateCheck, SIGNAL( finished( bool, bool, const QString &, const QString & ) ),
+           this, SLOT( updateCheckFinished( bool, bool, const QString &, const QString & ) ) );
 
   mStatLabel = new QLabel;
   statusBar()->addPermanentWidget(mStatLabel);
@@ -122,6 +127,8 @@ void MainWindow::setupActions()
           this, SLOT(downloadBorrowersDb()));
 
   /* Help Menu Actions */
+  connect(actionCheckForUpdates, SIGNAL(triggered(bool)),
+          this, SLOT(checkForUpdates()));
   connect(actionAbout, SIGNAL(triggered(bool)),
           this, SLOT(about()));
           
@@ -923,6 +930,38 @@ void MainWindow::addBorrowerPreviousIssue( const QString & itemcallnumber, const
 }
 
 /* Help Related Functions */
+void MainWindow::checkForUpdates()
+{
+  statusBar()->showMessage( tr("Checking for updates...") );
+
+  mUpdateCheck->start( VERSION );
+}
+
+void MainWindow::updateCheckFinished( bool ok, bool updateAvailable, const QString & latestVersion, const QString & releaseUrl )
+{
+  statusBar()->clearMessage();
+
+  if ( ! ok ) {
+      QMessageBox::warning(this, tr("Check for Updates"),
+                           tr("Could not check for updates. Try again later."));
+      return;
+  }
+
+  if ( ! updateAvailable ) {
+      QMessageBox::information(this, tr("Check for Updates"),
+                               tr("You are running the latest version, %1.").arg( VERSION ));
+      return;
+  }
+
+  int ret = QMessageBox::question(this, tr("Update Available"),
+                                  tr("Version %1 is available, you are running %2.\n\n"
+                                     "Open the downloads page?").arg( latestVersion, VERSION ),
+                                  QMessageBox::Yes | QMessageBox::No);
+  if ( ret == QMessageBox::Yes ) {
+      QDesktopServices::openUrl( QUrl( releaseUrl ) );
+  }
+}
+
 void MainWindow::about()
 {
   QMessageBox::about(this, tr("About Koha Offline Circulation"),

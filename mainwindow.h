@@ -29,6 +29,7 @@ class QMenu;
 class QProgressDialog;
 class QTimer;
 class KohaDownload;
+class UpdateCheck;
 
 class MainWindow : public QMainWindow, 
                    private Ui::MainWindow
@@ -80,6 +81,8 @@ class MainWindow : public QMainWindow,
         void kohaDownloadFinished( bool ok, const QString & message );
         void checkScheduledDownload();
         void checkStartupDownload();
+        void checkForUpdates();
+        void updateCheckFinished( bool ok, bool updateAvailable, const QString & latestVersion, const QString & releaseUrl );
         void about();
 
         /* Issues Related */
@@ -120,6 +123,7 @@ class MainWindow : public QMainWindow,
         bool mDownloadInteractive;
         QTimer *mScheduleTimer;
         QString mLastAutoDownloadDate;
+        UpdateCheck *mUpdateCheck;
 
         QString borrowersDbFilePath;
 

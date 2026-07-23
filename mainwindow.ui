@@ -696,6 +696,11 @@
             <string>Date</string>
            </property>
           </column>
+          <column>
+           <property name="text">
+            <string>Status</string>
+           </property>
+          </column>
          </widget>
         </item>
         <item>
@@ -752,6 +757,8 @@
     <addaction name="separator"/>
     <addaction name="actionSave"/>
     <addaction name="actionSaveAs"/>
+    <addaction name="separator"/>
+    <addaction name="actionUploadToKoha"/>
     <addaction name="separator"/>
     <addaction name="actionClose"/>
     <addaction name="separator"/>
@@ -876,6 +883,11 @@
    </property>
    <property name="text">
     <string>Set Default KOC Save Path</string>
+   </property>
+  </action>
+  <action name="actionUploadToKoha">
+   <property name="text">
+    <string>&amp;Upload to Koha</string>
    </property>
   </action>
   <action name="actionCheckForUpdates">

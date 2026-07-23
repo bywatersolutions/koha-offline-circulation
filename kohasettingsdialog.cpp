@@ -35,6 +35,9 @@ KohaSettingsDialog::KohaSettingsDialog(QWidget *parent) : QDialog(parent) {
     spinBoxBorrowersReport->setValue( settings.value("kohaBorrowersReportId", 0).toInt() );
     spinBoxIssuesReport->setValue( settings.value("kohaIssuesReportId", 0).toInt() );
 
+    lineEditBranchcode->setText( settings.value("kohaBranchcode").toString() );
+    checkBoxUploadPending->setChecked( settings.value("kohaUploadPending", false).toBool() );
+
     checkBoxNightly->setChecked( settings.value("kohaNightlyEnabled", false).toBool() );
     timeEditNightly->setTime( QTime::fromString( settings.value("kohaNightlyTime", "22:00").toString(), "HH:mm" ) );
     checkBoxOnLaunch->setChecked( settings.value("kohaDownloadOnLaunch", false).toBool() );
@@ -49,6 +52,9 @@ void KohaSettingsDialog::accept()
     settings.setValue( "kohaUseReports", radioButtonReports->isChecked() );
     settings.setValue( "kohaBorrowersReportId", spinBoxBorrowersReport->value() );
     settings.setValue( "kohaIssuesReportId", spinBoxIssuesReport->value() );
+    settings.setValue( "kohaBranchcode", lineEditBranchcode->text().trimmed().toUpper() );
+    settings.setValue( "kohaUploadPending", checkBoxUploadPending->isChecked() );
+
     settings.setValue( "kohaNightlyEnabled", checkBoxNightly->isChecked() );
     settings.setValue( "kohaNightlyTime", timeEditNightly->time().toString("HH:mm") );
     settings.setValue( "kohaDownloadOnLaunch", checkBoxOnLaunch->isChecked() );

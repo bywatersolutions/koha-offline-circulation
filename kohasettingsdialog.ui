@@ -133,6 +133,36 @@
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="groupBoxUpload">
+     <property name="title">
+      <string>Upload</string>
+     </property>
+     <layout class="QFormLayout" name="formLayoutUpload">
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelBranchcode">
+        <property name="text">
+         <string>Branch code</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="lineEditBranchcode">
+        <property name="placeholderText">
+         <string>The branch transactions are recorded under, e.g. CPL</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QCheckBox" name="checkBoxUploadPending">
+        <property name="text">
+         <string>Queue uploads for staff review instead of processing immediately</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QGroupBox" name="groupBoxAutomatic">
      <property name="title">
       <string>Automatic Downloads</string>

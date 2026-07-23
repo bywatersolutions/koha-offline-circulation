@@ -104,6 +104,26 @@ server than report mode but requires no other setup.
 Koha's `misc/cronjobs/create_koc_db.pl` remains a fine alternative for very
 large systems — the app reads the file it produces the same way.
 
+## Uploading transactions to Koha
+
+Once you're back online, **File → Upload to Koha** sends the current file's
+transactions straight to the server — no more copying the `.koc` file to a
+machine with staff client access. It uses the same connection settings as
+the download, plus a **Branch code** (in Settings → Koha Connection
+Settings) that the transactions are recorded under.
+
+By default transactions are processed immediately, the same as uploading a
+`.koc` file through the staff client. Ticking "Queue uploads for staff
+review" queues them under **Circulation → Pending offline circulation
+actions** instead, where staff approve them before anything is applied.
+
+Each row's result appears in the History tab's Status column. Rows marked
+*sent* are skipped if you upload again, so retrying after a network failure
+can't process a transaction twice — this matters most for fine payments,
+where a duplicate would double-charge the patron. Rejected rows (unknown
+barcode, unknown patron) show Koha's reason and stay eligible for retry.
+The account needs the `circulate` permission to upload.
+
 ## Building from source
 
 Requires Qt 6.5+ and CMake 3.22+.

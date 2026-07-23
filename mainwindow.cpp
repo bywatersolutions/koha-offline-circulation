@@ -25,6 +25,7 @@
 #include "kocfile.h"
 #include "kohadownload.h"
 #include "kohasettingsdialog.h"
+#include "kohaupload.h"
 #include "updatecheck.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -69,6 +70,14 @@ MainWindow::MainWindow(QWidget *parent)
   mUpdateCheck = new UpdateCheck( this );
   connect( mUpdateCheck, SIGNAL( finished( bool, bool, const QString &, const QString & ) ),
            this, SLOT( updateCheckFinished( bool, bool, const QString &, const QString & ) ) );
+
+  mKohaUpload = new KohaUpload( this );
+  connect( mKohaUpload, SIGNAL( transactionResult( int, bool, const QString & ) ),
+           this, SLOT( uploadTransactionResult( int, bool, const QString & ) ) );
+  connect( mKohaUpload, SIGNAL( finished( int, int ) ),
+           this, SLOT( uploadFinished( int, int ) ) );
+  mUploadProgress = 0;
+  mUploadRunning = false;
 
   mStatLabel = new QLabel;
   statusBar()->addPermanentWidget(mStatLabel);
@@ -115,6 +124,10 @@ void MainWindow::setupActions()
   connect(actionNew, SIGNAL(triggered(bool)),
           this, SLOT(newFile()));
   actionNew->setShortcut(tr("Ctrl+N"));
+
+  connect(actionUploadToKoha, SIGNAL(triggered(bool)),
+          this, SLOT(uploadToKoha()));
+  actionUploadToKoha->setShortcut(tr("Ctrl+U"));
 
   /* Settings Menu Actions */
   connect(actionSelectBorrowersDB, SIGNAL(triggered(bool)),
@@ -198,6 +211,7 @@ void MainWindow::setupIcons()
                                           QIcon(":/icons/images/icons/help_about.png") ) );
   actionDownloadBorrowersDB->setIcon( QIcon::fromTheme( QIcon::ThemeIcon::ViewRefresh,
                                                         QIcon(":/icons/images/icons/database.png") ) );
+  actionUploadToKoha->setIcon( QIcon::fromTheme( QIcon::ThemeIcon::DocumentSend ) );
 
   pushButtonIssuesSearchBorrowers->setIcon( QIcon::fromTheme( QIcon::ThemeIcon::SystemSearch,
                                                               QIcon(":/icons/images/icons/system-search.png") ) );
@@ -437,11 +451,11 @@ void MainWindow::newFile()
   statusBar()->showMessage(tr("Starting new file."), 3000);
 }
 
-bool MainWindow::closeFile()
+bool MainWindow::closeFile( bool skipConfirmation )
 {
   // Transactions are saved to disk as they're committed, but confirm
   // anyway in case the last save failed
-  if ( tableWidgetHistory->rowCount() > 0 ) {
+  if ( ! skipConfirmation && tableWidgetHistory->rowCount() > 0 ) {
       int ret = QMessageBox::question(this, tr("Close File"),
                                       tr("Close the current file? The transaction list will be cleared."),
                                       QMessageBox::Yes | QMessageBox::No);
@@ -795,6 +809,115 @@ void MainWindow::kohaDownloadFinished( bool ok, const QString & message )
         if ( mDownloadInteractive ) {
             QMessageBox::critical(this, tr("Download Failed"), message);
         }
+    }
+}
+
+void MainWindow::uploadToKoha()
+{
+    if ( mUploadRunning ) return;
+
+    if ( tableWidgetHistory->rowCount() == 0 ) {
+        QMessageBox::information(this, tr("Upload to Koha"),
+                                 tr("There are no transactions to upload."));
+        return;
+    }
+
+    QSettings settings;
+
+    KohaUpload::Config config;
+    config.baseUrl = settings.value("kohaBaseUrl").toString();
+    config.userid = settings.value("kohaUserid").toString();
+    config.password = settings.value("kohaPassword").toString();
+    config.branchcode = settings.value("kohaBranchcode").toString();
+    config.pending = settings.value("kohaUploadPending", false).toBool();
+
+    if ( config.baseUrl.isEmpty() || config.userid.isEmpty() || config.branchcode.isEmpty() ) {
+        QMessageBox::information(this, tr("Koha Connection Not Configured"),
+                                 tr("Set the Koha staff URL, credentials, and branch code first."));
+        showKohaSettings();
+        return;
+    }
+
+    // Skip rows already marked sent so retrying after a partial upload
+    // can't process a transaction twice
+    QList<KocTransaction> transactions;
+    mUploadRowMap.clear();
+    for ( int row = 0; row < tableWidgetHistory->rowCount(); row++ ) {
+        QTableWidgetItem *status = tableWidgetHistory->item( row, COLUMN_STATUS );
+        if ( status && status->text() == tr("sent") ) continue;
+
+        KocTransaction transaction;
+        transaction.type = tableWidgetHistory->item( row, COLUMN_TYPE )->text();
+        transaction.date = tableWidgetHistory->item( row, COLUMN_DATE )->text();
+
+        if ( transaction.type == "issue" ) {
+            transaction.cardnumber = tableWidgetHistory->item( row, COLUMN_CARDNUMBER )->text();
+            transaction.barcode = tableWidgetHistory->item( row, COLUMN_BARCODE )->text();
+        } else if ( transaction.type == "return" ) {
+            transaction.barcode = tableWidgetHistory->item( row, COLUMN_BARCODE )->text();
+        } else if ( transaction.type == "payment" ) {
+            transaction.cardnumber = tableWidgetHistory->item( row, COLUMN_CARDNUMBER )->text();
+            transaction.payment = tableWidgetHistory->item( row, COLUMN_PAYMENT )->text();
+        }
+
+        transactions.append( transaction );
+        mUploadRowMap.append( row );
+    }
+
+    if ( transactions.isEmpty() ) {
+        QMessageBox::information(this, tr("Upload to Koha"),
+                                 tr("Every transaction has already been sent."));
+        return;
+    }
+
+    mUploadRunning = true;
+
+    mUploadProgress = new QProgressDialog( tr("Uploading to Koha..."), tr("Cancel"), 0, transactions.count(), this );
+    mUploadProgress->setWindowModality( Qt::WindowModal );
+    mUploadProgress->setMinimumDuration( 0 );
+    connect( mUploadProgress, SIGNAL( canceled() ),
+             this, SLOT( cancelUpload() ) );
+
+    mKohaUpload->start( config, transactions );
+}
+
+void MainWindow::cancelUpload()
+{
+    mKohaUpload->cancel();
+}
+
+void MainWindow::uploadTransactionResult( int index, bool ok, const QString & result )
+{
+    int row = mUploadRowMap.value( index, -1 );
+    if ( row >= 0 ) {
+        tableWidgetHistory->setItem( row, COLUMN_STATUS,
+                                     new QTableWidgetItem( ok ? tr("sent") : result.left( 120 ) ) );
+    }
+
+    if ( mUploadProgress ) mUploadProgress->setValue( index + 1 );
+}
+
+void MainWindow::uploadFinished( int sent, int failed )
+{
+    mUploadRunning = false;
+
+    if ( mUploadProgress ) {
+        mUploadProgress->close();
+        mUploadProgress->deleteLater();
+        mUploadProgress = 0;
+    }
+
+    if ( failed == 0 && sent > 0 ) {
+        int ret = QMessageBox::question(this, tr("Upload Complete"),
+                                        tr("%1 transactions uploaded to Koha.\n\n"
+                                           "Close the file and start a new one?").arg( sent ),
+                                        QMessageBox::Yes | QMessageBox::No);
+        if ( ret == QMessageBox::Yes ) closeFile( true );
+    } else {
+        QMessageBox::warning(this, tr("Upload Problems"),
+                             tr("%1 transactions uploaded, %2 failed.\n\n"
+                                "Failed rows show the reason in the History tab's Status column. "
+                                "Retrying skips the rows already marked sent.").arg( sent ).arg( failed ));
     }
 }
 

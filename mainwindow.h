@@ -29,6 +29,7 @@ class QMenu;
 class QProgressDialog;
 class QTimer;
 class KohaDownload;
+class KohaUpload;
 class UpdateCheck;
 
 class MainWindow : public QMainWindow, 
@@ -68,7 +69,7 @@ class MainWindow : public QMainWindow,
     protected slots:
         /* File Related */
         void newFile();
-        bool closeFile();
+        bool closeFile( bool skipConfirmation = false );
         void loadFile();
         void saveFile();
         void saveFileAs();
@@ -83,6 +84,10 @@ class MainWindow : public QMainWindow,
         void checkStartupDownload();
         void checkForUpdates();
         void updateCheckFinished( bool ok, bool updateAvailable, const QString & latestVersion, const QString & releaseUrl );
+        void uploadToKoha();
+        void cancelUpload();
+        void uploadTransactionResult( int index, bool ok, const QString & result );
+        void uploadFinished( int sent, int failed );
         void about();
 
         /* Issues Related */
@@ -125,6 +130,11 @@ class MainWindow : public QMainWindow,
         QString mLastAutoDownloadDate;
         UpdateCheck *mUpdateCheck;
 
+        KohaUpload *mKohaUpload;
+        QProgressDialog *mUploadProgress;
+        QList<int> mUploadRowMap;
+        bool mUploadRunning;
+
         QString borrowersDbFilePath;
 
     /* Private Constants */
@@ -140,6 +150,7 @@ class MainWindow : public QMainWindow,
 	static const int COLUMN_BARCODE = 2;
 	static const int COLUMN_PAYMENT = 3;
 	static const int COLUMN_DATE = 4;
+	static const int COLUMN_STATUS = 5;
 
 	static const int COLUMN_DATEDUE = 0;
 	static const int COLUMN_TITLE = 1;

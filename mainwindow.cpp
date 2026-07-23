@@ -36,6 +36,7 @@ MainWindow::MainWindow(QWidget *parent)
 
   setupUi(this);
   setupActions();
+  setupIcons();
 
   // The stock "OK" label doesn't say what these buttons do
   buttonBoxIssues->button( QDialogButtonBox::Ok )->setText( tr("Commit") );
@@ -166,6 +167,43 @@ void MainWindow::setupActions()
   /* History Tab Actions */
   connect(pushButtonHistoryDeleteSelectedItem, SIGNAL(clicked()),
           this, SLOT(historyDeleteRow()));
+}
+
+void MainWindow::setupIcons()
+{
+  // Prefer the platform's native icons ( SF Symbols on macOS, Segoe
+  // Fluent on Windows 11, the icon theme on Linux ), falling back to
+  // the bundled PNGs where the platform has no equivalent
+  actionNew->setIcon( QIcon::fromTheme( QIcon::ThemeIcon::DocumentNew,
+                                        QIcon(":/icons/images/icons/filenew.png") ) );
+  actionOpen->setIcon( QIcon::fromTheme( QIcon::ThemeIcon::DocumentOpen,
+                                         QIcon(":/icons/images/icons/fileopen.png") ) );
+  actionOpen_Recent->setIcon( QIcon::fromTheme( QIcon::ThemeIcon::DocumentOpenRecent ) );
+  actionSave->setIcon( QIcon::fromTheme( QIcon::ThemeIcon::DocumentSave,
+                                         QIcon(":/icons/images/icons/filesave.png") ) );
+  actionSaveAs->setIcon( QIcon::fromTheme( QIcon::ThemeIcon::DocumentSaveAs,
+                                           QIcon(":/icons/images/icons/filesaveas.png") ) );
+  actionClose->setIcon( QIcon::fromTheme( QIcon::ThemeIcon::WindowClose,
+                                          QIcon(":/icons/images/icons/fileclose.png") ) );
+  actionQuit->setIcon( QIcon::fromTheme( QIcon::ThemeIcon::ApplicationExit,
+                                         QIcon(":/icons/images/icons/application_exit.png") ) );
+  actionAbout->setIcon( QIcon::fromTheme( QIcon::ThemeIcon::HelpAbout,
+                                          QIcon(":/icons/images/icons/help_about.png") ) );
+  actionDownloadBorrowersDB->setIcon( QIcon::fromTheme( QIcon::ThemeIcon::ViewRefresh,
+                                                        QIcon(":/icons/images/icons/database.png") ) );
+
+  pushButtonIssuesSearchBorrowers->setIcon( QIcon::fromTheme( QIcon::ThemeIcon::SystemSearch,
+                                                              QIcon(":/icons/images/icons/system-search.png") ) );
+  pushButtonAddItemBarcode->setIcon( QIcon::fromTheme( QIcon::ThemeIcon::ListAdd,
+                                                       QIcon(":/icons/images/icons/add.png") ) );
+  pushButtonReturnsAddItemBarcode->setIcon( QIcon::fromTheme( QIcon::ThemeIcon::ListAdd,
+                                                              QIcon(":/icons/images/icons/add.png") ) );
+  pushButtonIssuesDeleteSelectedItem->setIcon( QIcon::fromTheme( QIcon::ThemeIcon::EditDelete,
+                                                                 QIcon(":/icons/images/icons/editdelete.png") ) );
+  pushButtonReturnsDeleteSelectedItem->setIcon( QIcon::fromTheme( QIcon::ThemeIcon::EditDelete,
+                                                                  QIcon(":/icons/images/icons/editdelete.png") ) );
+  pushButtonHistoryDeleteSelectedItem->setIcon( QIcon::fromTheme( QIcon::ThemeIcon::EditDelete,
+                                                                  QIcon(":/icons/images/icons/editdelete.png") ) );
 }
 
 MainWindow::~MainWindow(){}

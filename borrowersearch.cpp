@@ -26,6 +26,9 @@
 BorrowerSearch::BorrowerSearch(QWidget *parent) : QDialog(parent) {
   setupUi(this);
 
+  searchBorrowersButton->setIcon( QIcon::fromTheme( QIcon::ThemeIcon::SystemSearch,
+                                                    QIcon(":/icons/images/icons/system-search.png") ) );
+
   setupActions();
 }
 

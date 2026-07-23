@@ -40,6 +40,7 @@ class MainWindow : public QMainWindow,
 
     protected:
         void setupActions();
+        void setupIcons();
 
         void writeSettings();
         void readSettings();

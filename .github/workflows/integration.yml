@@ -1,0 +1,63 @@
+name: Integration
+
+# Runs the KohaDownload integration test against a real Koha in
+# koha-testing-docker. Slow (the koha-testing image is large), so it
+# runs on pull requests and on demand rather than on every push. Also
+# doubles as an early warning if Koha main changes the API or report
+# service behavior this app depends on.
+on:
+  pull_request:
+  workflow_dispatch:
+
+env:
+  QT_VERSION: '6.10.*'
+
+jobs:
+  ktd:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+      - name: Configure and build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+      - name: Start koha-testing-docker
+        run: |
+          git clone --depth 1 https://github.com/Koha-Community/Koha.git "$GITHUB_WORKSPACE/kohaclone"
+          mkdir ktd && cd ktd
+          wget -q -O docker-compose.yml https://gitlab.com/koha-community/koha-testing-docker/raw/main/docker-compose.yml
+          mkdir env
+          wget -q -O env/defaults.env https://gitlab.com/koha-community/koha-testing-docker/raw/main/env/defaults.env
+          export SYNC_REPO="$GITHUB_WORKSPACE/kohaclone"
+          export LOCAL_USER_ID="$(id -u)"
+          export KOHA_IMAGE=main
+          export KOHA_MARC_FLAVOUR=marc21
+          docker compose pull --quiet
+          docker compose -f docker-compose.yml -p koha up --detach
+      - name: Wait for Koha to be ready
+        run: |
+          for i in $(seq 1 60); do
+            if curl -sf -o /dev/null http://127.0.0.1:8081; then
+              echo "Koha is up after about $((i * 10)) seconds"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Koha did not come up in time"
+          docker logs koha-koha-1 2>&1 | tail -50
+          exit 1
+      - name: Prepare the Koha instance
+        run: ./tests/integration/setup-ktd.sh >> "$GITHUB_ENV"
+      - name: Run integration test
+        env:
+          KOHA_URL: http://127.0.0.1:8081
+          KOHA_USER: koha
+          KOHA_PASSWORD: koha
+        run: ./build/tst_kohadownload_integration
+      - name: Koha logs on failure
+        if: failure()
+        run: docker logs koha-koha-1 2>&1 | tail -100

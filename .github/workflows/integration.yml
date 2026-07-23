@@ -28,16 +28,15 @@ jobs:
       - name: Start koha-testing-docker
         run: |
           git clone --depth 1 https://github.com/Koha-Community/Koha.git "$GITHUB_WORKSPACE/kohaclone"
-          mkdir ktd && cd ktd
-          wget -q -O docker-compose.yml https://gitlab.com/koha-community/koha-testing-docker/raw/main/docker-compose.yml
-          mkdir env
-          wget -q -O env/defaults.env https://gitlab.com/koha-community/koha-testing-docker/raw/main/env/defaults.env
+          git clone --depth 1 https://gitlab.com/koha-community/koha-testing-docker.git ktd
+          cd ktd
           export SYNC_REPO="$GITHUB_WORKSPACE/kohaclone"
           export LOCAL_USER_ID="$(id -u)"
           export KOHA_IMAGE=main
           export KOHA_MARC_FLAVOUR=marc21
-          docker compose pull --quiet
-          docker compose -f docker-compose.yml -p koha up --detach
+          # The same compose stack a plain ktd up uses
+          docker compose -f compose/base.yml -f compose/db-mariadb.yml pull --quiet
+          docker compose -f compose/base.yml -f compose/db-mariadb.yml -p koha up --detach
       - name: Wait for Koha to be ready
         run: |
           for i in $(seq 1 60); do

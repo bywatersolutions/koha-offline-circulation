@@ -23,6 +23,7 @@
 #include <QTemporaryDir>
 
 #include "kohadownload.h"
+#include "kohaupload.h"
 
 /* Live integration test against a real Koha server, normally a
  * koha-testing-docker instance prepared by tests/integration/setup-ktd.sh.
@@ -41,6 +42,7 @@ class TestKohaDownloadIntegration : public QObject
     private slots:
         void restMode();
         void reportMode();
+        void uploadPending();
 
     private:
         void runDownload( KohaDownload::Config config );
@@ -126,6 +128,36 @@ void TestKohaDownloadIntegration::reportMode()
     config.issuesReportId = qEnvironmentVariable( "KOHA_ISSUES_REPORT_ID" ).toInt();
 
     runDownload( config );
+}
+
+void TestKohaDownloadIntegration::uploadPending()
+{
+    if ( qEnvironmentVariable( "KOHA_URL" ).isEmpty() ) {
+        QSKIP( "KOHA_URL is not set, skipping the live Koha integration test" );
+    }
+
+    KohaUpload::Config config;
+    config.baseUrl = qEnvironmentVariable( "KOHA_URL" );
+    config.userid = qEnvironmentVariable( "KOHA_USER", "koha" );
+    config.password = qEnvironmentVariable( "KOHA_PASSWORD", "koha" );
+    config.branchcode = qEnvironmentVariable( "KOHA_BRANCHCODE", "CPL" );
+
+    // Pending mode only queues the transaction for review, nothing is
+    // circulated, so a nonsense barcode is safe
+    config.pending = true;
+
+    KocTransaction transaction;
+    transaction.type = "return";
+    transaction.barcode = "KOC-INTEGRATION-TEST";
+    transaction.date = QDateTime::currentDateTime().toString( "yyyy-MM-dd hh-mm-ss zzz" );
+
+    KohaUpload upload;
+    QSignalSpy finishedSpy( &upload, SIGNAL( finished( int, int ) ) );
+
+    upload.start( config, { transaction } );
+    QVERIFY( finishedSpy.wait( 60000 ) );
+    QCOMPARE( finishedSpy.first().at( 0 ).toInt(), 1 );
+    QCOMPARE( finishedSpy.first().at( 1 ).toInt(), 0 );
 }
 
 QTEST_GUILESS_MAIN(TestKohaDownloadIntegration)

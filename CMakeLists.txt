@@ -86,7 +86,7 @@ if(BUILD_TESTING)
 
     # Live test against a real Koha, skips itself unless KOHA_URL is set
     qt_add_executable(tst_kohadownload_integration tests/tst_kohadownload_integration.cpp
-        kohadownload.cpp kohadownload.h borrowersdb.cpp borrowersdb.h)
+        kohadownload.cpp kohadownload.h borrowersdb.cpp borrowersdb.h kohaupload.cpp kohaupload.h)
     target_include_directories(tst_kohadownload_integration PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
     target_link_libraries(tst_kohadownload_integration PRIVATE Qt6::Core Qt6::Sql Qt6::Network Qt6::Test)
 

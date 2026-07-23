@@ -23,90 +23,13 @@
 #include <QJsonObject>
 #include <QSqlDatabase>
 #include <QSqlQuery>
-#include <QTcpServer>
-#include <QTcpSocket>
 #include <QTemporaryDir>
 #include <QUrlQuery>
 
 #include <functional>
 
 #include "kohadownload.h"
-
-/* A minimal in-process HTTP server that plays the part of a Koha
- * server, just enough to exercise KohaDownload's state machine. */
-class MockKohaServer : public QObject
-{
-    Q_OBJECT
-
-    public:
-        std::function<void( const QUrl & url, int * status, QByteArray * body )> handler;
-        QList<QUrl> requests;
-        QList<QMap<QByteArray, QByteArray> > requestHeaders;
-
-        bool listen()
-        {
-            connect( &mServer, SIGNAL( newConnection() ),
-                     this, SLOT( onNewConnection() ) );
-            return mServer.listen( QHostAddress::LocalHost, 0 );
-        }
-
-        QString baseUrl() const
-        {
-            return QString( "http://127.0.0.1:%1" ).arg( mServer.serverPort() );
-        }
-
-    protected slots:
-        void onNewConnection()
-        {
-            QTcpSocket *socket = mServer.nextPendingConnection();
-            connect( socket, SIGNAL( readyRead() ),
-                     this, SLOT( onReadyRead() ) );
-            connect( socket, SIGNAL( disconnected() ),
-                     socket, SLOT( deleteLater() ) );
-        }
-
-        void onReadyRead()
-        {
-            QTcpSocket *socket = qobject_cast<QTcpSocket *>( sender() );
-            if ( ! socket ) return;
-
-            mBuffers[socket] += socket->readAll();
-            if ( ! mBuffers[socket].contains( "\r\n\r\n" ) ) return;
-
-            QByteArray request = mBuffers.take( socket );
-            QList<QByteArray> lines = request.split( '\n' );
-
-            QList<QByteArray> requestLine = lines.first().trimmed().split( ' ' );
-            QUrl url( "http://127.0.0.1" + QString::fromUtf8( requestLine.value( 1 ) ) );
-
-            QMap<QByteArray, QByteArray> headers;
-            for ( int i = 1; i < lines.count(); i++ ) {
-                QByteArray line = lines.at( i ).trimmed();
-                if ( line.isEmpty() ) break;
-                int colon = line.indexOf( ':' );
-                headers.insert( line.left( colon ).toLower(), line.mid( colon + 1 ).trimmed() );
-            }
-
-            requests.append( url );
-            requestHeaders.append( headers );
-
-            int status = 200;
-            QByteArray body = "[]";
-            if ( handler ) handler( url, &status, &body );
-
-            QByteArray response = "HTTP/1.1 " + QByteArray::number( status ) + " Status\r\n"
-                                  "Content-Type: application/json\r\n"
-                                  "Content-Length: " + QByteArray::number( body.size() ) + "\r\n"
-                                  "Connection: close\r\n"
-                                  "\r\n" + body;
-            socket->write( response );
-            socket->disconnectFromHost();
-        }
-
-    private:
-        QTcpServer mServer;
-        QMap<QTcpSocket *, QByteArray> mBuffers;
-};
+#include "mockhttpserver.h"
 
 class TestKohaDownload : public QObject
 {
@@ -144,7 +67,7 @@ int TestKohaDownload::countRows( const QString & dbPath, const QString & table )
 
 void TestKohaDownload::restMode()
 {
-    MockKohaServer server;
+    MockHttpServer server;
     QVERIFY( server.listen() );
 
     // 1000 rows is the client's page size, a full first page forces it
@@ -213,7 +136,7 @@ void TestKohaDownload::restMode()
 
 void TestKohaDownload::restAuthFailureHint()
 {
-    MockKohaServer server;
+    MockHttpServer server;
     QVERIFY( server.listen() );
 
     server.handler = []( const QUrl & url, int * status, QByteArray * body ) {
@@ -240,7 +163,7 @@ void TestKohaDownload::restAuthFailureHint()
 
 void TestKohaDownload::reportMode()
 {
-    MockKohaServer server;
+    MockHttpServer server;
     QVERIFY( server.listen() );
 
     server.handler = []( const QUrl & url, int * status, QByteArray * body ) {
@@ -312,7 +235,7 @@ void TestKohaDownload::reportMode()
 
 void TestKohaDownload::reportTruncationDetected()
 {
-    MockKohaServer server;
+    MockHttpServer server;
     QVERIFY( server.listen() );
 
     // Exactly 10 rows is Koha's default SvcMaxReportRows limit
@@ -348,7 +271,7 @@ void TestKohaDownload::reportTruncationDetected()
 
 void TestKohaDownload::reportBadJson()
 {
-    MockKohaServer server;
+    MockHttpServer server;
     QVERIFY( server.listen() );
 
     // A wrong URL or report ID typically returns an HTML page

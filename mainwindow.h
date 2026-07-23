@@ -32,10 +32,13 @@ class KohaDownload;
 class KohaUpload;
 class UpdateCheck;
 
-class MainWindow : public QMainWindow, 
+class MainWindow : public QMainWindow,
                    private Ui::MainWindow
 {
     Q_OBJECT
+
+    // The widget tests drive the private table and file methods directly
+    friend class TestMainWindow;
     public:
         MainWindow(QWidget *parent = 0);
         ~MainWindow();

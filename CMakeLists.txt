@@ -84,6 +84,22 @@ if(BUILD_TESTING)
 
     add_test(NAME updatecheck COMMAND tst_updatecheck)
 
+    qt_add_executable(tst_mainwindow tests/tst_mainwindow.cpp
+        mainwindow.cpp mainwindow.h mainwindow.ui
+        borrowersearch.cpp borrowersearch.h borrowersearch.ui
+        kocfile.cpp kocfile.h
+        borrowersdb.cpp borrowersdb.h
+        kohadownload.cpp kohadownload.h
+        kohasettingsdialog.cpp kohasettingsdialog.h kohasettingsdialog.ui
+        kohaupload.cpp kohaupload.h
+        updatecheck.cpp updatecheck.h
+        koc.qrc)
+    target_include_directories(tst_mainwindow PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+    target_compile_definitions(tst_mainwindow PRIVATE KOC_VERSION="0.0.0")
+    target_link_libraries(tst_mainwindow PRIVATE Qt6::Widgets Qt6::Sql Qt6::Network Qt6::Test)
+
+    add_test(NAME mainwindow COMMAND tst_mainwindow)
+
     # Live test against a real Koha, skips itself unless KOHA_URL is set
     qt_add_executable(tst_kohadownload_integration tests/tst_kohadownload_integration.cpp
         kohadownload.cpp kohadownload.h borrowersdb.cpp borrowersdb.h kohaupload.cpp kohaupload.h)

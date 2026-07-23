@@ -70,6 +70,11 @@ void KohaDownload::requestReport( int reportId )
 
     QUrlQuery query;
     query.addQueryItem( "id", QString::number( reportId ) );
+
+    // Koha 24.05 renamed the credential parameters to login_userid and
+    // login_password, send both sets so older versions keep working
+    query.addQueryItem( "login_userid", mConfig.userid );
+    query.addQueryItem( "login_password", mConfig.password );
     query.addQueryItem( "userid", mConfig.userid );
     query.addQueryItem( "password", mConfig.password );
     url.setQuery( query );

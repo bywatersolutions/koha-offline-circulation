@@ -31,10 +31,9 @@ VALUES ( NULL, NOW(), NOW(),
  'KOC issues', '1', '', 300, 0 );
 SQL
 
-# Sysprefs are cached, flush and restart so the running server sees the
-# changes made behind its back
-docker exec "$CONTAINER" koha-shell kohadev -c \
-    "perl -MKoha::Caches -e 'Koha::Caches->get_instance->flush_all'" >&2 || true
+# Sysprefs are cached, restart memcached and plack so the running
+# server sees the changes made behind its back
+docker restart "${CONTAINER%-koha-1}-memcached-1" >&2 || true
 docker exec "$CONTAINER" koha-plack --restart kohadev >&2
 sleep 5
 

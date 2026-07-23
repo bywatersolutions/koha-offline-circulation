@@ -299,10 +299,13 @@ void TestKohaDownload::reportMode()
     QCOMPARE( countRows( dbPath, "borrowers" ), 12 );
     QCOMPARE( countRows( dbPath, "issues" ), 3 );
 
-    // Credentials go to the report service as query parameters
+    // Credentials go to the report service as query parameters, in both
+    // the Koha 24.05+ and the older spellings
     QCOMPARE( server.requests.count(), 2 );
     QUrlQuery firstRequest( server.requests.first() );
     QCOMPARE( firstRequest.queryItemValue( "id" ), QString( "11" ) );
+    QCOMPARE( firstRequest.queryItemValue( "login_userid" ), QString( "koha" ) );
+    QCOMPARE( firstRequest.queryItemValue( "login_password" ), QString( "koha" ) );
     QCOMPARE( firstRequest.queryItemValue( "userid" ), QString( "koha" ) );
     QCOMPARE( firstRequest.queryItemValue( "password" ), QString( "koha" ) );
 }

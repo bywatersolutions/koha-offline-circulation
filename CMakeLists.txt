@@ -13,6 +13,7 @@ qt_add_executable(KohaOfflineCirculation
     borrowersdb.cpp borrowersdb.h
     kohadownload.cpp kohadownload.h
     kohasettingsdialog.cpp kohasettingsdialog.h kohasettingsdialog.ui
+    kohaupload.cpp kohaupload.h
     updatecheck.cpp updatecheck.h
     koc.qrc
 )
@@ -70,6 +71,12 @@ if(BUILD_TESTING)
     target_link_libraries(tst_kohadownload PRIVATE Qt6::Core Qt6::Sql Qt6::Network Qt6::Test)
 
     add_test(NAME kohadownload COMMAND tst_kohadownload)
+
+    qt_add_executable(tst_kohaupload tests/tst_kohaupload.cpp kohaupload.cpp kohaupload.h)
+    target_include_directories(tst_kohaupload PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+    target_link_libraries(tst_kohaupload PRIVATE Qt6::Core Qt6::Network Qt6::Test)
+
+    add_test(NAME kohaupload COMMAND tst_kohaupload)
 
     qt_add_executable(tst_updatecheck tests/tst_updatecheck.cpp updatecheck.cpp updatecheck.h)
     target_include_directories(tst_updatecheck PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")

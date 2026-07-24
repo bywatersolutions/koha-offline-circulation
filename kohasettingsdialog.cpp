@@ -30,6 +30,10 @@ KohaSettingsDialog::KohaSettingsDialog(QWidget *parent) : QDialog(parent) {
     lineEditUserid->setText( settings.value("kohaUserid").toString() );
     lineEditPassword->setText( CredentialStore::read("kohaPassword") );
 
+    checkBoxUseToken->setChecked( settings.value("kohaUseToken", false).toBool() );
+    lineEditClientId->setText( settings.value("kohaClientId").toString() );
+    lineEditClientSecret->setText( CredentialStore::read("kohaClientSecret") );
+
     bool useReports = settings.value("kohaUseReports", true).toBool();
     radioButtonReports->setChecked( useReports );
     radioButtonRest->setChecked( ! useReports );
@@ -50,6 +54,9 @@ void KohaSettingsDialog::accept()
     settings.setValue( "kohaBaseUrl", lineEditBaseUrl->text().trimmed() );
     settings.setValue( "kohaUserid", lineEditUserid->text().trimmed() );
     CredentialStore::write( "kohaPassword", lineEditPassword->text() );
+    settings.setValue( "kohaUseToken", checkBoxUseToken->isChecked() );
+    settings.setValue( "kohaClientId", lineEditClientId->text().trimmed() );
+    CredentialStore::write( "kohaClientSecret", lineEditClientSecret->text() );
     settings.setValue( "kohaUseReports", radioButtonReports->isChecked() );
     settings.setValue( "kohaBorrowersReportId", spinBoxBorrowersReport->value() );
     settings.setValue( "kohaIssuesReportId", spinBoxIssuesReport->value() );

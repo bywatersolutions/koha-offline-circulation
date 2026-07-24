@@ -729,7 +729,16 @@ void MainWindow::startKohaDownload( bool interactive )
     config.borrowersReportId = settings.value("kohaBorrowersReportId").toInt();
     config.issuesReportId = settings.value("kohaIssuesReportId").toInt();
 
-    bool configured = ! config.baseUrl.isEmpty() && ! config.userid.isEmpty()
+    // API tokens only work against the REST API, report mode keeps
+    // using the username and password
+    config.useOAuth = settings.value("kohaUseToken", false).toBool() && ! config.useReports;
+    if ( config.useOAuth ) {
+        config.clientId = settings.value("kohaClientId").toString();
+        config.clientSecret = CredentialStore::read("kohaClientSecret");
+    }
+
+    bool configured = ! config.baseUrl.isEmpty()
+        && ( config.useOAuth ? ! config.clientId.isEmpty() : ! config.userid.isEmpty() )
         && ( ! config.useReports || ( config.borrowersReportId > 0 && config.issuesReportId > 0 ) );
 
     if ( ! configured ) {

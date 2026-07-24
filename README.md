@@ -97,7 +97,18 @@ One-time setup on the Koha server:
 ### REST API
 
 No reports needed: enable the **`RESTBasicAuth`** system preference and use
-an account with the `borrowers` and `circulate` permissions. The app pages
+an account with the `borrowers` and `circulate` permissions. Alternatively,
+REST downloads can authenticate with an **API token** instead of the
+password: enable the `RESTOAuth2ClientCredentials` system preference,
+generate a client ID and secret on the account's patron record (More →
+Manage API keys), and enter them in the connection settings. API keys can
+be revoked per machine without touching the account password, and can't be
+used to log into the staff interface — but they only work for REST
+downloads; report mode and uploads still use the username and password.
+
+Credentials are stored in the operating system's keychain (macOS Keychain,
+Windows Credential Manager, or the Linux Secret Service) rather than in a
+settings file. The app pages
 through `/api/v1/patrons` and `/api/v1/checkouts`, which is heavier on the
 server than report mode but requires no other setup. After the first full
 download, REST mode only fetches the patrons changed since the last sync

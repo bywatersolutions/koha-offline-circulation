@@ -71,7 +71,55 @@
       <item>
        <widget class="QLabel" name="labelPasswordNote">
         <property name="text">
-         <string>The password is stored on this computer. Use a dedicated Koha account with minimal permissions.</string>
+         <string>Credentials are stored in the system keychain. Use a dedicated Koha account with minimal permissions.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="checkBoxUseToken">
+        <property name="text">
+         <string>Use an API token for REST downloads</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QFormLayout" name="formLayoutToken">
+        <property name="fieldGrowthPolicy">
+         <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+        </property>
+        <item row="0" column="0">
+         <widget class="QLabel" name="labelClientId">
+          <property name="text">
+           <string>Client ID</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="lineEditClientId"/>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="labelClientSecret">
+          <property name="text">
+           <string>Client secret</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QLineEdit" name="lineEditClientSecret">
+          <property name="echoMode">
+           <enum>QLineEdit::Password</enum>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="labelTokenNote">
+        <property name="text">
+         <string>API tokens are revocable per machine but only apply to REST downloads. Report mode and uploads use the username and password.</string>
         </property>
         <property name="wordWrap">
          <bool>true</bool>

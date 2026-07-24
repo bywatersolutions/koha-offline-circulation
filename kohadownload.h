@@ -53,6 +53,12 @@ class KohaDownload : public QObject
             // REST mode only: fetch just the patrons changed since this
             // ISO timestamp and merge them into the existing database
             QString updatedSince;
+
+            // REST mode only: authenticate with an OAuth2 client
+            // credentials token instead of the username and password
+            bool useOAuth = false;
+            QString clientId;
+            QString clientSecret;
         };
 
         explicit KohaDownload( QObject *parent = 0 );
@@ -68,18 +74,21 @@ class KohaDownload : public QObject
 
     protected:
         void requestReport( int reportId );
+        void requestToken();
         void requestRestPage( const QString & path, const QString & embed );
         void handleReportReply( const QByteArray & body );
+        void handleTokenReply( const QByteArray & body );
         void handleRestReply( const QByteArray & body );
         void writeDatabase();
         void fail( const QString & message );
 
     private:
-        enum Phase { PhaseBorrowersReport, PhaseIssuesReport, PhasePatrons, PhaseCheckouts };
+        enum Phase { PhaseBorrowersReport, PhaseIssuesReport, PhaseToken, PhasePatrons, PhaseCheckouts };
 
         QNetworkAccessManager *mNetwork;
         Config mConfig;
         QString mOutputPath;
+        QString mAccessToken;
         Phase mPhase;
         int mPage;
         QList<KohaPatron> mPatrons;

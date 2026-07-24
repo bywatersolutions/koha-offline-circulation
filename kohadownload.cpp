@@ -56,12 +56,50 @@ void KohaDownload::start( const Config & config, const QString & outputPath )
         mPhase = PhaseBorrowersReport;
         emit progress( tr("Downloading borrowers report...") );
         requestReport( mConfig.borrowersReportId );
+    } else if ( mConfig.useOAuth ) {
+        mPhase = PhaseToken;
+        mAccessToken.clear();
+        emit progress( tr("Requesting an access token...") );
+        requestToken();
     } else {
         mPhase = PhasePatrons;
         mPage = 1;
         emit progress( tr("Downloading borrowers...") );
         requestRestPage( "/api/v1/patrons", "account_balance" );
     }
+}
+
+void KohaDownload::requestToken()
+{
+    QNetworkRequest request( ( QUrl( mConfig.baseUrl + "/api/v1/oauth/token" ) ) );
+    request.setHeader( QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded" );
+    request.setTransferTimeout( 60000 );
+
+    QUrlQuery body;
+    body.addQueryItem( "grant_type", "client_credentials" );
+    body.addQueryItem( "client_id", mConfig.clientId );
+    body.addQueryItem( "client_secret", mConfig.clientSecret );
+
+    QNetworkReply *reply = mNetwork->post( request, body.toString( QUrl::FullyEncoded ).toUtf8() );
+    connect( reply, SIGNAL( finished() ),
+             this, SLOT( onReplyFinished() ) );
+}
+
+void KohaDownload::handleTokenReply( const QByteArray & body )
+{
+    QJsonObject response = QJsonDocument::fromJson( body ).object();
+    mAccessToken = response.value( "access_token" ).toString();
+
+    if ( mAccessToken.isEmpty() ) {
+        fail( tr("The server did not issue an access token. Check the API client ID and secret, "
+                 "and that the RESTOAuth2ClientCredentials system preference is enabled.") );
+        return;
+    }
+
+    mPhase = PhasePatrons;
+    mPage = 1;
+    emit progress( tr("Downloading borrowers...") );
+    requestRestPage( "/api/v1/patrons", "account_balance" );
 }
 
 void KohaDownload::requestReport( int reportId )
@@ -101,8 +139,12 @@ void KohaDownload::requestRestPage( const QString & path, const QString & embed 
 
     QNetworkRequest request( url );
     request.setRawHeader( "x-koha-embed", embed.toUtf8() );
-    request.setRawHeader( "Authorization",
-                          "Basic " + QString( mConfig.userid + ":" + mConfig.password ).toUtf8().toBase64() );
+    if ( mConfig.useOAuth ) {
+        request.setRawHeader( "Authorization", "Bearer " + mAccessToken.toUtf8() );
+    } else {
+        request.setRawHeader( "Authorization",
+                              "Basic " + QString( mConfig.userid + ":" + mConfig.password ).toUtf8().toBase64() );
+    }
     request.setTransferTimeout( 300000 );
 
     QNetworkReply *reply = mNetwork->get( request );
@@ -121,11 +163,16 @@ void KohaDownload::onReplyFinished()
         int status = reply->attribute( QNetworkRequest::HttpStatusCodeAttribute ).toInt();
 
         QString hint;
-        if ( status == 401 || status == 403 ) {
-            hint = mConfig.useReports
-                ? tr("\n\nCheck the username and password. The account needs the catalogue permission.")
-                : tr("\n\nCheck the username and password, that the RESTBasicAuth system preference is "
-                     "enabled, and that the account has the borrowers and circulate permissions.");
+        if ( status == 400 || status == 401 || status == 403 ) {
+            if ( mConfig.useReports ) {
+                hint = tr("\n\nCheck the username and password. The account needs the catalogue permission.");
+            } else if ( mConfig.useOAuth ) {
+                hint = tr("\n\nCheck the API client ID and secret, and that the "
+                          "RESTOAuth2ClientCredentials system preference is enabled.");
+            } else {
+                hint = tr("\n\nCheck the username and password, that the RESTBasicAuth system preference is "
+                          "enabled, and that the account has the borrowers and circulate permissions.");
+            }
         }
 
         fail( reply->errorString() + hint );
@@ -134,7 +181,9 @@ void KohaDownload::onReplyFinished()
 
     QByteArray body = reply->readAll();
 
-    if ( mConfig.useReports ) {
+    if ( mPhase == PhaseToken ) {
+        handleTokenReply( body );
+    } else if ( mConfig.useReports ) {
         handleReportReply( body );
     } else {
         handleRestReply( body );

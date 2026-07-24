@@ -38,6 +38,7 @@ class TestKohaDownload : public QObject
     private slots:
         void restMode();
         void restIncrementalMode();
+        void restOAuthMode();
         void restAuthFailureHint();
         void reportMode();
         void reportTruncationDetected();
@@ -186,6 +187,55 @@ void TestKohaDownload::restIncrementalMode()
     QVERIFY( patronsQuery.queryItemValue( "q", QUrl::FullyDecoded ).contains( "updated_on" ) );
     QUrlQuery checkoutsQuery( server.requests.last() );
     QVERIFY( ! checkoutsQuery.hasQueryItem( "q" ) );
+}
+
+void TestKohaDownload::restOAuthMode()
+{
+    MockHttpServer server;
+    QVERIFY( server.listen() );
+
+    server.handler = []( const QUrl & url, int * status, QByteArray * body ) {
+        Q_UNUSED( status )
+        if ( url.path() == "/api/v1/oauth/token" ) {
+            *body = "{\"access_token\":\"TESTTOKEN\",\"token_type\":\"Bearer\",\"expires_in\":3600}";
+            return;
+        }
+
+        QJsonArray rows;
+        if ( url.path() == "/api/v1/patrons" ) {
+            QJsonObject patron;
+            patron.insert( "patron_id", 1 );
+            patron.insert( "cardnumber", "CARD1" );
+            rows.append( patron );
+        }
+        *body = QJsonDocument( rows ).toJson( QJsonDocument::Compact );
+    };
+
+    KohaDownload download;
+    QSignalSpy finishedSpy( &download, SIGNAL( finished( bool, QString ) ) );
+
+    KohaDownload::Config config;
+    config.baseUrl = server.baseUrl();
+    config.useReports = false;
+    config.useOAuth = true;
+    config.clientId = "client-id";
+    config.clientSecret = "client-secret";
+
+    QTemporaryDir dir;
+    QString dbPath = dir.filePath( "borrowers.db" );
+
+    download.start( config, dbPath );
+    QVERIFY( finishedSpy.wait( 10000 ) );
+    QVERIFY2( finishedSpy.first().at( 0 ).toBool(),
+              qPrintable( finishedSpy.first().at( 1 ).toString() ) );
+
+    QCOMPARE( countRows( dbPath, "borrowers" ), 1 );
+
+    // The token request comes first, then every API request carries the
+    // bearer token instead of basic credentials
+    QCOMPARE( server.requests.first().path(), QString( "/api/v1/oauth/token" ) );
+    QCOMPARE( server.requestHeaders.at( 1 ).value( "authorization" ), QByteArray( "Bearer TESTTOKEN" ) );
+    QCOMPARE( server.requestHeaders.last().value( "authorization" ), QByteArray( "Bearer TESTTOKEN" ) );
 }
 
 void TestKohaDownload::restAuthFailureHint()

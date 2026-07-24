@@ -44,7 +44,7 @@ KohaSettingsDialog::KohaSettingsDialog(QWidget *parent) : QDialog(parent) {
     spinBoxIssuesReport->setValue( settings.value("kohaIssuesReportId", 0).toInt() );
 
     lineEditBranchcode->setText( settings.value("kohaBranchcode").toString() );
-    checkBoxUploadPending->setChecked( settings.value("kohaUploadPending", false).toBool() );
+    checkBoxUploadPending->setChecked( settings.value("kohaUploadPending", true).toBool() );
 
     checkBoxNightly->setChecked( settings.value("kohaNightlyEnabled", false).toBool() );
     timeEditNightly->setTime( QTime::fromString( settings.value("kohaNightlyTime", "22:00").toString(), "HH:mm" ) );

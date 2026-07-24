@@ -125,10 +125,12 @@ machine with staff client access. It uses the same connection settings as
 the download, plus a **Branch code** (in Settings → Koha Connection
 Settings) that the transactions are recorded under.
 
-By default transactions are processed immediately, the same as uploading a
-`.koc` file through the staff client. Ticking "Queue uploads for staff
-review" queues them under **Circulation → Pending offline circulation
-actions** instead, where staff approve them before anything is applied.
+By default uploaded transactions are queued under **Circulation → Pending
+offline circulation actions**, where staff review and apply them —
+nothing touches patron records until then. Unticking "Queue uploads for
+staff review" in the connection settings makes a machine process
+transactions immediately instead, the same as uploading a `.koc` file
+through the staff client.
 
 Each row's result appears in the History tab's Status column. Rows marked
 *sent* are skipped if you upload again, so retrying after a network failure

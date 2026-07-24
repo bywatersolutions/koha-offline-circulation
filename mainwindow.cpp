@@ -863,7 +863,7 @@ void MainWindow::uploadToKoha()
     config.userid = settings.value("kohaUserid").toString();
     config.password = CredentialStore::read("kohaPassword");
     config.branchcode = settings.value("kohaBranchcode").toString();
-    config.pending = settings.value("kohaUploadPending", false).toBool();
+    config.pending = settings.value("kohaUploadPending", true).toBool();
 
     if ( config.baseUrl.isEmpty() || config.userid.isEmpty() || config.branchcode.isEmpty() ) {
         QMessageBox::information(this, tr("Koha Connection Not Configured"),

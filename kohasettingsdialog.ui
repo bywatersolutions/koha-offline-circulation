@@ -218,6 +218,9 @@
         <property name="text">
          <string>Queue uploads for staff review instead of processing immediately</string>
         </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
      </layout>

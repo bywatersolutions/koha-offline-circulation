@@ -9,12 +9,15 @@ include(FetchContent)
 set(BUILD_WITH_QT6 ON CACHE BOOL "" FORCE)
 set(QTKEYCHAIN_STATIC ON CACHE BOOL "" FORCE)
 set(BUILD_TRANSLATIONS OFF CACHE BOOL "" FORCE)
-# Its test needs a live keychain, which headless CI runners don't have
-set(BUILD_TEST_APPLICATION OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(qtkeychain
     GIT_REPOSITORY https://github.com/frankosterfeld/qtkeychain.git
     GIT_TAG 0.15.0)
+# Force BUILD_TESTING off while qtkeychain configures, its test writes
+# to a real keychain, which headless CI runners don't have. qtkeychain
+# runs include(CTest) itself, so a plain variable shadow isn't enough.
+set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(qtkeychain)
+set(BUILD_TESTING ON CACHE BOOL "" FORCE)
 qt_standard_project_setup()
 set(CMAKE_AUTORCC ON)
 

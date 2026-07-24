@@ -1123,7 +1123,7 @@ void MainWindow::about()
 {
   QMessageBox::about(this, tr("About Koha Offline Circulation"),
                                         TITLE + " " + VERSION + ".\n\n"
-                                                "(c) 2010 Kyle M Hall\n\n"
+                                                "(c) 2010-2026 Kyle M Hall\n\n"
                                                 "http://kylehall.info/"
 	);
 }

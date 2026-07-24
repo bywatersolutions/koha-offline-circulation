@@ -17,7 +17,7 @@ BEGIN
       VALUE "FileVersion", "@PROJECT_VERSION@"
       VALUE "ProductName", "Koha Offline Circulation"
       VALUE "ProductVersion", "@PROJECT_VERSION@"
-      VALUE "LegalCopyright", "(c) 2010 Kyle M Hall, GPLv3"
+      VALUE "LegalCopyright", "(c) 2010-2026 Kyle M Hall, GPLv3"
       VALUE "OriginalFilename", "KohaOfflineCirculation.exe"
     END
   END

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(KohaOfflineCirculation VERSION 2.1.0 LANGUAGES CXX)
+project(KohaOfflineCirculation VERSION 2.2.0 LANGUAGES CXX)
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS Widgets Sql Network LinguistTools)
 qt_standard_project_setup()

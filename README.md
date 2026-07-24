@@ -56,11 +56,26 @@ schedule a nightly download and refresh automatically at startup when the
 database is more than a day old — recommended for machines that wipe their
 drives on reboot (Deep Freeze and similar).
 
-Two download methods are supported:
+Three download methods are supported:
 
-### Saved reports (recommended)
+### Koha plugin (recommended)
 
-The fastest option, and the account only needs the `catalogue` permission.
+Install the companion
+[Koha offline circulation plugin](https://github.com/bywatersolutions/koha-plugin-offline-circulation)
+on the server and pick **Koha plugin** as the download method — no other
+setup. The plugin builds `borrowers.db` on the server once nightly, so a
+download is a single file fetch no matter how many machines ask, and the
+app skips the transfer entirely when its local copy is already current.
+Uploads also go through the plugin as a single batch request, and the
+server keeps its own record of processed transactions, so a retry can
+never process a transaction twice — even from a machine whose drive is
+wiped on every reboot. The account needs the `catalogue` permission to
+download and `circulate` to upload.
+
+### Saved reports
+
+The fastest option without the plugin, and the account only needs the
+`catalogue` permission.
 One-time setup on the Koha server:
 
 1. Raise the **`SvcMaxReportRows`** system preference (default is only 10)
@@ -103,8 +118,9 @@ password: enable the `RESTOAuth2ClientCredentials` system preference,
 generate a client ID and secret on the account's patron record (More →
 Manage API keys), and enter them in the connection settings. API keys can
 be revoked per machine without touching the account password, and can't be
-used to log into the staff interface — but they only work for REST
-downloads; report mode and uploads still use the username and password.
+used to log into the staff interface. Tokens work for plugin and REST
+downloads and for plugin uploads; report mode and non-plugin uploads
+still use the username and password.
 
 Credentials are stored in the operating system's keychain (macOS Keychain,
 Windows Credential Manager, or the Linux Secret Service) rather than in a
@@ -124,6 +140,12 @@ transactions straight to the server — no more copying the `.koc` file to a
 machine with staff client access. It uses the same connection settings as
 the download, plus a **Branch code** (in Settings → Koha Connection
 Settings) that the transactions are recorded under.
+
+With the **Koha plugin** download method the upload goes through the
+plugin too: the whole file is sent as one request instead of one request
+per transaction, API tokens work, and the server remembers every
+transaction it has processed, so a duplicate is skipped even if the app's
+own history was lost.
 
 By default uploaded transactions are queued under **Circulation → Pending
 offline circulation actions**, where staff review and apply them —

@@ -2,6 +2,17 @@ cmake_minimum_required(VERSION 3.22)
 project(KohaOfflineCirculation VERSION 2.2.0 LANGUAGES CXX)
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS Widgets Sql Network LinguistTools)
+
+# QtKeychain stores credentials in the macOS Keychain, the Windows
+# Credential Manager, or the Linux Secret Service
+include(FetchContent)
+set(BUILD_WITH_QT6 ON CACHE BOOL "" FORCE)
+set(QTKEYCHAIN_STATIC ON CACHE BOOL "" FORCE)
+set(BUILD_TRANSLATIONS OFF CACHE BOOL "" FORCE)
+FetchContent_Declare(qtkeychain
+    GIT_REPOSITORY https://github.com/frankosterfeld/qtkeychain.git
+    GIT_TAG 0.15.0)
+FetchContent_MakeAvailable(qtkeychain)
 qt_standard_project_setup()
 set(CMAKE_AUTORCC ON)
 
@@ -15,10 +26,12 @@ qt_add_executable(KohaOfflineCirculation
     kohasettingsdialog.cpp kohasettingsdialog.h kohasettingsdialog.ui
     kohaupload.cpp kohaupload.h
     updatecheck.cpp updatecheck.h
+    credentialstore.cpp credentialstore.h
     koc.qrc
 )
 
-target_link_libraries(KohaOfflineCirculation PRIVATE Qt6::Widgets Qt6::Sql Qt6::Network)
+target_link_libraries(KohaOfflineCirculation PRIVATE Qt6::Widgets Qt6::Sql Qt6::Network qt6keychain)
+target_include_directories(KohaOfflineCirculation PRIVATE "${qtkeychain_SOURCE_DIR}" "${qtkeychain_BINARY_DIR}")
 
 # Single source of truth for the app version is the project() line above
 target_compile_definitions(KohaOfflineCirculation PRIVATE KOC_VERSION="${PROJECT_VERSION}")
@@ -77,6 +90,13 @@ if(BUILD_TESTING)
 
     add_test(NAME kohadownload COMMAND tst_kohadownload)
 
+    qt_add_executable(tst_credentialstore tests/tst_credentialstore.cpp credentialstore.cpp credentialstore.h)
+    target_include_directories(tst_credentialstore PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${qtkeychain_SOURCE_DIR}" "${qtkeychain_BINARY_DIR}")
+    target_link_libraries(tst_credentialstore PRIVATE Qt6::Core Qt6::Test qt6keychain)
+
+    add_test(NAME credentialstore COMMAND tst_credentialstore)
+
     qt_add_executable(tst_kohaupload tests/tst_kohaupload.cpp kohaupload.cpp kohaupload.h)
     target_include_directories(tst_kohaupload PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
     target_link_libraries(tst_kohaupload PRIVATE Qt6::Core Qt6::Network Qt6::Test)
@@ -98,10 +118,12 @@ if(BUILD_TESTING)
         kohasettingsdialog.cpp kohasettingsdialog.h kohasettingsdialog.ui
         kohaupload.cpp kohaupload.h
         updatecheck.cpp updatecheck.h
+        credentialstore.cpp credentialstore.h
         koc.qrc)
-    target_include_directories(tst_mainwindow PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+    target_include_directories(tst_mainwindow PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${qtkeychain_SOURCE_DIR}" "${qtkeychain_BINARY_DIR}")
     target_compile_definitions(tst_mainwindow PRIVATE KOC_VERSION="0.0.0")
-    target_link_libraries(tst_mainwindow PRIVATE Qt6::Widgets Qt6::Sql Qt6::Network Qt6::Test)
+    target_link_libraries(tst_mainwindow PRIVATE Qt6::Widgets Qt6::Sql Qt6::Network Qt6::Test qt6keychain)
 
     add_test(NAME mainwindow COMMAND tst_mainwindow)
 

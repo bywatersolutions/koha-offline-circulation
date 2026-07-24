@@ -20,6 +20,7 @@
 #include <QtWidgets>
 
 #include "kohasettingsdialog.h"
+#include "credentialstore.h"
 
 KohaSettingsDialog::KohaSettingsDialog(QWidget *parent) : QDialog(parent) {
     setupUi(this);
@@ -27,7 +28,7 @@ KohaSettingsDialog::KohaSettingsDialog(QWidget *parent) : QDialog(parent) {
     QSettings settings;
     lineEditBaseUrl->setText( settings.value("kohaBaseUrl").toString() );
     lineEditUserid->setText( settings.value("kohaUserid").toString() );
-    lineEditPassword->setText( settings.value("kohaPassword").toString() );
+    lineEditPassword->setText( CredentialStore::read("kohaPassword") );
 
     bool useReports = settings.value("kohaUseReports", true).toBool();
     radioButtonReports->setChecked( useReports );
@@ -48,7 +49,7 @@ void KohaSettingsDialog::accept()
     QSettings settings;
     settings.setValue( "kohaBaseUrl", lineEditBaseUrl->text().trimmed() );
     settings.setValue( "kohaUserid", lineEditUserid->text().trimmed() );
-    settings.setValue( "kohaPassword", lineEditPassword->text() );
+    CredentialStore::write( "kohaPassword", lineEditPassword->text() );
     settings.setValue( "kohaUseReports", radioButtonReports->isChecked() );
     settings.setValue( "kohaBorrowersReportId", spinBoxBorrowersReport->value() );
     settings.setValue( "kohaIssuesReportId", spinBoxIssuesReport->value() );

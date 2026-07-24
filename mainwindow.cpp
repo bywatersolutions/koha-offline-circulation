@@ -27,6 +27,7 @@
 #include "kohasettingsdialog.h"
 #include "kohaupload.h"
 #include "updatecheck.h"
+#include "credentialstore.h"
 
 MainWindow::MainWindow(QWidget *parent)
  : QMainWindow(parent)
@@ -723,7 +724,7 @@ void MainWindow::startKohaDownload( bool interactive )
     KohaDownload::Config config;
     config.baseUrl = settings.value("kohaBaseUrl").toString();
     config.userid = settings.value("kohaUserid").toString();
-    config.password = settings.value("kohaPassword").toString();
+    config.password = CredentialStore::read("kohaPassword");
     config.useReports = settings.value("kohaUseReports", true).toBool();
     config.borrowersReportId = settings.value("kohaBorrowersReportId").toInt();
     config.issuesReportId = settings.value("kohaIssuesReportId").toInt();
@@ -851,7 +852,7 @@ void MainWindow::uploadToKoha()
     KohaUpload::Config config;
     config.baseUrl = settings.value("kohaBaseUrl").toString();
     config.userid = settings.value("kohaUserid").toString();
-    config.password = settings.value("kohaPassword").toString();
+    config.password = CredentialStore::read("kohaPassword");
     config.branchcode = settings.value("kohaBranchcode").toString();
     config.pending = settings.value("kohaUploadPending", false).toBool();
 

@@ -31,6 +31,15 @@ VALUES ( NULL, NOW(), NOW(),
  'KOC issues', '1', '', 300, 0 );
 SQL
 
+# Install the companion offline circulation plugin when its source is
+# checked out somewhere, the plugin integration tests skip without it
+if [ -n "$KOC_PLUGIN_DIR" ]; then
+    docker cp "$KOC_PLUGIN_DIR/Koha" "$CONTAINER":/var/lib/koha/kohadev/plugins >&2
+    docker exec "$CONTAINER" chown -R kohadev-koha:kohadev-koha /var/lib/koha/kohadev/plugins >&2
+    docker exec "$CONTAINER" koha-shell kohadev -c 'perl /kohadevbox/koha/misc/devel/install_plugins.pl' >&2
+    echo "KOHA_PLUGIN=1"
+fi
+
 # Sysprefs are cached, restart memcached and plack so the running
 # server sees the changes made behind its back
 docker restart "${CONTAINER%-koha-1}-memcached-1" >&2 || true

@@ -66,7 +66,11 @@ jobs:
           docker logs koha-koha-1 2>&1 | tail -50
           exit 1
       - name: Prepare the Koha instance
-        run: ./tests/integration/setup-ktd.sh >> "$GITHUB_ENV"
+        env:
+          KOC_PLUGIN_DIR: ${{ github.workspace }}/koc-plugin
+        run: |
+          git clone --depth 1 https://github.com/bywatersolutions/koha-plugin-offline-circulation.git "$KOC_PLUGIN_DIR"
+          ./tests/integration/setup-ktd.sh >> "$GITHUB_ENV"
       - name: Run integration test
         env:
           KOHA_URL: http://127.0.0.1:8081

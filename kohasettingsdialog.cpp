@@ -28,11 +28,14 @@ KohaSettingsDialog::KohaSettingsDialog(QWidget *parent) : QDialog(parent) {
     QSettings settings;
     lineEditBaseUrl->setText( settings.value("kohaBaseUrl").toString() );
     lineEditUserid->setText( settings.value("kohaUserid").toString() );
-    lineEditPassword->setText( CredentialStore::read("kohaPassword") );
+    // Secrets aren't read back from the keychain here, opening the
+    // dialog shouldn't trigger keychain access prompts. Blank means
+    // keep the stored value.
+    lineEditPassword->setPlaceholderText( tr("Leave blank to keep the stored password") );
+    lineEditClientSecret->setPlaceholderText( tr("Leave blank to keep the stored secret") );
 
     checkBoxUseToken->setChecked( settings.value("kohaUseToken", false).toBool() );
     lineEditClientId->setText( settings.value("kohaClientId").toString() );
-    lineEditClientSecret->setText( CredentialStore::read("kohaClientSecret") );
 
     bool useReports = settings.value("kohaUseReports", true).toBool();
     radioButtonReports->setChecked( useReports );
@@ -58,10 +61,14 @@ void KohaSettingsDialog::accept()
     QSettings settings;
     settings.setValue( "kohaBaseUrl", lineEditBaseUrl->text().trimmed() );
     settings.setValue( "kohaUserid", lineEditUserid->text().trimmed() );
-    CredentialStore::write( "kohaPassword", lineEditPassword->text() );
+    if ( ! lineEditPassword->text().isEmpty() ) {
+        CredentialStore::write( "kohaPassword", lineEditPassword->text() );
+    }
     settings.setValue( "kohaUseToken", checkBoxUseToken->isChecked() );
     settings.setValue( "kohaClientId", lineEditClientId->text().trimmed() );
-    CredentialStore::write( "kohaClientSecret", lineEditClientSecret->text() );
+    if ( ! lineEditClientSecret->text().isEmpty() ) {
+        CredentialStore::write( "kohaClientSecret", lineEditClientSecret->text() );
+    }
     settings.setValue( "kohaUseReports", radioButtonReports->isChecked() );
     settings.setValue( "kohaBorrowersReportId", spinBoxBorrowersReport->value() );
     settings.setValue( "kohaIssuesReportId", spinBoxIssuesReport->value() );

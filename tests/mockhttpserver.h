@@ -35,6 +35,7 @@ class MockHttpServer
         std::function<void( const QUrl & url, int * status, QByteArray * body )> handler;
         QList<QUrl> requests;
         QList<QMap<QByteArray, QByteArray> > requestHeaders;
+        QList<QByteArray> requestBodies;
 
         bool listen()
         {
@@ -61,9 +62,20 @@ class MockHttpServer
         void onReadyRead( QTcpSocket *socket )
         {
             mBuffers[socket] += socket->readAll();
-            if ( ! mBuffers[socket].contains( "\r\n\r\n" ) ) return;
+            int headerEnd = mBuffers[socket].indexOf( "\r\n\r\n" );
+            if ( headerEnd < 0 ) return;
+
+            // Wait for the whole body when there is a Content-Length
+            int contentLength = 0;
+            for ( const QByteArray & line : mBuffers[socket].left( headerEnd ).split( '\n' ) ) {
+                if ( line.toLower().startsWith( "content-length:" ) ) {
+                    contentLength = line.mid( line.indexOf( ':' ) + 1 ).trimmed().toInt();
+                }
+            }
+            if ( mBuffers[socket].size() < headerEnd + 4 + contentLength ) return;
 
             QByteArray request = mBuffers.take( socket );
+            requestBodies.append( request.mid( headerEnd + 4 ) );
             QList<QByteArray> lines = request.split( '\n' );
 
             QList<QByteArray> requestLine = lines.first().trimmed().split( ' ' );

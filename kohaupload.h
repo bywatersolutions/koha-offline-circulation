@@ -25,6 +25,7 @@
 #include "kocfile.h"
 
 class QNetworkAccessManager;
+class QNetworkRequest;
 
 /* Uploads transactions to Koha's offline circulation service, one
  * request per transaction, the same endpoint the old KOCT browser
@@ -45,6 +46,16 @@ class KohaUpload : public QObject
             QString password;
             QString branchcode;
             bool pending = false;
+
+            // Upload through the companion Koha plugin in one request,
+            // with server side duplicate protection
+            bool usePlugin = false;
+
+            // Plugin mode: authenticate with an OAuth2 client
+            // credentials token instead of the username and password
+            bool useOAuth = false;
+            QString clientId;
+            QString clientSecret;
         };
 
         explicit KohaUpload( QObject *parent = 0 );
@@ -64,15 +75,23 @@ class KohaUpload : public QObject
 
     protected:
         void sendNext();
+        void sendBatch();
+        void requestToken();
+        void setAuthorization( QNetworkRequest & request );
+        void handleTokenReply( const QByteArray & body );
+        void handleBatchReply( const QByteArray & body );
+        void batchFail( const QString & message );
 
     private:
         QNetworkAccessManager *mNetwork;
         Config mConfig;
         QList<KocTransaction> mTransactions;
+        QString mAccessToken;
         int mIndex;
         int mSent;
         int mFailed;
         bool mCancelled;
+        bool mAwaitingToken;
 };
 
 #endif // KOHAUPLOAD_H

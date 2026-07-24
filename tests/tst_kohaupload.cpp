@@ -18,6 +18,9 @@
 */
 
 #include <QtTest>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QUrlQuery>
 
 #include "kohaupload.h"
@@ -33,6 +36,7 @@ class TestKohaUpload : public QObject
         void rejectedTransactionContinues();
         void transportFailureStops();
         void pendingMode();
+        void pluginBatch();
 };
 
 void TestKohaUpload::isoTimestamp()
@@ -213,6 +217,57 @@ void TestKohaUpload::pendingMode()
 
     QUrlQuery query( server.requests.first() );
     QCOMPARE( query.queryItemValue( "pending" ), QString( "true" ) );
+}
+
+void TestKohaUpload::pluginBatch()
+{
+    MockHttpServer server;
+    QVERIFY( server.listen() );
+
+    server.handler = []( const QUrl & url, int * status, QByteArray * body ) {
+        Q_UNUSED( url )
+        Q_UNUSED( status )
+        *body = "{\"results\":["
+                "{\"status\":\"queued\",\"message\":\"Added to the pending offline circulation queue\"},"
+                "{\"status\":\"skipped\",\"message\":\"Already processed: queued\"},"
+                "{\"status\":\"error\",\"message\":\"Borrower not found.\"}"
+                "]}";
+    };
+
+    KocTransaction transaction;
+    transaction.type = "return";
+    transaction.date = "2026-07-24 10-16-00 000";
+    transaction.barcode = "BC";
+
+    KohaUpload upload;
+    QSignalSpy resultSpy( &upload, SIGNAL( transactionResult( int, bool, QString ) ) );
+    QSignalSpy finishedSpy( &upload, SIGNAL( finished( int, int ) ) );
+
+    KohaUpload::Config config;
+    config.baseUrl = server.baseUrl();
+    config.userid = "koha";
+    config.password = "koha";
+    config.branchcode = "CPL";
+    config.usePlugin = true;
+
+    upload.start( config, { transaction, transaction, transaction } );
+    QVERIFY( finishedSpy.wait( 10000 ) );
+
+    // Queued and skipped both count as sent, the error doesn't
+    QCOMPARE( finishedSpy.first().at( 0 ).toInt(), 2 );
+    QCOMPARE( finishedSpy.first().at( 1 ).toInt(), 1 );
+    QCOMPARE( resultSpy.count(), 3 );
+    QCOMPARE( resultSpy.at( 1 ).at( 1 ).toBool(), true );
+    QCOMPARE( resultSpy.at( 2 ).at( 1 ).toBool(), false );
+
+    // One request carried the whole batch
+    QCOMPARE( server.requests.count(), 1 );
+    QCOMPARE( server.requests.first().path(), QString( "/api/v1/contrib/offlinecirc/transactions" ) );
+
+    QJsonObject body = QJsonDocument::fromJson( server.requestBodies.first() ).object();
+    QCOMPARE( body.value( "branchcode" ).toString(), QString( "CPL" ) );
+    QCOMPARE( body.value( "pending" ).toBool(), false );
+    QCOMPARE( body.value( "transactions" ).toArray().count(), 3 );
 }
 
 QTEST_GUILESS_MAIN(TestKohaUpload)

@@ -46,6 +46,11 @@ KohaSettingsDialog::KohaSettingsDialog(QWidget *parent) : QDialog(parent) {
     checkBoxNightly->setChecked( settings.value("kohaNightlyEnabled", false).toBool() );
     timeEditNightly->setTime( QTime::fromString( settings.value("kohaNightlyTime", "22:00").toString(), "HH:mm" ) );
     checkBoxOnLaunch->setChecked( settings.value("kohaDownloadOnLaunch", false).toBool() );
+
+    // Size to the content rather than the fixed size from the ui file,
+    // which squeezes the form rows whenever the dialog grows a field
+    adjustSize();
+    setMinimumSize( sizeHint() );
 }
 
 void KohaSettingsDialog::accept()

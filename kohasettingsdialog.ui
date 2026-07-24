@@ -81,7 +81,7 @@
       <item>
        <widget class="QCheckBox" name="checkBoxUseToken">
         <property name="text">
-         <string>Use an API token for REST downloads</string>
+         <string>Use an API token instead of the password</string>
         </property>
        </widget>
       </item>
@@ -119,7 +119,7 @@
       <item>
        <widget class="QLabel" name="labelTokenNote">
         <property name="text">
-         <string>API tokens are revocable per machine but only apply to REST downloads. Report mode and uploads use the username and password.</string>
+         <string>API tokens are revocable per machine. They apply to plugin and REST API downloads and to plugin uploads; report downloads and non-plugin uploads use the username and password.</string>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -135,6 +135,13 @@
       <string>Download Method</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayoutMethod">
+      <item>
+       <widget class="QRadioButton" name="radioButtonPlugin">
+        <property name="text">
+         <string>Koha plugin (recommended, needs the companion plugin on the server)</string>
+        </property>
+       </widget>
+      </item>
       <item>
        <widget class="QRadioButton" name="radioButtonReports">
         <property name="text">

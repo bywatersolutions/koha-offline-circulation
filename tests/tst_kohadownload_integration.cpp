@@ -34,7 +34,9 @@
  *   KOHA_USER, KOHA_PASSWORD  credentials, default koha/koha
  *   KOHA_EXPECTED_PATRONS     optional exact borrower count to assert
  *   KOHA_BORROWERS_REPORT_ID  saved report IDs, without them the report
- *   KOHA_ISSUES_REPORT_ID     mode test skips */
+ *   KOHA_ISSUES_REPORT_ID     mode test skips
+ *   KOHA_PLUGIN               set to 1 when the offline circulation plugin
+ *                             is installed, without it the plugin tests skip */
 class TestKohaDownloadIntegration : public QObject
 {
     Q_OBJECT
@@ -42,7 +44,9 @@ class TestKohaDownloadIntegration : public QObject
     private slots:
         void restMode();
         void reportMode();
+        void pluginMode();
         void uploadPending();
+        void pluginUpload();
 
     private:
         void runDownload( KohaDownload::Config config );
@@ -108,7 +112,7 @@ void TestKohaDownloadIntegration::restMode()
     }
 
     KohaDownload::Config config;
-    config.useReports = false;
+    config.method = KohaDownload::Config::MethodRest;
 
     runDownload( config );
 }
@@ -123,9 +127,24 @@ void TestKohaDownloadIntegration::reportMode()
     }
 
     KohaDownload::Config config;
-    config.useReports = true;
+    config.method = KohaDownload::Config::MethodReports;
     config.borrowersReportId = qEnvironmentVariable( "KOHA_BORROWERS_REPORT_ID" ).toInt();
     config.issuesReportId = qEnvironmentVariable( "KOHA_ISSUES_REPORT_ID" ).toInt();
+
+    runDownload( config );
+}
+
+void TestKohaDownloadIntegration::pluginMode()
+{
+    if ( qEnvironmentVariable( "KOHA_URL" ).isEmpty() ) {
+        QSKIP( "KOHA_URL is not set, skipping the live Koha integration test" );
+    }
+    if ( qEnvironmentVariable( "KOHA_PLUGIN" ).isEmpty() ) {
+        QSKIP( "KOHA_PLUGIN is not set, skipping the plugin mode test" );
+    }
+
+    KohaDownload::Config config;
+    config.method = KohaDownload::Config::MethodPlugin;
 
     runDownload( config );
 }
@@ -158,6 +177,53 @@ void TestKohaDownloadIntegration::uploadPending()
     QVERIFY( finishedSpy.wait( 60000 ) );
     QCOMPARE( finishedSpy.first().at( 0 ).toInt(), 1 );
     QCOMPARE( finishedSpy.first().at( 1 ).toInt(), 0 );
+}
+
+void TestKohaDownloadIntegration::pluginUpload()
+{
+    if ( qEnvironmentVariable( "KOHA_URL" ).isEmpty() ) {
+        QSKIP( "KOHA_URL is not set, skipping the live Koha integration test" );
+    }
+    if ( qEnvironmentVariable( "KOHA_PLUGIN" ).isEmpty() ) {
+        QSKIP( "KOHA_PLUGIN is not set, skipping the plugin upload test" );
+    }
+
+    KohaUpload::Config config;
+    config.baseUrl = qEnvironmentVariable( "KOHA_URL" );
+    config.userid = qEnvironmentVariable( "KOHA_USER", "koha" );
+    config.password = qEnvironmentVariable( "KOHA_PASSWORD", "koha" );
+    config.branchcode = qEnvironmentVariable( "KOHA_BRANCHCODE", "CPL" );
+    config.usePlugin = true;
+    config.pending = true;
+
+    KocTransaction transaction;
+    transaction.type = "return";
+    transaction.barcode = "KOC-INTEGRATION-TEST";
+    transaction.date = QDateTime::currentDateTime().toString( "yyyy-MM-dd hh-mm-ss zzz" );
+
+    {
+        KohaUpload upload;
+        QSignalSpy finishedSpy( &upload, SIGNAL( finished( int, int ) ) );
+
+        upload.start( config, { transaction } );
+        QVERIFY( finishedSpy.wait( 60000 ) );
+        QCOMPARE( finishedSpy.first().at( 0 ).toInt(), 1 );
+        QCOMPARE( finishedSpy.first().at( 1 ).toInt(), 0 );
+    }
+
+    // The same transaction again is deduplicated server side, the plugin
+    // reports it as skipped which still counts as sent
+    {
+        KohaUpload upload;
+        QSignalSpy resultSpy( &upload, SIGNAL( transactionResult( int, bool, QString ) ) );
+        QSignalSpy finishedSpy( &upload, SIGNAL( finished( int, int ) ) );
+
+        upload.start( config, { transaction } );
+        QVERIFY( finishedSpy.wait( 60000 ) );
+        QCOMPARE( finishedSpy.first().at( 0 ).toInt(), 1 );
+        QCOMPARE( finishedSpy.first().at( 1 ).toInt(), 0 );
+        QVERIFY( resultSpy.first().at( 2 ).toString().contains( "Already processed" ) );
+    }
 }
 
 QTEST_GUILESS_MAIN(TestKohaDownloadIntegration)

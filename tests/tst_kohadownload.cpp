@@ -40,6 +40,8 @@ class TestKohaDownload : public QObject
         void restIncrementalMode();
         void restOAuthMode();
         void restAuthFailureHint();
+        void pluginMode();
+        void pluginNotModified();
         void reportMode();
         void reportTruncationDetected();
         void reportBadJson();
@@ -116,7 +118,7 @@ void TestKohaDownload::restMode()
     config.baseUrl = server.baseUrl();
     config.userid = "koha";
     config.password = "koha";
-    config.useReports = false;
+    config.method = KohaDownload::Config::MethodRest;
 
     QTemporaryDir dir;
     QString dbPath = dir.filePath( "borrowers.db" );
@@ -171,7 +173,7 @@ void TestKohaDownload::restIncrementalMode()
     config.baseUrl = server.baseUrl();
     config.userid = "koha";
     config.password = "koha";
-    config.useReports = false;
+    config.method = KohaDownload::Config::MethodRest;
     config.updatedSince = "2026-07-01T00:00:00";
 
     download.start( config, dbPath );
@@ -216,7 +218,7 @@ void TestKohaDownload::restOAuthMode()
 
     KohaDownload::Config config;
     config.baseUrl = server.baseUrl();
-    config.useReports = false;
+    config.method = KohaDownload::Config::MethodRest;
     config.useOAuth = true;
     config.clientId = "client-id";
     config.clientSecret = "client-secret";
@@ -256,13 +258,100 @@ void TestKohaDownload::restAuthFailureHint()
     config.baseUrl = server.baseUrl();
     config.userid = "koha";
     config.password = "wrong";
-    config.useReports = false;
+    config.method = KohaDownload::Config::MethodRest;
 
     QTemporaryDir dir;
     download.start( config, dir.filePath( "borrowers.db" ) );
     QVERIFY( finishedSpy.wait( 10000 ) );
     QCOMPARE( finishedSpy.first().at( 0 ).toBool(), false );
     QVERIFY( finishedSpy.first().at( 1 ).toString().contains( "RESTBasicAuth" ) );
+}
+
+void TestKohaDownload::pluginMode()
+{
+    MockHttpServer server;
+    QVERIFY( server.listen() );
+
+    // The mock serves a real SQLite database built with BorrowersDb
+    QTemporaryDir sourceDir;
+    QString sourcePath = sourceDir.filePath( "source.db" );
+    KohaPatron patron;
+    patron.borrowernumber = "1";
+    patron.cardnumber = "PLUGINCARD";
+    QString error;
+    QVERIFY2( BorrowersDb::write( sourcePath, { patron }, {}, &error ), qPrintable( error ) );
+
+    QFile sourceFile( sourcePath );
+    QVERIFY( sourceFile.open( QIODevice::ReadOnly ) );
+    QByteArray database = sourceFile.readAll();
+
+    server.handler = [&database]( const QUrl & url, int * status, QByteArray * body ) {
+        Q_UNUSED( url )
+        Q_UNUSED( status )
+        *body = database;
+    };
+
+    KohaDownload download;
+    QSignalSpy finishedSpy( &download, SIGNAL( finished( bool, QString ) ) );
+
+    KohaDownload::Config config;
+    config.baseUrl = server.baseUrl();
+    config.userid = "koha";
+    config.password = "koha";
+    config.method = KohaDownload::Config::MethodPlugin;
+
+    QTemporaryDir dir;
+    QString dbPath = dir.filePath( "borrowers.db" );
+
+    download.start( config, dbPath );
+    QVERIFY( finishedSpy.wait( 10000 ) );
+    QVERIFY2( finishedSpy.first().at( 0 ).toBool(),
+              qPrintable( finishedSpy.first().at( 1 ).toString() ) );
+
+    QCOMPARE( countRows( dbPath, "borrowers" ), 1 );
+    QCOMPARE( server.requests.count(), 1 );
+    QCOMPARE( server.requests.first().path(), QString( "/api/v1/contrib/offlinecirc/borrowers.db" ) );
+    QVERIFY( server.requestHeaders.first().value( "authorization" ).startsWith( "Basic " ) );
+}
+
+void TestKohaDownload::pluginNotModified()
+{
+    MockHttpServer server;
+    QVERIFY( server.listen() );
+
+    server.handler = []( const QUrl & url, int * status, QByteArray * body ) {
+        Q_UNUSED( url )
+        *status = 304;
+        *body = QByteArray();
+    };
+
+    // An existing local database provides the If-Modified-Since stamp
+    QTemporaryDir dir;
+    QString dbPath = dir.filePath( "borrowers.db" );
+    KohaPatron patron;
+    patron.borrowernumber = "1";
+    QString error;
+    QVERIFY2( BorrowersDb::write( dbPath, { patron }, {}, &error ), qPrintable( error ) );
+
+    KohaDownload download;
+    QSignalSpy finishedSpy( &download, SIGNAL( finished( bool, QString ) ) );
+
+    KohaDownload::Config config;
+    config.baseUrl = server.baseUrl();
+    config.userid = "koha";
+    config.password = "koha";
+    config.method = KohaDownload::Config::MethodPlugin;
+
+    download.start( config, dbPath );
+    QVERIFY( finishedSpy.wait( 10000 ) );
+    QVERIFY2( finishedSpy.first().at( 0 ).toBool(),
+              qPrintable( finishedSpy.first().at( 1 ).toString() ) );
+    QVERIFY( finishedSpy.first().at( 1 ).toString().contains( "up to date" ) );
+
+    QVERIFY( ! server.requestHeaders.first().value( "if-modified-since" ).isEmpty() );
+
+    // The local database is untouched
+    QCOMPARE( countRows( dbPath, "borrowers" ), 1 );
 }
 
 void TestKohaDownload::reportMode()
@@ -311,7 +400,7 @@ void TestKohaDownload::reportMode()
     config.baseUrl = server.baseUrl();
     config.userid = "koha";
     config.password = "koha";
-    config.useReports = true;
+    config.method = KohaDownload::Config::MethodReports;
     config.borrowersReportId = 11;
     config.issuesReportId = 22;
 
@@ -362,7 +451,7 @@ void TestKohaDownload::reportTruncationDetected()
     config.baseUrl = server.baseUrl();
     config.userid = "koha";
     config.password = "koha";
-    config.useReports = true;
+    config.method = KohaDownload::Config::MethodReports;
     config.borrowersReportId = 11;
     config.issuesReportId = 22;
 
@@ -392,7 +481,7 @@ void TestKohaDownload::reportBadJson()
     config.baseUrl = server.baseUrl();
     config.userid = "koha";
     config.password = "koha";
-    config.useReports = true;
+    config.method = KohaDownload::Config::MethodReports;
     config.borrowersReportId = 11;
     config.issuesReportId = 22;
 

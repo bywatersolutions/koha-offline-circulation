@@ -37,9 +37,14 @@ KohaSettingsDialog::KohaSettingsDialog(QWidget *parent) : QDialog(parent) {
     checkBoxUseToken->setChecked( settings.value("kohaUseToken", false).toBool() );
     lineEditClientId->setText( settings.value("kohaClientId").toString() );
 
-    bool useReports = settings.value("kohaUseReports", true).toBool();
-    radioButtonReports->setChecked( useReports );
-    radioButtonRest->setChecked( ! useReports );
+    QString method = settings.value("kohaDownloadMethod").toString();
+    if ( method.isEmpty() ) {
+        // The pre plugin releases stored the method as a boolean
+        method = settings.value("kohaUseReports", true).toBool() ? "reports" : "rest";
+    }
+    radioButtonPlugin->setChecked( method == "plugin" );
+    radioButtonReports->setChecked( method == "reports" );
+    radioButtonRest->setChecked( method == "rest" );
     spinBoxBorrowersReport->setValue( settings.value("kohaBorrowersReportId", 0).toInt() );
     spinBoxIssuesReport->setValue( settings.value("kohaIssuesReportId", 0).toInt() );
 
@@ -69,7 +74,10 @@ void KohaSettingsDialog::accept()
     if ( ! lineEditClientSecret->text().isEmpty() ) {
         CredentialStore::write( "kohaClientSecret", lineEditClientSecret->text() );
     }
-    settings.setValue( "kohaUseReports", radioButtonReports->isChecked() );
+    settings.setValue( "kohaDownloadMethod",
+                       radioButtonPlugin->isChecked()  ? "plugin"
+                       : radioButtonReports->isChecked() ? "reports"
+                                                         : "rest" );
     settings.setValue( "kohaBorrowersReportId", spinBoxBorrowersReport->value() );
     settings.setValue( "kohaIssuesReportId", spinBoxIssuesReport->value() );
     settings.setValue( "kohaBranchcode", lineEditBranchcode->text().trimmed().toUpper() );

@@ -19,9 +19,12 @@
 
 #include "kohadownload.h"
 
+#include <QFile>
+#include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QLocale>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
@@ -52,7 +55,7 @@ void KohaDownload::start( const Config & config, const QString & outputPath )
     mPatrons.clear();
     mCheckouts.clear();
 
-    if ( mConfig.useReports ) {
+    if ( mConfig.method == Config::MethodReports ) {
         mPhase = PhaseBorrowersReport;
         emit progress( tr("Downloading borrowers report...") );
         requestReport( mConfig.borrowersReportId );
@@ -61,12 +64,47 @@ void KohaDownload::start( const Config & config, const QString & outputPath )
         mAccessToken.clear();
         emit progress( tr("Requesting an access token...") );
         requestToken();
+    } else if ( mConfig.method == Config::MethodPlugin ) {
+        mPhase = PhasePluginDownload;
+        emit progress( tr("Downloading the borrowers database...") );
+        requestPluginDatabase();
     } else {
         mPhase = PhasePatrons;
         mPage = 1;
         emit progress( tr("Downloading borrowers...") );
         requestRestPage( "/api/v1/patrons", "account_balance" );
     }
+}
+
+void KohaDownload::setAuthorization( QNetworkRequest & request )
+{
+    if ( mConfig.useOAuth ) {
+        request.setRawHeader( "Authorization", "Bearer " + mAccessToken.toUtf8() );
+    } else {
+        request.setRawHeader( "Authorization",
+                              "Basic " + QString( mConfig.userid + ":" + mConfig.password ).toUtf8().toBase64() );
+    }
+}
+
+void KohaDownload::requestPluginDatabase()
+{
+    QNetworkRequest request( ( QUrl( mConfig.baseUrl + "/api/v1/contrib/offlinecirc/borrowers.db" ) ) );
+    setAuthorization( request );
+
+    // A conditional request costs the server nothing when the database
+    // hasn't been rebuilt since the last download
+    QFileInfo existing( mOutputPath );
+    if ( existing.exists() ) {
+        QString httpDate = QLocale::c().toString( existing.lastModified().toUTC(),
+                                                  "ddd, dd MMM yyyy HH:mm:ss 'GMT'" );
+        request.setRawHeader( "If-Modified-Since", httpDate.toUtf8() );
+    }
+
+    request.setTransferTimeout( 300000 );
+
+    QNetworkReply *reply = mNetwork->get( request );
+    connect( reply, SIGNAL( finished() ),
+             this, SLOT( onReplyFinished() ) );
 }
 
 void KohaDownload::requestToken()
@@ -96,10 +134,43 @@ void KohaDownload::handleTokenReply( const QByteArray & body )
         return;
     }
 
-    mPhase = PhasePatrons;
-    mPage = 1;
-    emit progress( tr("Downloading borrowers...") );
-    requestRestPage( "/api/v1/patrons", "account_balance" );
+    if ( mConfig.method == Config::MethodPlugin ) {
+        mPhase = PhasePluginDownload;
+        emit progress( tr("Downloading the borrowers database...") );
+        requestPluginDatabase();
+    } else {
+        mPhase = PhasePatrons;
+        mPage = 1;
+        emit progress( tr("Downloading borrowers...") );
+        requestRestPage( "/api/v1/patrons", "account_balance" );
+    }
+}
+
+void KohaDownload::handlePluginReply( const QByteArray & body )
+{
+    if ( ! body.startsWith( "SQLite format 3" ) ) {
+        fail( tr("The server did not return a borrowers database file. Check the Koha staff URL "
+                 "and that the Offline Circulation plugin is installed.") );
+        return;
+    }
+
+    QString tmpPath = mOutputPath + ".tmp";
+    QFile::remove( tmpPath );
+
+    QFile file( tmpPath );
+    if ( ! file.open( QIODevice::WriteOnly ) || file.write( body ) != body.size() ) {
+        fail( tr("Could not write %1").arg( tmpPath ) );
+        return;
+    }
+    file.close();
+
+    QFile::remove( mOutputPath );
+    if ( ! QFile::rename( tmpPath, mOutputPath ) ) {
+        fail( tr("Could not replace %1").arg( mOutputPath ) );
+        return;
+    }
+
+    emit finished( true, tr("Downloaded the borrowers database, %1 KB.").arg( body.size() / 1024 ) );
 }
 
 void KohaDownload::requestReport( int reportId )
@@ -139,12 +210,7 @@ void KohaDownload::requestRestPage( const QString & path, const QString & embed 
 
     QNetworkRequest request( url );
     request.setRawHeader( "x-koha-embed", embed.toUtf8() );
-    if ( mConfig.useOAuth ) {
-        request.setRawHeader( "Authorization", "Bearer " + mAccessToken.toUtf8() );
-    } else {
-        request.setRawHeader( "Authorization",
-                              "Basic " + QString( mConfig.userid + ":" + mConfig.password ).toUtf8().toBase64() );
-    }
+    setAuthorization( request );
     request.setTransferTimeout( 300000 );
 
     QNetworkReply *reply = mNetwork->get( request );
@@ -159,12 +225,19 @@ void KohaDownload::onReplyFinished()
 
     reply->deleteLater();
 
-    if ( reply->error() != QNetworkReply::NoError ) {
-        int status = reply->attribute( QNetworkRequest::HttpStatusCodeAttribute ).toInt();
+    int status = reply->attribute( QNetworkRequest::HttpStatusCodeAttribute ).toInt();
 
+    if ( mPhase == PhasePluginDownload && status == 304 ) {
+        emit finished( true, tr("The borrowers database is already up to date.") );
+        return;
+    }
+
+    if ( reply->error() != QNetworkReply::NoError ) {
         QString hint;
-        if ( status == 400 || status == 401 || status == 403 ) {
-            if ( mConfig.useReports ) {
+        if ( status == 404 && mConfig.method == Config::MethodPlugin ) {
+            hint = tr("\n\nThe Offline Circulation plugin does not appear to be installed on this Koha server.");
+        } else if ( status == 400 || status == 401 || status == 403 ) {
+            if ( mConfig.method == Config::MethodReports ) {
                 hint = tr("\n\nCheck the username and password. The account needs the catalogue permission.");
             } else if ( mConfig.useOAuth ) {
                 hint = tr("\n\nCheck the API client ID and secret, and that the "
@@ -183,7 +256,9 @@ void KohaDownload::onReplyFinished()
 
     if ( mPhase == PhaseToken ) {
         handleTokenReply( body );
-    } else if ( mConfig.useReports ) {
+    } else if ( mPhase == PhasePluginDownload ) {
+        handlePluginReply( body );
+    } else if ( mConfig.method == Config::MethodReports ) {
         handleReportReply( body );
     } else {
         handleRestReply( body );

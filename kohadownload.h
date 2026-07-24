@@ -46,7 +46,12 @@ class KohaDownload : public QObject
             QString baseUrl;
             QString userid;
             QString password;
-            bool useReports = false;
+
+            // Plugin mode downloads the prebuilt database from the
+            // companion Koha plugin, the other modes assemble it here
+            enum Method { MethodPlugin, MethodReports, MethodRest };
+            Method method = MethodRest;
+
             int borrowersReportId = 0;
             int issuesReportId = 0;
 
@@ -54,7 +59,7 @@ class KohaDownload : public QObject
             // ISO timestamp and merge them into the existing database
             QString updatedSince;
 
-            // REST mode only: authenticate with an OAuth2 client
+            // Plugin and REST modes: authenticate with an OAuth2 client
             // credentials token instead of the username and password
             bool useOAuth = false;
             QString clientId;
@@ -76,14 +81,17 @@ class KohaDownload : public QObject
         void requestReport( int reportId );
         void requestToken();
         void requestRestPage( const QString & path, const QString & embed );
+        void requestPluginDatabase();
+        void setAuthorization( QNetworkRequest & request );
         void handleReportReply( const QByteArray & body );
         void handleTokenReply( const QByteArray & body );
         void handleRestReply( const QByteArray & body );
+        void handlePluginReply( const QByteArray & body );
         void writeDatabase();
         void fail( const QString & message );
 
     private:
-        enum Phase { PhaseBorrowersReport, PhaseIssuesReport, PhaseToken, PhasePatrons, PhaseCheckouts };
+        enum Phase { PhaseBorrowersReport, PhaseIssuesReport, PhaseToken, PhasePatrons, PhaseCheckouts, PhasePluginDownload };
 
         QNetworkAccessManager *mNetwork;
         Config mConfig;

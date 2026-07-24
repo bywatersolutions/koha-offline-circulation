@@ -715,6 +715,17 @@ void MainWindow::downloadBorrowersDb() {
     startKohaDownload( true );
 }
 
+// The pre plugin releases stored the download method as a boolean
+static QString downloadMethodSetting( QSettings & settings )
+{
+    QString method = settings.value("kohaDownloadMethod").toString();
+    if ( method.isEmpty() ) {
+        method = settings.value("kohaUseReports", true).toBool() ? "reports" : "rest";
+    }
+
+    return method;
+}
+
 void MainWindow::startKohaDownload( bool interactive )
 {
     if ( mDownloadRunning ) return;
@@ -725,13 +736,19 @@ void MainWindow::startKohaDownload( bool interactive )
     config.baseUrl = settings.value("kohaBaseUrl").toString();
     config.userid = settings.value("kohaUserid").toString();
     config.password = CredentialStore::read("kohaPassword");
-    config.useReports = settings.value("kohaUseReports", true).toBool();
+
+    QString method = downloadMethodSetting( settings );
+    config.method = method == "plugin"  ? KohaDownload::Config::MethodPlugin
+                  : method == "reports" ? KohaDownload::Config::MethodReports
+                                        : KohaDownload::Config::MethodRest;
+
     config.borrowersReportId = settings.value("kohaBorrowersReportId").toInt();
     config.issuesReportId = settings.value("kohaIssuesReportId").toInt();
 
-    // API tokens only work against the REST API, report mode keeps
-    // using the username and password
-    config.useOAuth = settings.value("kohaUseToken", false).toBool() && ! config.useReports;
+    // API tokens work with the plugin and REST methods, report mode
+    // keeps using the username and password
+    config.useOAuth = settings.value("kohaUseToken", false).toBool()
+        && config.method != KohaDownload::Config::MethodReports;
     if ( config.useOAuth ) {
         config.clientId = settings.value("kohaClientId").toString();
         config.clientSecret = CredentialStore::read("kohaClientSecret");
@@ -739,7 +756,8 @@ void MainWindow::startKohaDownload( bool interactive )
 
     bool configured = ! config.baseUrl.isEmpty()
         && ( config.useOAuth ? ! config.clientId.isEmpty() : ! config.userid.isEmpty() )
-        && ( ! config.useReports || ( config.borrowersReportId > 0 && config.issuesReportId > 0 ) );
+        && ( config.method != KohaDownload::Config::MethodReports
+             || ( config.borrowersReportId > 0 && config.issuesReportId > 0 ) );
 
     if ( ! configured ) {
         if ( interactive ) {
@@ -759,7 +777,7 @@ void MainWindow::startKohaDownload( bool interactive )
     // download picks up patrons deleted in Koha, and the hour of overlap
     // absorbs clock drift, reapplying a patron update is harmless.
     mDownloadWasIncremental = false;
-    if ( ! config.useReports ) {
+    if ( config.method == KohaDownload::Config::MethodRest ) {
         QDateTime lastSync = QDateTime::fromString( settings.value("kohaLastSyncTime").toString(), Qt::ISODate );
         QDateTime lastFull = QDateTime::fromString( settings.value("kohaLastFullSyncTime").toString(), Qt::ISODate );
 
@@ -865,7 +883,17 @@ void MainWindow::uploadToKoha()
     config.branchcode = settings.value("kohaBranchcode").toString();
     config.pending = settings.value("kohaUploadPending", true).toBool();
 
-    if ( config.baseUrl.isEmpty() || config.userid.isEmpty() || config.branchcode.isEmpty() ) {
+    // With the companion plugin, uploads go through it too, one
+    // request with server side duplicate protection and token support
+    config.usePlugin = downloadMethodSetting( settings ) == "plugin";
+    if ( config.usePlugin && settings.value("kohaUseToken", false).toBool() ) {
+        config.useOAuth = true;
+        config.clientId = settings.value("kohaClientId").toString();
+        config.clientSecret = CredentialStore::read("kohaClientSecret");
+    }
+
+    bool haveCredentials = config.useOAuth ? ! config.clientId.isEmpty() : ! config.userid.isEmpty();
+    if ( config.baseUrl.isEmpty() || ! haveCredentials || config.branchcode.isEmpty() ) {
         QMessageBox::information(this, tr("Koha Connection Not Configured"),
                                  tr("Set the Koha staff URL, credentials, and branch code first."));
         showKohaSettings();

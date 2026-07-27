@@ -18,7 +18,7 @@ Grab the latest packages from the
 | Platform | File | Notes |
 |----------|------|-------|
 | Windows | `KohaOfflineCirculation-x.y.z-setup.exe` | Installer. Requires Windows 10 or 11, 64-bit. |
-| Windows | `KohaOfflineCirculation-x.y.z-windows-portable.zip` | No install needed — unzip and run. Good for locked-down machines. |
+| Windows | `KohaOfflineCirculation-x.y.z-windows-portable.zip` | No install needed, just unzip and run. Good for locked-down machines. |
 | macOS | `KohaOfflineCirculation-x.y.z-macos.dmg` | Universal (Apple Silicon + Intel). See Gatekeeper note below. |
 | Linux | `KohaOfflineCirculation-x.y.z-x86_64.AppImage` | `chmod +x` the file and run it. Requires glibc 2.39+ (Ubuntu 24.04+, Debian 13+, Fedora 40+). |
 
@@ -29,7 +29,7 @@ Windows 7/8, use the old
 ### macOS Gatekeeper note
 
 This only applies to releases built without code signing (see the macOS code
-signing section below) — signed and notarized releases open normally. For an
+signing section below). Signed and notarized releases open normally. For an
 unsigned build, the first launch will be blocked. To open it:
 open System Settings → Privacy & Security, scroll down, and click **Open Anyway**
 next to the message about KohaOfflineCirculation. Alternatively, from a terminal:
@@ -53,8 +53,8 @@ The app can build its own `borrowers.db` directly from your Koha server:
 **Settings → Koha Connection Settings** to configure, then **Settings →
 Download Borrowers DB from Koha** to run it. The settings dialog can also
 schedule a nightly download and refresh automatically at startup when the
-database is more than a day old — recommended for machines that wipe their
-drives on reboot (Deep Freeze and similar).
+database is more than a day old. This is recommended for machines that wipe
+their drives on reboot (Deep Freeze and similar).
 
 Three download methods are supported:
 
@@ -62,13 +62,13 @@ Three download methods are supported:
 
 Install the companion
 [Koha offline circulation plugin](https://github.com/bywatersolutions/koha-plugin-offline-circulation)
-on the server and pick **Koha plugin** as the download method — no other
-setup. The plugin builds `borrowers.db` on the server once nightly, so a
+on the server and pick **Koha plugin** as the download method. No other
+setup is needed. The plugin builds `borrowers.db` on the server once nightly, so a
 download is a single file fetch no matter how many machines ask, and the
 app skips the transfer entirely when its local copy is already current.
 Uploads also go through the plugin as a single batch request, and the
 server keeps its own record of processed transactions, so a retry can
-never process a transaction twice — even from a machine whose drive is
+never process a transaction twice, even from a machine whose drive is
 wiped on every reboot. The account needs the `catalogue` permission to
 download and `circulate` to upload.
 
@@ -81,7 +81,7 @@ One-time setup on the Koha server:
 1. Raise the **`SvcMaxReportRows`** system preference (default is only 10)
    to a value above your patron count, e.g. 1000000.
 2. Create two saved SQL reports and note their report IDs. The column
-   order matters — use this SQL as-is:
+   order matters, so use this SQL as-is:
 
    Borrowers report:
 
@@ -105,7 +105,7 @@ One-time setup on the Koha server:
    JOIN biblioitems bi ON bi.biblionumber = bib.biblionumber
    ```
 
-3. Optionally set a cache expiry on both reports (e.g. an hour) — with
+3. Optionally set a cache expiry on both reports (e.g. an hour). With
    memcached active, a whole fleet of circulation computers downloading at
    the same time costs the server a single SQL run.
 
@@ -131,13 +131,13 @@ download, REST mode only fetches the patrons changed since the last sync
 and does a fresh full download weekly to pick up deletions.
 
 Koha's `misc/cronjobs/create_koc_db.pl` remains a fine alternative for very
-large systems — the app reads the file it produces the same way.
+large systems. The app reads the file it produces the same way.
 
 ## Uploading transactions to Koha
 
 Once you're back online, **File → Upload to Koha** sends the current file's
-transactions straight to the server — no more copying the `.koc` file to a
-machine with staff client access. It uses the same connection settings as
+transactions straight to the server, so there is no need to copy the `.koc`
+file to a machine with staff client access. It uses the same connection settings as
 the download, plus a **Branch code** (in Settings → Koha Connection
 Settings) that the transactions are recorded under.
 
@@ -148,15 +148,15 @@ transaction it has processed, so a duplicate is skipped even if the app's
 own history was lost.
 
 By default uploaded transactions are queued under **Circulation → Pending
-offline circulation actions**, where staff review and apply them —
-nothing touches patron records until then. Unticking "Queue uploads for
+offline circulation actions**, where staff review and apply them.
+Nothing touches patron records until then. Unticking "Queue uploads for
 staff review" in the connection settings makes a machine process
 transactions immediately instead, the same as uploading a `.koc` file
 through the staff client.
 
 Each row's result appears in the History tab's Status column. Rows marked
 *sent* are skipped if you upload again, so retrying after a network failure
-can't process a transaction twice — this matters most for fine payments,
+can't process a transaction twice. This matters most for fine payments,
 where a duplicate would double-charge the patron. Rejected rows (unknown
 barcode, unknown patron) show Koha's reason and stay eligible for retry.
 The account needs the `circulate` permission to upload.
@@ -164,7 +164,7 @@ The account needs the `circulate` permission to upload.
 ## Translating
 
 The interface is translatable with Qt Linguist. The `translations/`
-directory holds a `.ts` file per language (Spanish and French to start —
+directory holds a `.ts` file per language (Spanish and French to start;
 ask for more, adding one is a one-line change). To contribute a
 translation, open the file in Qt Linguist, translate, and submit the
 result; translations are embedded into the app at build time and picked
@@ -205,13 +205,6 @@ Every push and pull request also runs the full build and packaging on all three
 platforms, so packaging breakage shows up before release time.
 
 ## macOS code signing
-
-Builds are signed, notarized, and stapled automatically when these Actions
-secrets are configured (Settings → Secrets and variables → Actions). They
-are the same secrets, with the same names, used by the Olorin companion
-app, so they can be shared as organization secrets. Without them the build
-falls back to ad-hoc signing and users hit the Gatekeeper flow described
-above.
 
 | Secret | Contents |
 |--------|----------|

@@ -119,7 +119,7 @@
       <item>
        <widget class="QLabel" name="labelTokenNote">
         <property name="text">
-         <string>API tokens are revocable per machine. They apply to plugin and REST API downloads and to plugin uploads; report downloads and non-plugin uploads use the username and password.</string>
+         <string>Tokens work with the Koha plugin and REST API methods. Saved reports, and uploads without the plugin, use the username and password.</string>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
@@ -132,23 +132,49 @@
    <item>
     <widget class="QGroupBox" name="groupBoxMethod">
      <property name="title">
-      <string>Download Method</string>
+      <string>Connection method</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayoutMethod">
       <item>
        <widget class="QRadioButton" name="radioButtonPlugin">
         <property name="text">
-         <string>Koha plugin (recommended, needs the companion plugin on the server)</string>
+         <string>Koha plugin (recommended)</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="labelPluginNote">
+        <property name="text">
+         <string>Downloads the borrowers database the companion plugin builds nightly, and uploads go through the plugin too.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="indent">
+         <number>20</number>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QRadioButton" name="radioButtonReports">
         <property name="text">
-         <string>Saved reports (fastest, needs the report IDs below)</string>
+         <string>Saved reports</string>
         </property>
         <property name="checked">
          <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="labelReportsNote">
+        <property name="text">
+         <string>Needs the two report IDs below and the catalogue permission.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="indent">
+         <number>20</number>
         </property>
        </widget>
       </item>
@@ -190,7 +216,20 @@
       <item>
        <widget class="QRadioButton" name="radioButtonRest">
         <property name="text">
-         <string>REST API (no reports needed, requires RESTBasicAuth)</string>
+         <string>REST API</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="labelRestNote">
+        <property name="text">
+         <string>No server setup, needs the borrowers and circulate permissions.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="indent">
+         <number>20</number>
         </property>
        </widget>
       </item>

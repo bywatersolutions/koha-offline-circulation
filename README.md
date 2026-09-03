@@ -56,13 +56,13 @@ schedule a nightly download and refresh automatically at startup when the
 database is more than a day old. This is recommended for machines that wipe
 their drives on reboot (Deep Freeze and similar).
 
-Three download methods are supported:
+Three connection methods are supported:
 
 ### Koha plugin (recommended)
 
 Install the companion
 [Koha offline circulation plugin](https://github.com/bywatersolutions/koha-plugin-offline-circulation)
-on the server and pick **Koha plugin** as the download method. No other
+on the server and pick **Koha plugin** as the connection method. No other
 setup is needed. The plugin builds `borrowers.db` on the server once nightly, so a
 download is a single file fetch no matter how many machines ask, and the
 app skips the transfer entirely when its local copy is already current.
@@ -141,7 +141,7 @@ file to a machine with staff client access. It uses the same connection settings
 the download, plus a **Branch code** (in Settings → Koha Connection
 Settings) that the transactions are recorded under.
 
-With the **Koha plugin** download method the upload goes through the
+With the **Koha plugin** connection method the upload goes through the
 plugin too: the whole file is sent as one request instead of one request
 per transaction, API tokens work, and the server remembers every
 transaction it has processed, so a duplicate is skipped even if the app's

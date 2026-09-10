@@ -57,6 +57,7 @@ class MainWindow : public QMainWindow,
 
         void saveFile(const QString&);
         void loadFile(const QString&);
+        QString defaultFilePath();
 
         void addRecentFile( const QString & path );
         void updateRecentFilesMenu();

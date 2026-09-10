@@ -90,7 +90,7 @@ MainWindow::MainWindow(QWidget *parent)
   borrowersDbFilePath = settings.value("borrowersDbFilePath").toString();
   defaultKocSavePath = settings.value("defaultKocSavePath").toString();
   if ( ! defaultKocSavePath.isEmpty() ) {
-      mFilePath = defaultKocSavePath + "/" + QDateTime::currentDateTime().toString( DATETIME_FORMAT ) + ".koc";
+      mFilePath = defaultFilePath();
       this->setWindowTitle( TITLE + " - " + mFilePath );
   }
 
@@ -576,17 +576,20 @@ void MainWindow::saveFile(const QString &name)
   }
 }
 
+// The name for a new file, in the default KOC save path when one is
+// set, otherwise bare so a Save As dialog opens in the working directory
+QString MainWindow::defaultFilePath()
+{
+  QString fileName = KocFile::defaultFileName( QDateTime::currentDateTime() );
+  if ( defaultKocSavePath.isEmpty() ) return fileName;
+
+  return defaultKocSavePath + "/" + fileName;
+}
+
 void MainWindow::saveFileAs()
 {
-  // Start the dialog in the default KOC save path if one is set,
-  // otherwise it opens in the working directory ( Program Files on Windows )
-  QString suggestedFilePath = QDateTime::currentDateTime().toString( DATETIME_FORMAT ) + ".koc";
-  if ( ! defaultKocSavePath.isEmpty() ) {
-      suggestedFilePath = defaultKocSavePath + "/" + suggestedFilePath;
-  }
-
   mFilePath = QFileDialog::getSaveFileName(this, TITLE + " - " + tr("Save File"),
-                            suggestedFilePath,
+                            defaultFilePath(),
                             tr("Koha Offline Circulation Files (*.koc)"));
   if ( mFilePath.isEmpty() ) return;
 
@@ -697,7 +700,7 @@ void MainWindow::selectDefaultKocSavePath() {
     // Use the new path immediately if the current file has never been saved,
     // otherwise it wouldn't take effect until the next launch
     if ( mFilePath.isEmpty() || ! QFile::exists( mFilePath ) ) {
-        mFilePath = defaultKocSavePath + "/" + QDateTime::currentDateTime().toString( DATETIME_FORMAT ) + ".koc";
+        mFilePath = defaultFilePath();
         this->setWindowTitle( TITLE + " - " + mFilePath );
     }
 

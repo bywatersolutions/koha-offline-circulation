@@ -22,6 +22,8 @@
 
 #include <QString>
 
+class QDateTime;
+
 struct KocTransaction {
     QString date;
     QString type;
@@ -39,6 +41,7 @@ namespace KocFile {
     QString serializeLine( const KocTransaction & transaction );
     KocTransaction parseLine( const QString & line );
     QString formatPayment( double amount );
+    QString defaultFileName( const QDateTime & dateTime );
 }
 
 #endif // KOCFILE_H

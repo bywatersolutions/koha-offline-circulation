@@ -39,6 +39,7 @@ class TestKocFile : public QObject
         void parseShortLine();
         void roundTrip();
         void formatPayment();
+        void defaultFileName();
 };
 
 void TestKocFile::headerLine()
@@ -152,6 +153,14 @@ void TestKocFile::formatPayment()
 
     // No grouping separators, Koha parses the amount as a number
     QCOMPARE( KocFile::formatPayment( 1234.56 ), QString("1234.56") );
+}
+
+void TestKocFile::defaultFileName()
+{
+    QDateTime dateTime( QDate( 2026, 9, 3 ), QTime( 12, 10, 30, 0 ) );
+
+    QCOMPARE( KocFile::defaultFileName( dateTime ),
+              QString("koha-offline-circ-2026-09-03-12-10-30-000.koc") );
 }
 
 QTEST_APPLESS_MAIN(TestKocFile)

@@ -19,6 +19,7 @@
 
 #include "kocfile.h"
 
+#include <QDateTime>
 #include <QStringList>
 
 QString KocFile::headerLine( const QString & fileVersion, const QString & generatorVersion )
@@ -42,6 +43,13 @@ QString KocFile::serializeLine( const KocTransaction & transaction )
 QString KocFile::formatPayment( double amount )
 {
     return QString::number( amount, 'f', 2 );
+}
+
+// Hyphens throughout, so the name survives scripts and USB drives
+// with odd filesystems as well as it survives a human reading it
+QString KocFile::defaultFileName( const QDateTime & dateTime )
+{
+    return "koha-offline-circ-" + dateTime.toString( "yyyy-MM-dd-hh-mm-ss-zzz" ) + ".koc";
 }
 
 KocTransaction KocFile::parseLine( const QString & line )

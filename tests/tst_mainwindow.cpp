@@ -35,6 +35,7 @@ class TestMainWindow : public QObject
     private slots:
         void saveLoadRoundTrip();
         void patronNameFromBorrowersDb();
+        void earlierSessionsGroupedNewestFirst();
 
     private:
         void addRow( MainWindow & window, const QString & type, const QString & cardnumber,
@@ -129,6 +130,51 @@ void TestMainWindow::patronNameFromBorrowersDb()
 
     // Let go of the file so the temporary directory can be removed
     QSqlDatabase::database( QSqlDatabase::defaultConnection, false ).close();
+}
+
+void TestMainWindow::earlierSessionsGroupedNewestFirst()
+{
+    QTemporaryDir dir;
+    QVERIFY( dir.isValid() );
+    QString path = dir.filePath( "sessions.koc" );
+
+    MainWindow saver;
+    addRow( saver, "issue", "CARDA", "31000000000001", "", "2026-09-03 11-58-02 000" );
+    addRow( saver, "issue", "CARDA", "31000000000002", "", "2026-09-03 11-58-02 000" );
+    addRow( saver, "return", "", "31000000000003", "", "2026-09-03 12-00-00 000" );
+    addRow( saver, "payment", "CARDA", "", "5.00", "2026-09-03 12-05-00 000" );
+    // Stamped a few milliseconds apart, the way 2.4.0 and earlier wrote a batch
+    addRow( saver, "issue", "CARDB", "31000000000004", "", "2026-09-03 12-10-30 000" );
+    addRow( saver, "issue", "CARDB", "31000000000005", "", "2026-09-03 12-10-30 004" );
+    addRow( saver, "issue", "CARDB", "31000000000006", "", "2026-09-03 12-10-30 009" );
+    saver.saveFile( path );
+
+    MainWindow loader;
+    loader.loadFile( path );
+
+    // Newest batch first, opened; the older one closed
+    QTreeWidget *issues = loader.treeWidgetIssuesSessions;
+    QCOMPARE( issues->topLevelItemCount(), 2 );
+    QCOMPARE( issues->topLevelItem( 0 )->text( 0 ), QString( "2026-09-03 12:10:30" ) );
+    QCOMPARE( issues->topLevelItem( 0 )->text( 1 ), QString( "CARDB" ) );
+    QCOMPARE( issues->topLevelItem( 0 )->text( 3 ), QString( "3 items" ) );
+    QCOMPARE( issues->topLevelItem( 0 )->childCount(), 3 );
+    QCOMPARE( issues->topLevelItem( 0 )->child( 2 )->text( 0 ), QString( "31000000000006" ) );
+    QVERIFY( issues->topLevelItem( 0 )->isExpanded() );
+    QCOMPARE( issues->topLevelItem( 1 )->text( 1 ), QString( "CARDA" ) );
+    QCOMPARE( issues->topLevelItem( 1 )->childCount(), 2 );
+    QVERIFY( ! issues->topLevelItem( 1 )->isExpanded() );
+
+    // Returns have their own list, the payment appears in neither
+    QTreeWidget *returns = loader.treeWidgetReturnsSessions;
+    QCOMPARE( returns->topLevelItemCount(), 1 );
+    QCOMPARE( returns->topLevelItem( 0 )->text( 0 ), QString( "2026-09-03 12:00:00" ) );
+    QCOMPARE( returns->topLevelItem( 0 )->childCount(), 1 );
+
+    // Closing the file clears both lists
+    loader.closeFile( true );
+    QCOMPARE( issues->topLevelItemCount(), 0 );
+    QCOMPARE( returns->topLevelItemCount(), 0 );
 }
 
 int main( int argc, char *argv[] )

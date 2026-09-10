@@ -20,6 +20,8 @@
 #include <QtWidgets>
 #include <QtSql>
 
+#include <algorithm>
+
 #include "mainwindow.h"
 #include "borrowersearch.h"
 #include "kocfile.h"
@@ -268,10 +270,13 @@ void MainWindow::commitIssues() {
 
   QString name = borrowerName( lineEditIssuesBorrowerCardnumber->text() );
 
+  // One timestamp for the whole batch, so it stays one session
+  QString batchTime = QDateTime::currentDateTime().toString( DATETIME_FORMAT );
+
   while ( QListWidgetItem *item = listWidgetIssuesScannedBarcodes->takeItem(0) ) {
     QTableWidgetItem *borrowerCardnumber = new QTableWidgetItem( lineEditIssuesBorrowerCardnumber->text() );
     QTableWidgetItem *type = new QTableWidgetItem("issue");
-    QTableWidgetItem *dateTime = new QTableWidgetItem( QDateTime::currentDateTime().toString( DATETIME_FORMAT ) );
+    QTableWidgetItem *dateTime = new QTableWidgetItem( batchTime );
     QTableWidgetItem *itemBarcode = new QTableWidgetItem( item->text() );
 
     int row = tableWidgetHistory->rowCount();
@@ -284,6 +289,7 @@ void MainWindow::commitIssues() {
 	tableWidgetHistory->setItem(row, COLUMN_DATE, dateTime);
   }
 
+  rebuildSessions();
   cancelIssues();
   saveFile();
 }
@@ -396,9 +402,12 @@ void MainWindow::returnsDeleteItemBarcode() {
 }
 
 void MainWindow::commitReturns() {
+  // One timestamp for the whole batch, so it stays one session
+  QString batchTime = QDateTime::currentDateTime().toString( DATETIME_FORMAT );
+
   while ( QListWidgetItem *item = listWidgetReturnsScannedBarcodes->takeItem(0) ) {
     QTableWidgetItem *type = new QTableWidgetItem("return");
-    QTableWidgetItem *dateTime = new QTableWidgetItem( QDateTime::currentDateTime().toString( DATETIME_FORMAT ) );
+    QTableWidgetItem *dateTime = new QTableWidgetItem( batchTime );
     QTableWidgetItem *itemBarcode = new QTableWidgetItem( item->text() );
 
     int row = tableWidgetHistory->rowCount();
@@ -409,6 +418,7 @@ void MainWindow::commitReturns() {
 	tableWidgetHistory->setItem(row, COLUMN_DATE, dateTime);
   }
 
+  rebuildSessions();
   cancelReturns();
   saveFile();
 }
@@ -436,6 +446,7 @@ void MainWindow::historyDeleteRow() {
 		}
 	}
 
+	rebuildSessions();
 	saveFile();
 }
 
@@ -443,6 +454,82 @@ void MainWindow::clearHistory() {
 	int rowCount = tableWidgetHistory->rowCount();
 	for ( int row = 0; row < rowCount; row++ ) {
 		tableWidgetHistory->removeRow( 0 );
+	}
+
+	treeWidgetIssuesSessions->clear();
+	treeWidgetReturnsSessions->clear();
+}
+
+// A cell's text, or nothing where the row has no item in that column
+static QString cellText( QTableWidget *table, int row, int column )
+{
+	QTableWidgetItem *item = table->item( row, column );
+	return item ? item->text() : QString();
+}
+
+/* The Issues and Returns tabs list this file's earlier batches beneath
+ * the one being scanned, newest first. A batch is a run of history rows
+ * committed together: same type, same timestamp, and for issues the
+ * same cardnumber. Payments aren't barcodes, they stay in the History
+ * tab only. */
+void MainWindow::rebuildSessions() {
+	struct Session {
+		QString type;
+		QString date;
+		QString cardnumber;
+		QString name;
+		QStringList barcodes;
+	};
+	QList<Session> sessions;
+
+	for ( int row = 0; row < tableWidgetHistory->rowCount(); row++ ) {
+		QString type = cellText( tableWidgetHistory, row, COLUMN_TYPE );
+		if ( type == "payment" ) continue;
+
+		// Files from 2.4.0 and earlier stamped each row separately, so
+		// compare timestamps without the milliseconds
+		QString date = cellText( tableWidgetHistory, row, COLUMN_DATE ).left( 19 );
+		QString cardnumber = type == "issue" ? cellText( tableWidgetHistory, row, COLUMN_CARDNUMBER ) : QString();
+
+		if ( sessions.isEmpty() || sessions.last().type != type
+		     || sessions.last().date != date || sessions.last().cardnumber != cardnumber ) {
+			Session session;
+			session.type = type;
+			session.date = date;
+			session.cardnumber = cardnumber;
+			session.name = cellText( tableWidgetHistory, row, COLUMN_NAME );
+			sessions.append( session );
+		}
+		sessions.last().barcodes.append( cellText( tableWidgetHistory, row, COLUMN_BARCODE ) );
+	}
+
+	// The timestamp format sorts chronologically as plain text
+	std::stable_sort( sessions.begin(), sessions.end(),
+	                  []( const Session & a, const Session & b ) { return a.date > b.date; } );
+
+	treeWidgetIssuesSessions->clear();
+	treeWidgetReturnsSessions->clear();
+
+	for ( const Session & session : sessions ) {
+		QDateTime parsed = QDateTime::fromString( session.date, "yyyy-MM-dd hh-mm-ss" );
+		QString time = parsed.isValid() ? parsed.toString( "yyyy-MM-dd hh:mm:ss" ) : session.date;
+		QString count = tr("%1 items").arg( session.barcodes.count() );
+
+		QTreeWidget *tree = session.type == "issue" ? treeWidgetIssuesSessions : treeWidgetReturnsSessions;
+		QStringList columns = session.type == "issue"
+		    ? QStringList{ time, session.cardnumber, session.name, count }
+		    : QStringList{ time, count };
+
+		QTreeWidgetItem *item = new QTreeWidgetItem( tree, columns );
+		for ( const QString & barcode : session.barcodes ) {
+			new QTreeWidgetItem( item, QStringList{ barcode } );
+		}
+	}
+
+	// Only the newest batch starts opened, that's the one just committed
+	for ( QTreeWidget *tree : { treeWidgetIssuesSessions, treeWidgetReturnsSessions } ) {
+		if ( tree->topLevelItemCount() > 0 ) tree->topLevelItem( 0 )->setExpanded( true );
+		for ( int column = 0; column < tree->columnCount(); column++ ) tree->resizeColumnToContents( column );
 	}
 }
 
@@ -524,6 +611,8 @@ void MainWindow::loadFile(const QString &filename)
 
 		line = stream.readLine();
 	}
+
+	rebuildSessions();
 
 	file.close();
     statusBar()->showMessage(tr("File successfully loaded."), 3000);

@@ -67,6 +67,7 @@ class MainWindow : public QMainWindow,
         QString borrowersDbTargetPath();
 
         void clearHistory();
+        void rebuildSessions();
 
         QSqlDatabase borrowersDb();
         QString borrowerName( const QString & cardnumber );

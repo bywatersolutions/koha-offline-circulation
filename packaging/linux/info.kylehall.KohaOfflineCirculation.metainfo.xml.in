@@ -24,4 +24,7 @@
   <url type="homepage">https://github.com/bywatersolutions/koha-offline-circulation</url>
   <url type="bugtracker">https://github.com/bywatersolutions/koha-offline-circulation/issues</url>
   <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="@PROJECT_VERSION@" date="@KOC_BUILD_DATE@"/>
+  </releases>
 </component>

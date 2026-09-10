@@ -76,9 +76,15 @@ install(TARGETS KohaOfflineCirculation
 # The Flatpak build installs into its sandbox; the AppImage hands these
 # files to linuxdeploy directly and never runs the install step
 if(UNIX AND NOT APPLE)
+    # AppStream requires a release entry, filled in from the project()
+    # version and the build date the same way koc.rc.in is on Windows
+    string(TIMESTAMP KOC_BUILD_DATE "%Y-%m-%d" UTC)
+    configure_file(packaging/linux/info.kylehall.KohaOfflineCirculation.metainfo.xml.in
+        "${CMAKE_CURRENT_BINARY_DIR}/info.kylehall.KohaOfflineCirculation.metainfo.xml" @ONLY)
+
     install(FILES packaging/linux/kohaofflinecirculation.desktop DESTINATION share/applications)
     install(FILES images/icons/koha.png DESTINATION share/icons/hicolor/256x256/apps)
-    install(FILES packaging/linux/info.kylehall.KohaOfflineCirculation.metainfo.xml DESTINATION share/metainfo)
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/info.kylehall.KohaOfflineCirculation.metainfo.xml" DESTINATION share/metainfo)
 endif()
 
 include(CTest)

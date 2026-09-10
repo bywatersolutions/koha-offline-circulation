@@ -183,9 +183,32 @@ jobs:
           name: linux
           path: KohaOfflineCirculation-*.AppImage
 
+  flatpak:
+    needs: version
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:kde-6.10
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate the AppStream metadata
+        # flatpak-builder composes it during the build and a validation
+        # error fails the whole job, check it up front for a clear message
+        run: appstreamcli validate --no-net packaging/linux/info.kylehall.KohaOfflineCirculation.metainfo.xml
+      - name: Build Flatpak bundle
+        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          manifest-path: packaging/flatpak/info.kylehall.KohaOfflineCirculation.yml
+          bundle: KohaOfflineCirculation-${{ needs.version.outputs.version }}-x86_64.flatpak
+          upload-artifact: false
+      - uses: actions/upload-artifact@v4
+        with:
+          name: flatpak
+          path: KohaOfflineCirculation-*.flatpak
+
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [version, windows, macos, linux]
+    needs: [version, windows, macos, linux, flatpak]
     runs-on: ubuntu-latest
     permissions:
       contents: write

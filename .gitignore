@@ -4,6 +4,9 @@ build-*/
 deploy/
 dist/
 AppDir/
+.flatpak-builder/
+flatpak_app/
+repo/
 
 # qmake / generated leftovers
 Makefile*

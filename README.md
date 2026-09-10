@@ -21,6 +21,7 @@ Grab the latest packages from the
 | Windows | `KohaOfflineCirculation-x.y.z-windows-portable.zip` | No install needed, just unzip and run. Good for locked-down machines. |
 | macOS | `KohaOfflineCirculation-x.y.z-macos.dmg` | Universal (Apple Silicon + Intel). See Gatekeeper note below. |
 | Linux | `KohaOfflineCirculation-x.y.z-x86_64.AppImage` | `chmod +x` the file and run it. Requires glibc 2.39+ (Ubuntu 24.04+, Debian 13+, Fedora 40+). |
+| Linux | `KohaOfflineCirculation-x.y.z-x86_64.flatpak` | Flatpak bundle for any distribution with Flatpak. `flatpak install --user KohaOfflineCirculation-x.y.z-x86_64.flatpak`; the KDE runtime is fetched from [Flathub](https://flathub.org/setup) on first install. |
 
 Version 2.0.0 and later require a 64-bit OS. If you are on 32-bit Windows or
 Windows 7/8, use the old
@@ -189,7 +190,9 @@ cmake --build build
 - **macOS**: `brew install cmake qt`, then the commands above produce
   `build/KohaOfflineCirculation.app`.
 - **Linux**: install Qt 6 development packages (e.g. `qt6-base-dev` on Debian/Ubuntu),
-  then the commands above.
+  then the commands above. For the Flatpak, `flatpak-builder --user --install
+  --force-clean build-flatpak packaging/flatpak/info.kylehall.KohaOfflineCirculation.yml`
+  builds and installs it locally (needs the `org.kde.Sdk//6.10` runtime from Flathub).
 - **Windows**: use the [Qt online installer](https://www.qt.io/download-qt-installer)
   with MSVC 2022, then configure with `cmake -S . -B build -G "Visual Studio 17 2022" -A x64`.
 
@@ -200,7 +203,7 @@ Packages are built and published automatically by GitHub Actions:
 1. Bump the version on the `project(...)` line in `CMakeLists.txt`.
 2. Commit, then tag the commit `vX.Y.Z` (the workflow fails if the tag and CMake
    version disagree) and push the tag.
-3. The workflow builds all platforms and attaches the four packages to a GitHub
+3. The workflow builds all platforms and attaches the five packages to a GitHub
    Release. Tags containing a suffix (e.g. `v2.1.0-rc1`) are marked as prereleases.
 
 Every push and pull request also runs the full build and packaging on all three

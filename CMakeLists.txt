@@ -73,6 +73,14 @@ install(TARGETS KohaOfflineCirculation
     RUNTIME DESTINATION bin
 )
 
+# The Flatpak build installs into its sandbox; the AppImage hands these
+# files to linuxdeploy directly and never runs the install step
+if(UNIX AND NOT APPLE)
+    install(FILES packaging/linux/kohaofflinecirculation.desktop DESTINATION share/applications)
+    install(FILES images/icons/koha.png DESTINATION share/icons/hicolor/256x256/apps)
+    install(FILES packaging/linux/info.kylehall.KohaOfflineCirculation.metainfo.xml DESTINATION share/metainfo)
+endif()
+
 include(CTest)
 if(BUILD_TESTING)
     find_package(Qt6 6.5 REQUIRED COMPONENTS Test)

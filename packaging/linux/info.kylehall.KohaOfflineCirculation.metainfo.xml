@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>info.kylehall.KohaOfflineCirculation</id>
+  <name>Koha Offline Circulation</name>
+  <summary>Circulate items while the Koha server is unreachable</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <developer id="info.kylehall">
+    <name>Kyle M Hall</name>
+  </developer>
+  <description>
+    <p>
+      Scan patron cards and item barcodes for checkouts, returns, and fine
+      payments while your Koha server is offline. Transactions are written to
+      a .koc file that uploads to Koha once you are back online, either
+      straight from the app or through the staff interface.
+    </p>
+    <p>
+      With a borrowers database downloaded from Koha, the app also shows
+      patron details and searches for patrons by name while offline.
+    </p>
+  </description>
+  <launchable type="desktop-id">info.kylehall.KohaOfflineCirculation.desktop</launchable>
+  <url type="homepage">https://github.com/bywatersolutions/koha-offline-circulation</url>
+  <url type="bugtracker">https://github.com/bywatersolutions/koha-offline-circulation/issues</url>
+  <content_rating type="oars-1.1"/>
+</component>

@@ -1,0 +1,81 @@
+# Flatpak manifest, built by the flatpak job in .github/workflows/build.yml
+# into the .flatpak bundle attached to each release. To build it locally:
+#
+#   flatpak-builder --user --install --force-clean build-flatpak \
+#       packaging/flatpak/info.kylehall.KohaOfflineCirculation.yml
+app-id: info.kylehall.KohaOfflineCirculation
+runtime: org.kde.Platform
+# Qt 6.10 on the freedesktop 25.08 base, with the SQLite driver and the
+# Linguist tools the build needs
+runtime-version: '6.10'
+sdk: org.kde.Sdk
+command: KohaOfflineCirculation
+rename-desktop-file: kohaofflinecirculation.desktop
+rename-icon: koha
+finish-args:
+  - --share=ipc
+  - --share=network
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --device=dri
+  # .koc files and borrowers.db live wherever the library puts them,
+  # often a USB drive on machines that wipe their disks on reboot
+  - --filesystem=home
+  - --filesystem=/media
+  - --filesystem=/run/media
+  - --filesystem=/mnt
+  # QtKeychain talks to the Secret Service, or to KWallet on Plasma
+  - --talk-name=org.freedesktop.secrets
+  - --talk-name=org.kde.kwalletd6
+  - --talk-name=org.kde.kwalletd5
+cleanup:
+  - /include
+  - /lib/cmake
+  - /lib/pkgconfig
+  # QtKeychain is linked statically but still installs its archive
+  - /lib/*.a
+  - /share/man
+modules:
+  # Neither the KDE nor the freedesktop runtime ships libsecret, this
+  # is the flathub shared-modules definition
+  - name: libsecret
+    buildsystem: meson
+    config-opts:
+      - -Dmanpage=false
+      - -Dvapi=false
+      - -Dgtk_doc=false
+      - -Dintrospection=false
+    cleanup:
+      - /bin
+      - /include
+      - /lib/pkgconfig
+      - /share/man
+    sources:
+      - type: archive
+        url: https://download.gnome.org/sources/libsecret/0.21/libsecret-0.21.7.tar.xz
+        sha256: 6b452e4750590a2b5617adc40026f28d2f4903de15f1250e1d1c40bfd68ed55e
+
+  - name: kohaofflinecirculation
+    buildsystem: cmake-ninja
+    builddir: true
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      # flatpak-builder builds without network access, so FetchContent
+      # can't clone QtKeychain itself; point it at the checkout below
+      - -DFETCHCONTENT_FULLY_DISCONNECTED=ON
+      - -DFETCHCONTENT_SOURCE_DIR_QTKEYCHAIN=/run/build/kohaofflinecirculation/qtkeychain
+    sources:
+      - type: dir
+        path: ../..
+        # Literal paths, no globbing. flatpak-builder skips its own
+        # flatpak_app and .flatpak-builder directories on its own
+        skip:
+          - .git
+          - repo
+          - build
+          - .cache
+          - .claude
+      - type: git
+        url: https://github.com/frankosterfeld/qtkeychain.git
+        tag: 0.15.0
+        dest: qtkeychain

@@ -253,13 +253,40 @@
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QLineEdit" name="lineEditBranchcode">
-        <property name="placeholderText">
-         <string>The branch transactions are recorded under, e.g. CPL</string>
+       <layout class="QHBoxLayout" name="horizontalLayoutBranchcode">
+        <item>
+         <widget class="QComboBox" name="comboBoxBranchcode">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="editable">
+           <bool>true</bool>
+          </property>
+          <property name="insertPolicy">
+           <enum>QComboBox::NoInsert</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButtonFetchLibraries">
+          <property name="text">
+           <string>Fetch from Koha</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLabel" name="labelLibrariesStatus">
+        <property name="text">
+         <string/>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="2" column="1">
        <widget class="QCheckBox" name="checkBoxUploadPending">
         <property name="text">
          <string>Queue uploads for staff review instead of processing immediately</string>

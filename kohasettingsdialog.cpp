@@ -21,6 +21,7 @@
 
 #include "kohasettingsdialog.h"
 #include "credentialstore.h"
+#include "kohalibraries.h"
 
 KohaSettingsDialog::KohaSettingsDialog(QWidget *parent) : QDialog(parent) {
     setupUi(this);
@@ -48,7 +49,16 @@ KohaSettingsDialog::KohaSettingsDialog(QWidget *parent) : QDialog(parent) {
     spinBoxBorrowersReport->setValue( settings.value("kohaBorrowersReportId", 0).toInt() );
     spinBoxIssuesReport->setValue( settings.value("kohaIssuesReportId", 0).toInt() );
 
-    lineEditBranchcode->setText( settings.value("kohaBranchcode").toString() );
+    comboBoxBranchcode->lineEdit()->setPlaceholderText( tr("The branch transactions are recorded under, e.g. CPL") );
+    comboBoxBranchcode->setEditText( settings.value("kohaBranchcode").toString() );
+
+    // The list is only fetched on request, so opening the settings on
+    // an offline machine doesn't hit the network
+    mKohaLibraries = new KohaLibraries( this );
+    connect( mKohaLibraries, SIGNAL( finished( bool, const QString & ) ),
+             this, SLOT( librariesFetched( bool, const QString & ) ) );
+    connect( pushButtonFetchLibraries, SIGNAL( clicked() ),
+             this, SLOT( fetchLibraries() ) );
     checkBoxUploadPending->setChecked( settings.value("kohaUploadPending", true).toBool() );
 
     checkBoxNightly->setChecked( settings.value("kohaNightlyEnabled", false).toBool() );
@@ -80,7 +90,12 @@ void KohaSettingsDialog::accept()
                                                          : "rest" );
     settings.setValue( "kohaBorrowersReportId", spinBoxBorrowersReport->value() );
     settings.setValue( "kohaIssuesReportId", spinBoxIssuesReport->value() );
-    settings.setValue( "kohaBranchcode", lineEditBranchcode->text().trimmed().toUpper() );
+    // A picked entry reads "Name (CODE)", a typed one is the code itself
+    int index = comboBoxBranchcode->findText( comboBoxBranchcode->currentText() );
+    QString branchcode = index >= 0
+        ? comboBoxBranchcode->itemData( index ).toString()
+        : comboBoxBranchcode->currentText().trimmed().toUpper();
+    settings.setValue( "kohaBranchcode", branchcode );
     settings.setValue( "kohaUploadPending", checkBoxUploadPending->isChecked() );
 
     settings.setValue( "kohaNightlyEnabled", checkBoxNightly->isChecked() );
@@ -88,4 +103,51 @@ void KohaSettingsDialog::accept()
     settings.setValue( "kohaDownloadOnLaunch", checkBoxOnLaunch->isChecked() );
 
     QDialog::accept();
+}
+
+void KohaSettingsDialog::fetchLibraries()
+{
+    QString baseUrl = lineEditBaseUrl->text().trimmed();
+    if ( baseUrl.isEmpty() ) {
+        QMessageBox::information(this, tr("Fetch Libraries"),
+                                 tr("Enter the Koha staff interface URL first."));
+        return;
+    }
+
+    pushButtonFetchLibraries->setEnabled( false );
+    labelLibrariesStatus->setText( tr("Contacting Koha...") );
+
+    mKohaLibraries->start( baseUrl );
+}
+
+void KohaSettingsDialog::librariesFetched( bool ok, const QString & message )
+{
+    pushButtonFetchLibraries->setEnabled( true );
+
+    if ( ! ok ) {
+        labelLibrariesStatus->clear();
+        QMessageBox::warning(this, tr("Fetch Libraries"), message);
+        return;
+    }
+
+    // Keep whatever was already picked or typed selected in the new list
+    QString current = comboBoxBranchcode->currentText().trimmed();
+    int currentIndex = comboBoxBranchcode->findText( current );
+    if ( currentIndex >= 0 ) current = comboBoxBranchcode->itemData( currentIndex ).toString();
+
+    comboBoxBranchcode->clear();
+    for ( const KohaLibrary & library : mKohaLibraries->libraries() ) {
+        comboBoxBranchcode->addItem( library.name + " (" + library.code + ")", library.code );
+    }
+
+    int index = comboBoxBranchcode->findData( current, Qt::UserRole, Qt::MatchFixedString );
+    if ( index >= 0 ) {
+        comboBoxBranchcode->setCurrentIndex( index );
+    } else {
+        // Nothing chosen yet shouldn't silently become the first library
+        comboBoxBranchcode->setCurrentIndex( -1 );
+        comboBoxBranchcode->setEditText( current );
+    }
+
+    labelLibrariesStatus->setText( message );
 }

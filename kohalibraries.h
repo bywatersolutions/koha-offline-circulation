@@ -17,28 +17,44 @@
 * along with Koha Offline Circulation.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef KOHASETTINGSDIALOG_H
-#define KOHASETTINGSDIALOG_H
+#ifndef KOHALIBRARIES_H
+#define KOHALIBRARIES_H
 
-#include <QDialog>
-#include "ui_kohasettingsdialog.h"
+#include <QList>
+#include <QObject>
+#include <QString>
 
-class KohaLibraries;
+class QNetworkAccessManager;
 
-class KohaSettingsDialog : public QDialog,
-                           private Ui::KohaSettingsDialog
-{
-    Q_OBJECT
-    public:
-        KohaSettingsDialog(QWidget *parent = 0);
-
-    protected slots:
-        void accept();
-        void fetchLibraries();
-        void librariesFetched( bool ok, const QString & message );
-
-    private:
-        KohaLibraries *mKohaLibraries;
+struct KohaLibrary {
+    QString code;
+    QString name;
 };
 
-#endif // KOHASETTINGSDIALOG_H
+/* Fetches the list of libraries from a Koha server's public API so
+ * the branch code can be picked from a list instead of typed. The
+ * public namespace needs no credentials, so this works the same with
+ * every connection method. */
+class KohaLibraries : public QObject
+{
+    Q_OBJECT
+
+    public:
+        explicit KohaLibraries( QObject *parent = 0 );
+
+        void start( const QString & baseUrl );
+
+        const QList<KohaLibrary> & libraries() const;
+
+    signals:
+        void finished( bool ok, const QString & message );
+
+    protected slots:
+        void onReplyFinished();
+
+    private:
+        QNetworkAccessManager *mNetwork;
+        QList<KohaLibrary> mLibraries;
+};
+
+#endif // KOHALIBRARIES_H

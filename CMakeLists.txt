@@ -30,6 +30,7 @@ qt_add_executable(KohaOfflineCirculation
     kohadownload.cpp kohadownload.h
     kohasettingsdialog.cpp kohasettingsdialog.h kohasettingsdialog.ui
     kohaupload.cpp kohaupload.h
+    kohalibraries.cpp kohalibraries.h
     updatecheck.cpp updatecheck.h
     credentialstore.cpp credentialstore.h
     koc.qrc
@@ -114,6 +115,12 @@ if(BUILD_TESTING)
 
     add_test(NAME updatecheck COMMAND tst_updatecheck)
 
+    qt_add_executable(tst_kohalibraries tests/tst_kohalibraries.cpp kohalibraries.cpp kohalibraries.h)
+    target_include_directories(tst_kohalibraries PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+    target_link_libraries(tst_kohalibraries PRIVATE Qt6::Core Qt6::Network Qt6::Test)
+
+    add_test(NAME kohalibraries COMMAND tst_kohalibraries)
+
     qt_add_executable(tst_mainwindow tests/tst_mainwindow.cpp
         mainwindow.cpp mainwindow.h mainwindow.ui
         borrowersearch.cpp borrowersearch.h borrowersearch.ui
@@ -122,6 +129,7 @@ if(BUILD_TESTING)
         kohadownload.cpp kohadownload.h
         kohasettingsdialog.cpp kohasettingsdialog.h kohasettingsdialog.ui
         kohaupload.cpp kohaupload.h
+        kohalibraries.cpp kohalibraries.h
         updatecheck.cpp updatecheck.h
         credentialstore.cpp credentialstore.h
         koc.qrc)

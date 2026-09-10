@@ -139,7 +139,9 @@ Once you're back online, **File → Upload to Koha** sends the current file's
 transactions straight to the server, so there is no need to copy the `.koc`
 file to a machine with staff client access. It uses the same connection settings as
 the download, plus a **Branch code** (in Settings → Koha Connection
-Settings) that the transactions are recorded under.
+Settings) that the transactions are recorded under. Click **Fetch from
+Koha** next to it to pick the branch from the server's list of libraries
+instead of typing the code.
 
 With the **Koha plugin** connection method the upload goes through the
 plugin too: the whole file is sent as one request instead of one request

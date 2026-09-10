@@ -683,6 +683,11 @@
           </column>
           <column>
            <property name="text">
+            <string>Patron name</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
             <string>Barcode</string>
            </property>
           </column>

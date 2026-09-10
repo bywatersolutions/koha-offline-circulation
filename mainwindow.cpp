@@ -266,6 +266,8 @@ void MainWindow::commitIssues() {
     return;
   }
 
+  QString name = borrowerName( lineEditIssuesBorrowerCardnumber->text() );
+
   while ( QListWidgetItem *item = listWidgetIssuesScannedBarcodes->takeItem(0) ) {
     QTableWidgetItem *borrowerCardnumber = new QTableWidgetItem( lineEditIssuesBorrowerCardnumber->text() );
     QTableWidgetItem *type = new QTableWidgetItem("issue");
@@ -277,6 +279,7 @@ void MainWindow::commitIssues() {
 	tableWidgetHistory->insertRow(row);
 	tableWidgetHistory->setItem(row, COLUMN_TYPE, type);
 	tableWidgetHistory->setItem(row, COLUMN_CARDNUMBER, borrowerCardnumber);
+	tableWidgetHistory->setItem(row, COLUMN_NAME, new QTableWidgetItem( name ));
 	tableWidgetHistory->setItem(row, COLUMN_BARCODE, itemBarcode);
 	tableWidgetHistory->setItem(row, COLUMN_DATE, dateTime);
   }
@@ -339,6 +342,7 @@ void MainWindow::issuesPayFine() {
 			tableWidgetHistory->insertRow(row);
 			tableWidgetHistory->setItem(row, COLUMN_TYPE, type);
 			tableWidgetHistory->setItem(row, COLUMN_CARDNUMBER, borrowerCardnumber);
+			tableWidgetHistory->setItem(row, COLUMN_NAME, new QTableWidgetItem( borrowerName( borrowerCardnumber->text() ) ));
 			tableWidgetHistory->setItem(row, COLUMN_PAYMENT, payment);
 			tableWidgetHistory->setItem(row, COLUMN_DATE, dateTime);
 
@@ -505,13 +509,16 @@ void MainWindow::loadFile(const QString &filename)
 		tableWidgetHistory->setItem(row, COLUMN_TYPE, new QTableWidgetItem(transaction.type));
 		tableWidgetHistory->setItem(row, COLUMN_DATE, new QTableWidgetItem(transaction.date));
 
+		// The file doesn't carry names, look them up again from the database
 		if ( transaction.type == "issue" ) {
 			tableWidgetHistory->setItem(row, COLUMN_CARDNUMBER, new QTableWidgetItem(transaction.cardnumber));
+			tableWidgetHistory->setItem(row, COLUMN_NAME, new QTableWidgetItem( borrowerName( transaction.cardnumber ) ));
 			tableWidgetHistory->setItem(row, COLUMN_BARCODE, new QTableWidgetItem(transaction.barcode));
 		} else if ( transaction.type == "return" ) {
 			tableWidgetHistory->setItem(row, COLUMN_BARCODE, new QTableWidgetItem(transaction.barcode));
 		} else if ( transaction.type == "payment" ) {
 			tableWidgetHistory->setItem(row, COLUMN_CARDNUMBER, new QTableWidgetItem(transaction.cardnumber));
+			tableWidgetHistory->setItem(row, COLUMN_NAME, new QTableWidgetItem( borrowerName( transaction.cardnumber ) ));
 			tableWidgetHistory->setItem(row, COLUMN_PAYMENT, new QTableWidgetItem(transaction.payment));
 		}
 
@@ -1015,16 +1022,9 @@ void MainWindow::checkStartupDownload()
 }
 
 
-void MainWindow::findBorrower() {
-    qDebug() << "MainWindow::findBorrower()";
-    qDebug() << "Using Borrowers DB File: " + borrowersDbFilePath;
-
-    // Clear the previous borrower first so a failed lookup can't leave
-    // the last borrower's details displayed next to the new cardnumber
-    clearBorrowerDetails();
-
-    // Reuse the existing connection, calling addDatabase repeatedly
-    // adds a duplicate connection and Qt warns about it every time
+// Reuse the existing connection, calling addDatabase repeatedly
+// adds a duplicate connection and Qt warns about it every time
+QSqlDatabase MainWindow::borrowersDb() {
     QSqlDatabase db = QSqlDatabase::contains()
         ? QSqlDatabase::database( QSqlDatabase::defaultConnection, false )
         : QSqlDatabase::addDatabase( "QSQLITE" );
@@ -1033,6 +1033,37 @@ void MainWindow::findBorrower() {
         db.close();
         db.setDatabaseName( borrowersDbFilePath );
     }
+
+    return db;
+}
+
+// The patron's name for the history, empty when there is no borrowers
+// database or the cardnumber isn't in it
+QString MainWindow::borrowerName( const QString & cardnumber ) {
+    // SQLite creates a missing file on open, don't leave one behind
+    if ( borrowersDbFilePath.isEmpty() || ! QFile::exists( borrowersDbFilePath ) ) return QString();
+
+    QSqlDatabase db = borrowersDb();
+    if ( ! db.isOpen() && ! db.open() ) return QString();
+
+    QSqlQuery query( db );
+    query.prepare( "SELECT firstname, surname FROM borrowers WHERE cardnumber = ?" );
+    query.addBindValue( cardnumber );
+    query.exec();
+    if ( ! query.next() ) return QString();
+
+    return ( query.value( 0 ).toString() + " " + query.value( 1 ).toString() ).trimmed();
+}
+
+void MainWindow::findBorrower() {
+    qDebug() << "MainWindow::findBorrower()";
+    qDebug() << "Using Borrowers DB File: " + borrowersDbFilePath;
+
+    // Clear the previous borrower first so a failed lookup can't leave
+    // the last borrower's details displayed next to the new cardnumber
+    clearBorrowerDetails();
+
+    QSqlDatabase db = borrowersDb();
 
 	if ( db.isOpen() || db.open() ) {
 		QString borrowerCardnumber = lineEditIssuesBorrowerCardnumber->text();

@@ -19,8 +19,10 @@
 
 #include <QtTest>
 #include <QtWidgets>
+#include <QtSql>
 #include <QTemporaryDir>
 
+#include "borrowersdb.h"
 #include "mainwindow.h"
 
 /* Widget level tests that push transactions through the real history
@@ -32,6 +34,7 @@ class TestMainWindow : public QObject
 
     private slots:
         void saveLoadRoundTrip();
+        void patronNameFromBorrowersDb();
 
     private:
         void addRow( MainWindow & window, const QString & type, const QString & cardnumber,
@@ -91,6 +94,41 @@ void TestMainWindow::saveLoadRoundTrip()
 
     // Loaded rows have no upload status yet
     QVERIFY( ! loader.tableWidgetHistory->item( 0, MainWindow::COLUMN_STATUS ) );
+}
+
+void TestMainWindow::patronNameFromBorrowersDb()
+{
+    QTemporaryDir dir;
+    QVERIFY( dir.isValid() );
+
+    // A borrowers database with a single patron in it
+    QString dbPath = dir.filePath( "borrowers.db" );
+    KohaPatron patron;
+    patron.borrowernumber = "1";
+    patron.cardnumber = "23529001000463";
+    patron.firstname = "Edna";
+    patron.surname = "Acosta";
+    QString error;
+    QVERIFY2( BorrowersDb::write( dbPath, { patron }, {}, &error ), qPrintable( error ) );
+
+    QString path = dir.filePath( "names.koc" );
+    MainWindow saver;
+    addRow( saver, "issue", "23529001000463", "31000000123456", "", "2026-09-03 10-15-30 000" );
+    addRow( saver, "return", "", "31000000654321", "", "2026-09-03 10-16-00 000" );
+    addRow( saver, "issue", "NOSUCHCARD", "31000000111111", "", "2026-09-03 10-17-00 000" );
+    saver.saveFile( path );
+
+    // The file doesn't carry names, they come from the database on load
+    MainWindow loader;
+    loader.borrowersDbFilePath = dbPath;
+    loader.loadFile( path );
+
+    QCOMPARE( loader.tableWidgetHistory->item( 0, MainWindow::COLUMN_NAME )->text(), QString( "Edna Acosta" ) );
+    QVERIFY( ! loader.tableWidgetHistory->item( 1, MainWindow::COLUMN_NAME ) );
+    QCOMPARE( loader.tableWidgetHistory->item( 2, MainWindow::COLUMN_NAME )->text(), QString() );
+
+    // Let go of the file so the temporary directory can be removed
+    QSqlDatabase::database( QSqlDatabase::defaultConnection, false ).close();
 }
 
 int main( int argc, char *argv[] )

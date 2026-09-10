@@ -22,6 +22,7 @@
 
 #include <QDateTime>
 #include <QMainWindow>
+#include <QSqlDatabase>
 #include "ui_mainwindow.h"
 
 class QLabel;
@@ -67,6 +68,8 @@ class MainWindow : public QMainWindow,
 
         void clearHistory();
 
+        QSqlDatabase borrowersDb();
+        QString borrowerName( const QString & cardnumber );
         void findBorrower();
         void addBorrowerPreviousIssue( const QString & itemcallnumber, const QString & itemtype, const QString & title, const QString & datedue );
         void clearBorrowerDetails();
@@ -154,10 +157,11 @@ class MainWindow : public QMainWindow,
 
 	static const int COLUMN_TYPE = 0;
 	static const int COLUMN_CARDNUMBER = 1;
-	static const int COLUMN_BARCODE = 2;
-	static const int COLUMN_PAYMENT = 3;
-	static const int COLUMN_DATE = 4;
-	static const int COLUMN_STATUS = 5;
+	static const int COLUMN_NAME = 2;
+	static const int COLUMN_BARCODE = 3;
+	static const int COLUMN_PAYMENT = 4;
+	static const int COLUMN_DATE = 5;
+	static const int COLUMN_STATUS = 6;
 
 	static const int COLUMN_DATEDUE = 0;
 	static const int COLUMN_TITLE = 1;

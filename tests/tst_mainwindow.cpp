@@ -87,6 +87,7 @@ class TestMainWindow : public QObject
         void closingWithNothingPendingDoesNotAsk();
         void closingWithPendingBarcodesCanBeRefused();
         void closingWithPendingBarcodesCanBeConfirmed();
+        void closingTheFileAsksAboutPendingBarcodesEvenAfterAnUpload();
 
     private:
         void addRow( MainWindow & window, const QString & type, const QString & cardnumber,
@@ -286,6 +287,31 @@ void TestMainWindow::closingWithPendingBarcodesCanBeConfirmed()
 
     QVERIFY( window.close() );
     QCOMPARE( answer.answered(), 1 );
+}
+
+void TestMainWindow::closingTheFileAsksAboutPendingBarcodesEvenAfterAnUpload()
+{
+    // A finished upload closes the file with the confirmation skipped,
+    // because the transactions it uploaded are already on disk. Barcodes
+    // scanned since then are not, so they still get a question
+    MainWindow window;
+    addRow( window, "issue", "CARDA", "31000000000001", "", "2026-09-03 11-58-02 000" );
+    window.listWidgetReturnsScannedBarcodes->addItem( "31000000000009" );
+
+    MessageBoxAnswer answer( QMessageBox::No );
+
+    QVERIFY( ! window.closeFile( true ) );
+    QCOMPARE( answer.answered(), 1 );
+    QCOMPARE( window.tableWidgetHistory->rowCount(), 1 );
+    QCOMPARE( window.listWidgetReturnsScannedBarcodes->count(), 1 );
+
+    // With nothing scanned it stays silent, the way the upload flow needs
+    window.listWidgetReturnsScannedBarcodes->clear();
+    MessageBoxAnswer again( QMessageBox::No );
+
+    QVERIFY( window.closeFile( true ) );
+    QCOMPARE( again.answered(), 0 );
+    QCOMPARE( window.tableWidgetHistory->rowCount(), 0 );
 }
 
 int main( int argc, char *argv[] )

@@ -545,6 +545,11 @@ void MainWindow::newFile()
 
 bool MainWindow::closeFile( bool skipConfirmation )
 {
+  // Committed transactions are on disk already, so a caller that just
+  // uploaded them can skip that question. Barcodes scanned but not
+  // committed are not on disk, so they are always worth asking about
+  if ( ! confirmDiscardScannedBarcodes() ) return false;
+
   // Transactions are saved to disk as they're committed, but confirm
   // anyway in case the last save failed
   if ( ! skipConfirmation && tableWidgetHistory->rowCount() > 0 ) {

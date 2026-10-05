@@ -25,6 +25,53 @@
 #include "borrowersdb.h"
 #include "mainwindow.h"
 
+static QMessageBox *visibleMessageBox()
+{
+    for ( QWidget *widget : QApplication::topLevelWidgets() ) {
+        QMessageBox *box = qobject_cast<QMessageBox *>( widget );
+        if ( box && box->isVisible() ) return box;
+    }
+
+    return nullptr;
+}
+
+/* Clicks the chosen button on any message box that appears, and counts
+ * the ones it answered. A modal box runs its own event loop, so a timer
+ * is the only way to reach it, and stopping the timer on destruction
+ * keeps a test that expected no box from arming one for the next test. */
+class MessageBoxAnswer
+{
+    public:
+        explicit MessageBoxAnswer( QMessageBox::StandardButton answer )
+            : mAnswer( answer )
+        {
+            QObject::connect( &mTimer, &QTimer::timeout, [this]() { answerIfShown(); } );
+            mTimer.start( 0 );
+        }
+
+        ~MessageBoxAnswer() { mTimer.stop(); }
+
+        int answered() const { return mAnswered; }
+        QString text() const { return mText; }
+
+    private:
+        void answerIfShown()
+        {
+            QMessageBox *box = visibleMessageBox();
+            if ( ! box ) return;
+
+            mAnswered++;
+            mText = box->text();
+
+            if ( QAbstractButton *button = box->button( mAnswer ) ) button->click();
+        }
+
+        QMessageBox::StandardButton mAnswer;
+        int mAnswered = 0;
+        QString mText;
+        QTimer mTimer;
+};
+
 /* Widget level tests that push transactions through the real history
  * table and the real save and load paths, the part the KocFile unit
  * tests can't see. */
@@ -37,6 +84,9 @@ class TestMainWindow : public QObject
         void patronNameFromBorrowersDb();
         void earlierSessionsGroupedNewestFirst();
         void noHardCodedHeightFloorOnTheIssuesTab();
+        void closingWithNothingPendingDoesNotAsk();
+        void closingWithPendingBarcodesCanBeRefused();
+        void closingWithPendingBarcodesCanBeConfirmed();
 
     private:
         void addRow( MainWindow & window, const QString & type, const QString & cardnumber,
@@ -193,6 +243,51 @@ void TestMainWindow::noHardCodedHeightFloorOnTheIssuesTab()
     QVERIFY2( minimum < 800, qPrintable( QString("window minimum height is %1").arg( minimum ) ) );
 }
 
+void TestMainWindow::closingWithNothingPendingDoesNotAsk()
+{
+    MainWindow window;
+    window.show();
+
+    // Set to answer No, so an unexpected prompt can't slip past
+    MessageBoxAnswer answer( QMessageBox::No );
+
+    QVERIFY( window.close() );
+    QCOMPARE( answer.answered(), 0 );
+}
+
+void TestMainWindow::closingWithPendingBarcodesCanBeRefused()
+{
+    MainWindow window;
+    window.show();
+    window.listWidgetIssuesScannedBarcodes->addItem( "31000000000001" );
+    window.listWidgetReturnsScannedBarcodes->addItem( "31000000000002" );
+
+    MessageBoxAnswer answer( QMessageBox::No );
+
+    QVERIFY( ! window.close() );
+    QCOMPARE( answer.answered(), 1 );
+
+    // Both tabs count toward the total, not just the one in front
+    QVERIFY2( answer.text().contains( "2" ), qPrintable( answer.text() ) );
+
+    // Refusing leaves the window and the barcodes exactly as they were
+    QVERIFY( window.isVisible() );
+    QCOMPARE( window.listWidgetIssuesScannedBarcodes->count(), 1 );
+    QCOMPARE( window.listWidgetReturnsScannedBarcodes->count(), 1 );
+}
+
+void TestMainWindow::closingWithPendingBarcodesCanBeConfirmed()
+{
+    MainWindow window;
+    window.show();
+    window.listWidgetReturnsScannedBarcodes->addItem( "31000000000003" );
+
+    MessageBoxAnswer answer( QMessageBox::Yes );
+
+    QVERIFY( window.close() );
+    QCOMPARE( answer.answered(), 1 );
+}
+
 int main( int argc, char *argv[] )
 {
     // No window system needed, and keep the test's QSettings away from
@@ -202,8 +297,19 @@ int main( int argc, char *argv[] )
     }
 
     QApplication app( argc, argv );
+
+    // Closing a window in a test must not take the whole application
+    // down with it, the close tests do exactly that
+    app.setQuitOnLastWindowClosed( false );
+
     QCoreApplication::setOrganizationName( "Koha Offline Circulation Tests" );
     QCoreApplication::setApplicationName( "tst_mainwindow" );
+
+    // The close tests reach writeSettings(), keep the window geometry it
+    // saves in a scratch directory so runs can't affect one another
+    QTemporaryDir settingsDir;
+    QSettings::setDefaultFormat( QSettings::IniFormat );
+    QSettings::setPath( QSettings::IniFormat, QSettings::UserScope, settingsDir.path() );
 
     TestMainWindow test;
     return QTest::qExec( &test, argc, argv );

@@ -1302,8 +1302,34 @@ void MainWindow::readSettings()
   restoreState(settings.value("MainWindow/Properties").toByteArray());
 }
 
+// Barcodes scanned into either tab but not yet committed. They only
+// live in the list widgets, where a commit would write them to disk
+int MainWindow::pendingBarcodeCount()
+{
+  return listWidgetIssuesScannedBarcodes->count() + listWidgetReturnsScannedBarcodes->count();
+}
+
+bool MainWindow::confirmDiscardScannedBarcodes()
+{
+  int pending = pendingBarcodeCount();
+  if ( pending == 0 ) return true;
+
+  int ret = QMessageBox::question(this, tr("Barcodes Not Committed"),
+                                  tr("Scanned barcodes not yet committed: %1\n\n"
+                                     "They will be lost. Close anyway?").arg( pending ),
+                                  QMessageBox::Yes | QMessageBox::No);
+
+  return ret == QMessageBox::Yes;
+}
+
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+  // Ask before the geometry is saved, the window may be staying open
+  if ( ! confirmDiscardScannedBarcodes() ) {
+      event->ignore();
+      return;
+  }
+
   writeSettings();
 
   QMainWindow::closeEvent(event);

@@ -55,6 +55,8 @@ class MainWindow : public QMainWindow,
         void updateReturnsCount();
 
         void closeEvent(QCloseEvent *event);
+        int pendingBarcodeCount();
+        bool confirmDiscardScannedBarcodes();
 
         void saveFile(const QString&);
         void loadFile(const QString&);

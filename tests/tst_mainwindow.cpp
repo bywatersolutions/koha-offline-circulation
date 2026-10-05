@@ -83,7 +83,7 @@ class TestMainWindow : public QObject
         void saveLoadRoundTrip();
         void patronNameFromBorrowersDb();
         void earlierSessionsGroupedNewestFirst();
-        void noHardCodedHeightFloorOnTheIssuesTab();
+        void theWindowFitsASmallScreen();
         void closingWithNothingPendingDoesNotAsk();
         void closingWithPendingBarcodesCanBeRefused();
         void closingWithPendingBarcodesCanBeConfirmed();
@@ -229,7 +229,7 @@ void TestMainWindow::earlierSessionsGroupedNewestFirst()
     QCOMPARE( returns->topLevelItemCount(), 0 );
 }
 
-void TestMainWindow::noHardCodedHeightFloorOnTheIssuesTab()
+void TestMainWindow::theWindowFitsASmallScreen()
 {
     MainWindow window;
 
@@ -237,11 +237,18 @@ void TestMainWindow::noHardCodedHeightFloorOnTheIssuesTab()
     // window, leaving the buttons off the bottom of a small screen
     QCOMPARE( window.borrowerDetailsCurrentIssues->minimumHeight(), 0 );
 
-    // Loose canary rather than a tight bound, font metrics differ by a few
-    // dozen pixels between the Windows, macOS and Linux runners. It is well
-    // clear of the 715 this measures locally and well under the old 925.
+    // The borrower details are six stacked group boxes and will always want
+    // more height than a small screen has, so they scroll rather than hold
+    // the window open
+    QScrollArea *area = window.findChild<QScrollArea *>( "scrollAreaBorrowerDetails" );
+    QVERIFY2( area, "the borrower details column has to stay inside a scroll area" );
+    QVERIFY( area->isAncestorOf( window.groupBoxBorrowerDetails ) );
+
+    // A maximized window on a 1280x720 screen gets about 649 pixels once the
+    // taskbar and the caption are gone. This measures 619, and the bound is
+    // loose because font metrics differ between the three CI runners.
     int minimum = window.minimumSizeHint().height();
-    QVERIFY2( minimum < 800, qPrintable( QString("window minimum height is %1").arg( minimum ) ) );
+    QVERIFY2( minimum < 700, qPrintable( QString("window minimum height is %1").arg( minimum ) ) );
 }
 
 void TestMainWindow::closingWithNothingPendingDoesNotAsk()

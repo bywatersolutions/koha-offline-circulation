@@ -36,6 +36,7 @@ class TestMainWindow : public QObject
         void saveLoadRoundTrip();
         void patronNameFromBorrowersDb();
         void earlierSessionsGroupedNewestFirst();
+        void noHardCodedHeightFloorOnTheIssuesTab();
 
     private:
         void addRow( MainWindow & window, const QString & type, const QString & cardnumber,
@@ -175,6 +176,21 @@ void TestMainWindow::earlierSessionsGroupedNewestFirst()
     loader.closeFile( true );
     QCOMPARE( issues->topLevelItemCount(), 0 );
     QCOMPARE( returns->topLevelItemCount(), 0 );
+}
+
+void TestMainWindow::noHardCodedHeightFloorOnTheIssuesTab()
+{
+    MainWindow window;
+
+    // A 300 pixel floor here used to set the minimum height of the whole
+    // window, leaving the buttons off the bottom of a small screen
+    QCOMPARE( window.borrowerDetailsCurrentIssues->minimumHeight(), 0 );
+
+    // Loose canary rather than a tight bound, font metrics differ by a few
+    // dozen pixels between the Windows, macOS and Linux runners. It is well
+    // clear of the 715 this measures locally and well under the old 925.
+    int minimum = window.minimumSizeHint().height();
+    QVERIFY2( minimum < 800, qPrintable( QString("window minimum height is %1").arg( minimum ) ) );
 }
 
 int main( int argc, char *argv[] )

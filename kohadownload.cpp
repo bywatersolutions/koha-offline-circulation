@@ -112,12 +112,15 @@ void KohaDownload::requestToken()
 {
     QNetworkRequest request = kohaRequest( QUrl( mConfig.baseUrl + "/api/v1/oauth/token" ) );
     request.setHeader( QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded" );
+    // The client credentials go in a basic auth header rather than the body,
+    // so every request to the plugin carries an Authorization header for a
+    // firewall exception to match, Koha has accepted both since 20.05
+    request.setRawHeader( "Authorization",
+                          "Basic " + QString( mConfig.clientId + ":" + mConfig.clientSecret ).toUtf8().toBase64() );
     request.setTransferTimeout( 60000 );
 
     QUrlQuery body;
     body.addQueryItem( "grant_type", "client_credentials" );
-    body.addQueryItem( "client_id", mConfig.clientId );
-    body.addQueryItem( "client_secret", mConfig.clientSecret );
 
     QNetworkReply *reply = mNetwork->post( request, body.toString( QUrl::FullyEncoded ).toUtf8() );
     connect( reply, SIGNAL( finished() ),

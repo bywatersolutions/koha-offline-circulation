@@ -245,6 +245,9 @@ void TestKohaDownload::restOAuthMode()
     // bearer token instead of basic credentials
     QCOMPARE( server.requests.first().path(), QString( "/api/v1/oauth/token" ) );
     QCOMPARE( server.requestHeaders.first().value( "user-agent" ), QByteArray( "KohaOfflineCirculation/9.9.9" ) );
+    QCOMPARE( server.requestHeaders.first().value( "authorization" ),
+              "Basic " + QByteArray( "client-id:client-secret" ).toBase64() );
+    QCOMPARE( server.requestBodies.first(), QByteArray( "grant_type=client_credentials" ) );
     QCOMPARE( server.requestHeaders.at( 1 ).value( "authorization" ), QByteArray( "Bearer TESTTOKEN" ) );
     QCOMPARE( server.requestHeaders.last().value( "authorization" ), QByteArray( "Bearer TESTTOKEN" ) );
 }

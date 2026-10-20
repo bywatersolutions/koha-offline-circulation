@@ -38,6 +38,7 @@ class TestKohaUpload : public QObject
         void transportFailureStops();
         void pendingMode();
         void pluginBatch();
+        void pluginBatchToken();
 };
 
 void TestKohaUpload::initTestCase()
@@ -277,6 +278,52 @@ void TestKohaUpload::pluginBatch()
     QCOMPARE( body.value( "branchcode" ).toString(), QString( "CPL" ) );
     QCOMPARE( body.value( "pending" ).toBool(), false );
     QCOMPARE( body.value( "transactions" ).toArray().count(), 3 );
+}
+
+void TestKohaUpload::pluginBatchToken()
+{
+    MockHttpServer server;
+    QVERIFY( server.listen() );
+
+    server.handler = []( const QUrl & url, int * status, QByteArray * body ) {
+        Q_UNUSED( status )
+        if ( url.path() == "/api/v1/oauth/token" ) {
+            *body = "{\"access_token\":\"TESTTOKEN\",\"token_type\":\"Bearer\",\"expires_in\":3600}";
+            return;
+        }
+        *body = "{\"results\":[{\"status\":\"queued\",\"message\":\"Added to the pending offline circulation queue\"}]}";
+    };
+
+    KocTransaction transaction;
+    transaction.type = "return";
+    transaction.date = "2026-07-24 10-16-00 000";
+    transaction.barcode = "BC";
+
+    KohaUpload upload;
+    QSignalSpy finishedSpy( &upload, SIGNAL( finished( int, int ) ) );
+
+    KohaUpload::Config config;
+    config.baseUrl = server.baseUrl();
+    config.branchcode = "CPL";
+    config.usePlugin = true;
+    config.useOAuth = true;
+    config.clientId = "client-id";
+    config.clientSecret = "client-secret";
+
+    upload.start( config, { transaction } );
+    QVERIFY( finishedSpy.wait( 10000 ) );
+    QCOMPARE( finishedSpy.first().at( 0 ).toInt(), 1 );
+    QCOMPARE( finishedSpy.first().at( 1 ).toInt(), 0 );
+
+    // The client credentials go in a basic auth header, then the batch
+    // carries the bearer token
+    QCOMPARE( server.requests.count(), 2 );
+    QCOMPARE( server.requests.first().path(), QString( "/api/v1/oauth/token" ) );
+    QCOMPARE( server.requestHeaders.first().value( "authorization" ),
+              "Basic " + QByteArray( "client-id:client-secret" ).toBase64() );
+    QCOMPARE( server.requestBodies.first(), QByteArray( "grant_type=client_credentials" ) );
+    QCOMPARE( server.requests.last().path(), QString( "/api/v1/contrib/offlinecirc/transactions" ) );
+    QCOMPARE( server.requestHeaders.last().value( "authorization" ), QByteArray( "Bearer TESTTOKEN" ) );
 }
 
 QTEST_GUILESS_MAIN(TestKohaUpload)

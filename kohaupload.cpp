@@ -18,6 +18,7 @@
 */
 
 #include "kohaupload.h"
+#include "kohanetwork.h"
 
 #include <QDateTime>
 #include <QJsonArray>
@@ -87,7 +88,7 @@ void KohaUpload::setAuthorization( QNetworkRequest & request )
 
 void KohaUpload::requestToken()
 {
-    QNetworkRequest request( ( QUrl( mConfig.baseUrl + "/api/v1/oauth/token" ) ) );
+    QNetworkRequest request = kohaRequest( QUrl( mConfig.baseUrl + "/api/v1/oauth/token" ) );
     request.setHeader( QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded" );
     request.setTransferTimeout( 60000 );
 
@@ -135,7 +136,7 @@ void KohaUpload::sendBatch()
 
     emit progress( tr("Uploading %1 transactions...").arg( mTransactions.count() ) );
 
-    QNetworkRequest request( ( QUrl( mConfig.baseUrl + "/api/v1/contrib/offlinecirc/transactions" ) ) );
+    QNetworkRequest request = kohaRequest( QUrl( mConfig.baseUrl + "/api/v1/contrib/offlinecirc/transactions" ) );
     request.setHeader( QNetworkRequest::ContentTypeHeader, "application/json" );
     setAuthorization( request );
     request.setTransferTimeout( 300000 );
@@ -216,7 +217,7 @@ void KohaUpload::sendNext()
 
     emit progress( tr("Uploading transaction %1 of %2...").arg( mIndex + 1 ).arg( mTransactions.count() ) );
 
-    QNetworkRequest request( url );
+    QNetworkRequest request = kohaRequest( url );
     request.setTransferTimeout( 60000 );
 
     QNetworkReply *reply = mNetwork->get( request );

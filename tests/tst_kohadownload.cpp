@@ -36,6 +36,7 @@ class TestKohaDownload : public QObject
     Q_OBJECT
 
     private slots:
+        void initTestCase();
         void restMode();
         void restIncrementalMode();
         void restOAuthMode();
@@ -67,6 +68,12 @@ int TestKohaDownload::countRows( const QString & dbPath, const QString & table )
     QSqlDatabase::removeDatabase( "kohadownload_test" );
 
     return count;
+}
+
+void TestKohaDownload::initTestCase()
+{
+    // main.cpp sets the version in the app, requests send it in the user agent
+    QCoreApplication::setApplicationVersion( "9.9.9" );
 }
 
 void TestKohaDownload::restMode()
@@ -134,6 +141,7 @@ void TestKohaDownload::restMode()
     // Two patron pages plus one checkout page
     QCOMPARE( server.requests.count(), 3 );
     QVERIFY( server.requestHeaders.first().value( "authorization" ).startsWith( "Basic " ) );
+    QCOMPARE( server.requestHeaders.first().value( "user-agent" ), QByteArray( "KohaOfflineCirculation/9.9.9" ) );
     QCOMPARE( server.requestHeaders.first().value( "x-koha-embed" ), QByteArray( "account_balance" ) );
     QCOMPARE( server.requestHeaders.last().value( "x-koha-embed" ), QByteArray( "item,item.biblio" ) );
 }
@@ -236,6 +244,7 @@ void TestKohaDownload::restOAuthMode()
     // The token request comes first, then every API request carries the
     // bearer token instead of basic credentials
     QCOMPARE( server.requests.first().path(), QString( "/api/v1/oauth/token" ) );
+    QCOMPARE( server.requestHeaders.first().value( "user-agent" ), QByteArray( "KohaOfflineCirculation/9.9.9" ) );
     QCOMPARE( server.requestHeaders.at( 1 ).value( "authorization" ), QByteArray( "Bearer TESTTOKEN" ) );
     QCOMPARE( server.requestHeaders.last().value( "authorization" ), QByteArray( "Bearer TESTTOKEN" ) );
 }
@@ -312,6 +321,7 @@ void TestKohaDownload::pluginMode()
     QCOMPARE( server.requests.count(), 1 );
     QCOMPARE( server.requests.first().path(), QString( "/api/v1/contrib/offlinecirc/borrowers.db" ) );
     QVERIFY( server.requestHeaders.first().value( "authorization" ).startsWith( "Basic " ) );
+    QCOMPARE( server.requestHeaders.first().value( "user-agent" ), QByteArray( "KohaOfflineCirculation/9.9.9" ) );
 }
 
 void TestKohaDownload::pluginNotModified()
@@ -418,6 +428,7 @@ void TestKohaDownload::reportMode()
     // Credentials go to the report service as query parameters, in both
     // the Koha 24.05+ and the older spellings
     QCOMPARE( server.requests.count(), 2 );
+    QCOMPARE( server.requestHeaders.first().value( "user-agent" ), QByteArray( "KohaOfflineCirculation/9.9.9" ) );
     QUrlQuery firstRequest( server.requests.first() );
     QCOMPARE( firstRequest.queryItemValue( "id" ), QString( "11" ) );
     QCOMPARE( firstRequest.queryItemValue( "login_userid" ), QString( "koha" ) );

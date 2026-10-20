@@ -31,6 +31,7 @@ class TestKohaUpload : public QObject
     Q_OBJECT
 
     private slots:
+        void initTestCase();
         void isoTimestamp();
         void uploadsEachTransaction();
         void rejectedTransactionContinues();
@@ -38,6 +39,12 @@ class TestKohaUpload : public QObject
         void pendingMode();
         void pluginBatch();
 };
+
+void TestKohaUpload::initTestCase()
+{
+    // main.cpp sets the version in the app, requests send it in the user agent
+    QCoreApplication::setApplicationVersion( "9.9.9" );
+}
 
 void TestKohaUpload::isoTimestamp()
 {
@@ -96,6 +103,7 @@ void TestKohaUpload::uploadsEachTransaction()
     QCOMPARE( resultSpy.count(), 3 );
 
     QCOMPARE( server.requests.count(), 3 );
+    QCOMPARE( server.requestHeaders.first().value( "user-agent" ), QByteArray( "KohaOfflineCirculation/9.9.9" ) );
 
     QUrlQuery first( server.requests.at( 0 ) );
     QCOMPARE( server.requests.at( 0 ).path(), QString( "/cgi-bin/koha/offline_circ/service.pl" ) );
@@ -263,6 +271,7 @@ void TestKohaUpload::pluginBatch()
     // One request carried the whole batch
     QCOMPARE( server.requests.count(), 1 );
     QCOMPARE( server.requests.first().path(), QString( "/api/v1/contrib/offlinecirc/transactions" ) );
+    QCOMPARE( server.requestHeaders.first().value( "user-agent" ), QByteArray( "KohaOfflineCirculation/9.9.9" ) );
 
     QJsonObject body = QJsonDocument::fromJson( server.requestBodies.first() ).object();
     QCOMPARE( body.value( "branchcode" ).toString(), QString( "CPL" ) );

@@ -18,6 +18,7 @@
 */
 
 #include "kohalibraries.h"
+#include "kohanetwork.h"
 
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -54,7 +55,7 @@ void KohaLibraries::start( const QString & baseUrl )
     query.addQueryItem( "_order_by", "name" );
     url.setQuery( query );
 
-    QNetworkRequest request( url );
+    QNetworkRequest request = kohaRequest( url );
     request.setTransferTimeout( 30000 );
 
     QNetworkReply *reply = mNetwork->get( request );

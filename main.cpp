@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
   QCoreApplication::setOrganizationName("Kyle M Hall");
   QCoreApplication::setOrganizationDomain("kylehall.info");
   QCoreApplication::setApplicationName("Koha Offline Circulation");
+  QCoreApplication::setApplicationVersion(KOC_VERSION);
 
   QTranslator translator;
   if ( translator.load( QLocale(), "koc", "_", ":/i18n" ) ) {

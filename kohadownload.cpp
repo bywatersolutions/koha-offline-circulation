@@ -18,6 +18,7 @@
 */
 
 #include "kohadownload.h"
+#include "kohanetwork.h"
 
 #include <QFile>
 #include <QFileInfo>
@@ -88,7 +89,7 @@ void KohaDownload::setAuthorization( QNetworkRequest & request )
 
 void KohaDownload::requestPluginDatabase()
 {
-    QNetworkRequest request( ( QUrl( mConfig.baseUrl + "/api/v1/contrib/offlinecirc/borrowers.db" ) ) );
+    QNetworkRequest request = kohaRequest( QUrl( mConfig.baseUrl + "/api/v1/contrib/offlinecirc/borrowers.db" ) );
     setAuthorization( request );
 
     // A conditional request costs the server nothing when the database
@@ -109,7 +110,7 @@ void KohaDownload::requestPluginDatabase()
 
 void KohaDownload::requestToken()
 {
-    QNetworkRequest request( ( QUrl( mConfig.baseUrl + "/api/v1/oauth/token" ) ) );
+    QNetworkRequest request = kohaRequest( QUrl( mConfig.baseUrl + "/api/v1/oauth/token" ) );
     request.setHeader( QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded" );
     request.setTransferTimeout( 60000 );
 
@@ -188,7 +189,7 @@ void KohaDownload::requestReport( int reportId )
     query.addQueryItem( "password", mConfig.password );
     url.setQuery( query );
 
-    QNetworkRequest request( url );
+    QNetworkRequest request = kohaRequest( url );
     request.setTransferTimeout( 300000 );
 
     QNetworkReply *reply = mNetwork->get( request );
@@ -208,7 +209,7 @@ void KohaDownload::requestRestPage( const QString & path, const QString & embed 
     }
     url.setQuery( query );
 
-    QNetworkRequest request( url );
+    QNetworkRequest request = kohaRequest( url );
     request.setRawHeader( "x-koha-embed", embed.toUtf8() );
     setAuthorization( request );
     request.setTransferTimeout( 300000 );

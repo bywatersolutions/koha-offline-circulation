@@ -31,6 +31,7 @@ qt_add_executable(KohaOfflineCirculation
     kohasettingsdialog.cpp kohasettingsdialog.h kohasettingsdialog.ui
     kohaupload.cpp kohaupload.h
     kohalibraries.cpp kohalibraries.h
+    kohanetwork.h
     updatecheck.cpp updatecheck.h
     credentialstore.cpp credentialstore.h
     koc.qrc

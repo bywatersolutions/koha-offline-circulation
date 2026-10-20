@@ -28,10 +28,17 @@ class TestKohaLibraries : public QObject
     Q_OBJECT
 
     private slots:
+        void initTestCase();
         void librariesLoaded();
         void notFoundHint();
         void badJson();
 };
+
+void TestKohaLibraries::initTestCase()
+{
+    // main.cpp sets the version in the app, requests send it in the user agent
+    QCoreApplication::setApplicationVersion( "9.9.9" );
+}
 
 void TestKohaLibraries::librariesLoaded()
 {
@@ -67,6 +74,7 @@ void TestKohaLibraries::librariesLoaded()
     QCOMPARE( query.queryItemValue( "_per_page" ), QString( "-1" ) );
     QCOMPARE( query.queryItemValue( "_order_by" ), QString( "name" ) );
     QVERIFY( ! server.requestHeaders.first().contains( "authorization" ) );
+    QCOMPARE( server.requestHeaders.first().value( "user-agent" ), QByteArray( "KohaOfflineCirculation/9.9.9" ) );
 }
 
 void TestKohaLibraries::notFoundHint()

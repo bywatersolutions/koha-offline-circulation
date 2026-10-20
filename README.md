@@ -63,8 +63,12 @@ Three connection methods are supported:
 
 Install the companion
 [Koha offline circulation plugin](https://github.com/bywatersolutions/koha-plugin-offline-circulation)
-on the server and pick **Koha plugin** as the connection method. No other
-setup is needed. The plugin builds `borrowers.db` on the server once nightly, so a
+on the server and pick **Koha plugin** as the connection method. The
+account signs in with its password, which needs the **`RESTBasicAuth`**
+system preference, or with an API token (see [REST API](#rest-api)). A
+firewall in front of Koha may also need an exception, see
+[Firewalls and bot protection](#firewalls-and-bot-protection). The plugin
+builds `borrowers.db` on the server once nightly, so a
 download is a single file fetch no matter how many machines ask, and the
 app skips the transfer entirely when its local copy is already current.
 Uploads also go through the plugin as a single batch request, and the
@@ -163,6 +167,23 @@ can't process a transaction twice. This matters most for fine payments,
 where a duplicate would double-charge the patron. Rejected rows (unknown
 barcode, unknown patron) show Koha's reason and stay eligible for retry.
 The account needs the `circulate` permission to upload.
+
+## Firewalls and bot protection
+
+A web application firewall or bot protection service in front of Koha
+(Cloudflare, for example) can mistake the app for a bot and block it
+before it reaches Koha. Downloads and uploads then fail with status code
+403 even though the account, permissions and system preferences are
+right.
+
+Every request the app sends to Koha has the user agent
+`KohaOfflineCirculation/<version>`, and with the **Koha plugin** method
+every request also carries an `Authorization` header, including the API
+token request. That's enough for a narrow exception: skip bot checks for
+requests to `/api/v1/contrib/offlinecirc/` and `/api/v1/oauth/token`
+that have both. Koha still authenticates every one of those requests.
+Older versions of the app send neither, so the exception doesn't match
+them.
 
 ## Translating
 

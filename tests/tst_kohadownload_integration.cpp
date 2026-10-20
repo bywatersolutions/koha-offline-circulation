@@ -36,7 +36,9 @@
  *   KOHA_BORROWERS_REPORT_ID  saved report IDs, without them the report
  *   KOHA_ISSUES_REPORT_ID     mode test skips
  *   KOHA_PLUGIN               set to 1 when the offline circulation plugin
- *                             is installed, without it the plugin tests skip */
+ *                             is installed, without it the plugin tests skip
+ *   KOHA_CLIENT_ID            an API key for the account, without it the
+ *   KOHA_CLIENT_SECRET        API token test skips */
 class TestKohaDownloadIntegration : public QObject
 {
     Q_OBJECT
@@ -45,6 +47,7 @@ class TestKohaDownloadIntegration : public QObject
         void restMode();
         void reportMode();
         void pluginMode();
+        void pluginModeToken();
         void uploadPending();
         void pluginUpload();
 
@@ -145,6 +148,27 @@ void TestKohaDownloadIntegration::pluginMode()
 
     KohaDownload::Config config;
     config.method = KohaDownload::Config::MethodPlugin;
+
+    runDownload( config );
+}
+
+void TestKohaDownloadIntegration::pluginModeToken()
+{
+    if ( qEnvironmentVariable( "KOHA_URL" ).isEmpty() ) {
+        QSKIP( "KOHA_URL is not set, skipping the live Koha integration test" );
+    }
+    if ( qEnvironmentVariable( "KOHA_PLUGIN" ).isEmpty() ) {
+        QSKIP( "KOHA_PLUGIN is not set, skipping the plugin mode test" );
+    }
+    if ( qEnvironmentVariable( "KOHA_CLIENT_ID" ).isEmpty() ) {
+        QSKIP( "KOHA_CLIENT_ID is not set, skipping the API token test" );
+    }
+
+    KohaDownload::Config config;
+    config.method = KohaDownload::Config::MethodPlugin;
+    config.useOAuth = true;
+    config.clientId = qEnvironmentVariable( "KOHA_CLIENT_ID" );
+    config.clientSecret = qEnvironmentVariable( "KOHA_CLIENT_SECRET" );
 
     runDownload( config );
 }

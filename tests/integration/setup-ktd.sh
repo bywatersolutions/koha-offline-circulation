@@ -19,6 +19,7 @@ koha_mysql() {
 
 koha_mysql >&2 <<'SQL'
 UPDATE systempreferences SET value = '1' WHERE variable = 'RESTBasicAuth';
+UPDATE systempreferences SET value = '1' WHERE variable = 'RESTOAuth2ClientCredentials';
 UPDATE systempreferences SET value = '1000000' WHERE variable = 'SvcMaxReportRows';
 DELETE FROM saved_sql WHERE report_name IN ('KOC borrowers', 'KOC issues');
 INSERT INTO saved_sql ( borrowernumber, date_created, last_modified, savedsql, report_name, type, notes, cache_expiry, public )
@@ -39,6 +40,20 @@ if [ -n "$KOC_PLUGIN_DIR" ]; then
     docker exec "$CONTAINER" koha-shell kohadev -c 'perl /kohadevbox/koha/misc/devel/install_plugins.pl' >&2
     echo "KOHA_PLUGIN=1"
 fi
+
+# An API key for the koha account lets the token test request an access
+# token, a fresh key every run since Koha only shows a secret on creation
+API_KEY=$(docker exec -i "$CONTAINER" koha-shell kohadev -c perl <<'PERL'
+use Koha::ApiKeys;
+use Koha::Patrons;
+my $patron = Koha::Patrons->find( { userid => 'koha' } );
+Koha::ApiKeys->search( { patron_id => $patron->id, description => 'KOC integration' } )->delete;
+my $api_key = Koha::ApiKey->new( { patron_id => $patron->id, description => 'KOC integration' } )->store;
+print $api_key->client_id . ' ' . $api_key->plain_text_secret . "\n";
+PERL
+)
+echo "KOHA_CLIENT_ID=${API_KEY% *}"
+echo "KOHA_CLIENT_SECRET=${API_KEY#* }"
 
 # Sysprefs are cached, restart memcached and plack so the running
 # server sees the changes made behind its back

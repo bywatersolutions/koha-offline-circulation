@@ -154,6 +154,7 @@ if(BUILD_TESTING)
         kohaupload.cpp kohaupload.h
         kohalibraries.cpp kohalibraries.h
         updatecheck.cpp updatecheck.h
+        updateinstaller.cpp updateinstaller.h
         credentialstore.cpp credentialstore.h
         koc.qrc)
     target_include_directories(tst_mainwindow PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}"

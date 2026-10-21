@@ -22,11 +22,23 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
+#include <QProcess>
+#include <QRegularExpression>
 #include <QSaveFile>
 #include <QScopedPointer>
+#include <QTemporaryDir>
+
+#if defined( Q_OS_WIN )
+#include <windows.h>
+#include <shellapi.h>
+#pragma comment( lib, "shell32" )
+#else
+#include <cstdio>
+#endif
 
 UpdateInstaller::UpdateInstaller( QObject *parent )
  : QObject( parent ), mReply( 0 ), mFile( 0 ), mHash( QCryptographicHash::Sha256 )
@@ -147,4 +159,167 @@ void UpdateInstaller::onReplyFinished()
     }
 
     emit ready( file->fileName() );
+}
+
+#if ! defined( Q_OS_WIN )
+// Starts the new version once this process has exited, so the two never
+// run side by side
+static void relaunchAfterExit( const QStringList & command )
+{
+    QStringList arguments = { "-c", "while kill -0 \"$0\" 2>/dev/null; do sleep 0.2; done; exec \"$@\"",
+                              QString::number( QCoreApplication::applicationPid() ) };
+    QProcess::startDetached( "/bin/sh", arguments + command );
+}
+#endif
+
+#if defined( Q_OS_MACOS )
+static bool runTool( const QString & program, const QStringList & arguments, QString * output = 0 )
+{
+    QProcess process;
+    process.setProcessChannelMode( QProcess::MergedChannels );
+    process.start( program, arguments );
+    if ( ! process.waitForFinished( 300000 ) ) return false;
+    if ( output ) *output = QString::fromUtf8( process.readAll() );
+
+    return process.exitStatus() == QProcess::NormalExit && process.exitCode() == 0;
+}
+
+// Empty for an ad-hoc signed development build
+static QString teamIdentifier( const QString & bundle )
+{
+    QString output;
+    runTool( "/usr/bin/codesign", { "-dv", "--verbose=2", bundle }, &output );
+
+    QRegularExpressionMatch match = QRegularExpression( "^TeamIdentifier=(\\S+)$",
+                                                        QRegularExpression::MultilineOption ).match( output );
+    QString team = match.hasMatch() ? match.captured( 1 ) : QString();
+
+    return team == "not" ? QString() : team;
+}
+#endif
+
+bool UpdateInstaller::install( const QString & path, QString * error )
+{
+#if defined( Q_OS_WIN )
+    // The installer asks for administrator rights, only ShellExecute can
+    // raise the UAC prompt for it. RELAUNCH tells it to start the app
+    // again once it's done, an IT deployment doesn't pass it
+    std::wstring file = QDir::toNativeSeparators( path ).toStdWString();
+    std::wstring parameters = L"/SILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS /NORESTARTAPPLICATIONS /RELAUNCH=1";
+
+    SHELLEXECUTEINFOW info = {};
+    info.cbSize = sizeof( info );
+    info.fMask = SEE_MASK_NOASYNC;
+    info.lpVerb = L"open";
+    info.lpFile = file.c_str();
+    info.lpParameters = parameters.c_str();
+    info.nShow = SW_SHOWNORMAL;
+
+    if ( ! ShellExecuteExW( &info ) ) {
+        DWORD code = GetLastError();
+        if ( code == ERROR_CANCELLED ) {
+            *error = tr("Installing the update needs a Windows administrator. Ask your IT staff to install the new version.");
+        } else {
+            *error = tr("Could not start the installer, Windows error %1.").arg( code );
+        }
+        return false;
+    }
+
+    return true;
+#elif defined( Q_OS_MACOS )
+    QString bundle = QDir( QCoreApplication::applicationDirPath() + "/../.." ).canonicalPath();
+    QString parent = QFileInfo( bundle ).absolutePath();
+
+    if ( ! QFileInfo( parent ).isWritable() ) {
+        *error = tr("The app can't be replaced in %1 without an administrator.").arg( parent );
+        return false;
+    }
+
+    QTemporaryDir mountPoint;
+    if ( ! runTool( "/usr/bin/hdiutil", { "attach", "-nobrowse", "-readonly", "-noautoopen",
+                                          "-mountpoint", mountPoint.path(), path } ) ) {
+        *error = tr("Could not open the downloaded disk image.");
+        return false;
+    }
+
+    // Copied next to the running app first, so the swap below is a rename
+    // on the same disk
+    QString staged = parent + "/.KohaOfflineCirculation-update.app";
+    QDir( staged ).removeRecursively();
+
+    QStringList apps = QDir( mountPoint.path() ).entryList( { "*.app" }, QDir::Dirs );
+    bool copied = ! apps.isEmpty() && runTool( "/usr/bin/ditto", { mountPoint.path() + "/" + apps.first(), staged } );
+    runTool( "/usr/bin/hdiutil", { "detach", mountPoint.path() } );
+    QFile::remove( path );
+
+    if ( ! copied ) {
+        QDir( staged ).removeRecursively();
+        *error = tr("Could not copy the new version out of the disk image.");
+        return false;
+    }
+
+    // A signed release must come from the same developer as this copy,
+    // a development build has no team to compare against
+    QString currentTeam = teamIdentifier( bundle );
+    if ( ! runTool( "/usr/bin/codesign", { "--verify", "--deep", "--strict", staged } )
+         || ( ! currentTeam.isEmpty() && teamIdentifier( staged ) != currentTeam ) ) {
+        QDir( staged ).removeRecursively();
+        *error = tr("The new version's code signature could not be verified, it was not installed.");
+        return false;
+    }
+
+    QString old = parent + "/.KohaOfflineCirculation-old.app";
+    QDir( old ).removeRecursively();
+    if ( ! QDir().rename( bundle, old ) ) {
+        QDir( staged ).removeRecursively();
+        *error = tr("Could not move the current version out of the way in %1.").arg( parent );
+        return false;
+    }
+    if ( ! QDir().rename( staged, bundle ) ) {
+        QDir().rename( old, bundle );
+        QDir( staged ).removeRecursively();
+        *error = tr("Could not move the new version into place in %1.").arg( parent );
+        return false;
+    }
+    QDir( old ).removeRecursively();
+
+    relaunchAfterExit( { "/usr/bin/open", "-n", bundle } );
+    return true;
+#elif defined( Q_OS_LINUX )
+    QString target = qEnvironmentVariable( "APPIMAGE" );
+    QString dir = QFileInfo( target ).absolutePath();
+
+    if ( ! QFileInfo( dir ).isWritable() ) {
+        *error = tr("The AppImage in %1 can't be replaced, the folder isn't writable.").arg( dir );
+        return false;
+    }
+
+    // Staged beside the running AppImage so rename() can swap it in place,
+    // the running copy keeps the file it was started from
+    QString staged = dir + "/.KohaOfflineCirculation-update.AppImage";
+    QFile::remove( staged );
+    bool copied = QFile::copy( path, staged );
+    QFile::remove( path );
+
+    if ( ! copied ) {
+        *error = tr("Could not copy the new version to %1.").arg( dir );
+        return false;
+    }
+
+    QFile::setPermissions( staged, QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner
+                                   | QFile::ReadGroup | QFile::ExeGroup | QFile::ReadOther | QFile::ExeOther );
+
+    if ( std::rename( QFile::encodeName( staged ).constData(), QFile::encodeName( target ).constData() ) != 0 ) {
+        QFile::remove( staged );
+        *error = tr("Could not replace %1 with the new version.").arg( target );
+        return false;
+    }
+
+    relaunchAfterExit( { target } );
+    return true;
+#else
+    Q_UNUSED( path )
+    *error = tr("Updates can't be installed on this platform.");
+    return false;
+#endif
 }

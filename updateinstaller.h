@@ -31,7 +31,9 @@ class QSaveFile;
 
 /* Downloads the release asset that matches how this copy of the app was
  * installed and checks it against the SHA-256 GitHub published for it,
- * nothing is installed from a file that doesn't match. */
+ * nothing is installed from a file that doesn't match. install() then
+ * puts the new version in place and arranges for it to start once this
+ * one has quit. */
 class UpdateInstaller : public QObject
 {
     Q_OBJECT
@@ -49,6 +51,8 @@ class UpdateInstaller : public QObject
 
         void download( const UpdateAsset & asset );
         void cancel();
+
+        bool install( const QString & path, QString * error );
 
     signals:
         void downloadProgress( qint64 received, qint64 total );

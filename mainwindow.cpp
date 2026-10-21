@@ -29,6 +29,7 @@
 #include "kohasettingsdialog.h"
 #include "kohaupload.h"
 #include "updatecheck.h"
+#include "updateinstaller.h"
 #include "credentialstore.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -73,6 +74,17 @@ MainWindow::MainWindow(QWidget *parent)
   mUpdateCheck = new UpdateCheck( this );
   connect( mUpdateCheck, SIGNAL( finished( bool, bool, const QString &, const QString & ) ),
            this, SLOT( updateCheckFinished( bool, bool, const QString &, const QString & ) ) );
+
+  mUpdateInstaller = new UpdateInstaller( this );
+  connect( mUpdateInstaller, SIGNAL( downloadProgress( qint64, qint64 ) ),
+           this, SLOT( updateDownloadProgress( qint64, qint64 ) ) );
+  connect( mUpdateInstaller, SIGNAL( ready( const QString & ) ),
+           this, SLOT( updateDownloadReady( const QString & ) ) );
+  connect( mUpdateInstaller, SIGNAL( failed( const QString & ) ),
+           this, SLOT( updateDownloadFailed( const QString & ) ) );
+  mUpdateProgress = 0;
+  mUpdateCanceled = false;
+  mQuittingForUpdate = false;
 
   mKohaUpload = new KohaUpload( this );
   connect( mKohaUpload, SIGNAL( transactionResult( int, bool, const QString & ) ),
@@ -1266,13 +1278,111 @@ void MainWindow::updateCheckFinished( bool ok, bool updateAvailable, const QStri
       return;
   }
 
-  int ret = QMessageBox::question(this, tr("Update Available"),
-                                  tr("Version %1 is available, you are running %2.\n\n"
-                                     "Open the downloads page?").arg( latestVersion, VERSION ),
-                                  QMessageBox::Yes | QMessageBox::No);
-  if ( ret == QMessageBox::Yes ) {
-      QDesktopServices::openUrl( QUrl( releaseUrl ) );
+  mUpdateReleaseUrl = releaseUrl;
+
+  // The portable zip and the Flatpak bundle can't update themselves, nor
+  // can anything when the release lacks this platform's package
+  int assetIndex = UpdateInstaller::pickAsset( mUpdateCheck->assets(), UpdateInstaller::installKind() );
+  if ( assetIndex < 0 ) {
+      int ret = QMessageBox::question(this, tr("Update Available"),
+                                      tr("Version %1 is available, you are running %2.\n\n"
+                                         "Open the downloads page?").arg( latestVersion, VERSION ),
+                                      QMessageBox::Yes | QMessageBox::No);
+      if ( ret == QMessageBox::Yes ) {
+          QDesktopServices::openUrl( QUrl( releaseUrl ) );
+      }
+      return;
   }
+
+  QMessageBox box( QMessageBox::Question, tr("Update Available"),
+                   tr("Version %1 is available, you are running %2.").arg( latestVersion, VERSION ),
+                   QMessageBox::NoButton, this );
+  QPushButton *updateButton = box.addButton( tr("Update Now"), QMessageBox::AcceptRole );
+  QPushButton *notesButton = box.addButton( tr("Release Notes"), QMessageBox::HelpRole );
+  box.addButton( tr("Not Now"), QMessageBox::RejectRole );
+  box.setDefaultButton( updateButton );
+  box.exec();
+
+  if ( box.clickedButton() == notesButton ) {
+      QDesktopServices::openUrl( QUrl( releaseUrl ) );
+  } else if ( box.clickedButton() == updateButton ) {
+      startUpdate( mUpdateCheck->assets().at( assetIndex ) );
+  }
+}
+
+void MainWindow::startUpdate( const UpdateAsset & asset )
+{
+    mUpdateCanceled = false;
+
+    mUpdateProgress = new QProgressDialog( tr("Downloading the update..."), tr("Cancel"), 0, 0, this );
+    mUpdateProgress->setWindowModality( Qt::WindowModal );
+    mUpdateProgress->setMinimumDuration( 0 );
+    connect( mUpdateProgress, SIGNAL( canceled() ),
+             this, SLOT( cancelUpdateDownload() ) );
+
+    mUpdateInstaller->download( asset );
+}
+
+void MainWindow::cancelUpdateDownload()
+{
+    mUpdateCanceled = true;
+    mUpdateInstaller->cancel();
+}
+
+void MainWindow::updateDownloadProgress( qint64 received, qint64 total )
+{
+    if ( ! mUpdateProgress || total <= 0 ) return;
+
+    mUpdateProgress->setMaximum( int( total ) );
+    mUpdateProgress->setValue( int( received ) );
+}
+
+void MainWindow::updateDownloadFailed( const QString & error )
+{
+    if ( mUpdateProgress ) {
+        mUpdateProgress->close();
+        mUpdateProgress->deleteLater();
+        mUpdateProgress = 0;
+    }
+
+    if ( mUpdateCanceled ) return;
+
+    offerDownloadsPage( error );
+}
+
+void MainWindow::updateDownloadReady( const QString & path )
+{
+    if ( mUpdateProgress ) {
+        mUpdateProgress->close();
+        mUpdateProgress->deleteLater();
+        mUpdateProgress = 0;
+    }
+
+    // Installing quits the app, ask about scanned barcodes first and only once
+    if ( ! confirmDiscardScannedBarcodes() ) {
+        QFile::remove( path );
+        return;
+    }
+
+    QString error;
+    if ( ! mUpdateInstaller->install( path, &error ) ) {
+        QFile::remove( path );
+        offerDownloadsPage( error );
+        return;
+    }
+
+    mQuittingForUpdate = true;
+    close();
+}
+
+void MainWindow::offerDownloadsPage( const QString & reason )
+{
+    int ret = QMessageBox::question(this, tr("Update Failed"),
+                                    tr("%1\n\nOpen the downloads page to update by hand?").arg( reason ),
+                                    QMessageBox::Yes | QMessageBox::No);
+    if ( ret == QMessageBox::Yes ) {
+        QDesktopServices::openUrl( QUrl( mUpdateReleaseUrl ) );
+    }
 }
 
 void MainWindow::about()
@@ -1329,8 +1439,9 @@ bool MainWindow::confirmDiscardScannedBarcodes()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-  // Ask before the geometry is saved, the window may be staying open
-  if ( ! confirmDiscardScannedBarcodes() ) {
+  // Ask before the geometry is saved, the window may be staying open. An
+  // update already asked before it installed
+  if ( ! mQuittingForUpdate && ! confirmDiscardScannedBarcodes() ) {
       event->ignore();
       return;
   }

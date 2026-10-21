@@ -33,6 +33,8 @@ class QTimer;
 class KohaDownload;
 class KohaUpload;
 class UpdateCheck;
+class UpdateInstaller;
+struct UpdateAsset;
 
 class MainWindow : public QMainWindow,
                    private Ui::MainWindow
@@ -68,6 +70,9 @@ class MainWindow : public QMainWindow,
         void startKohaDownload( bool interactive );
         QString borrowersDbTargetPath();
 
+        void startUpdate( const UpdateAsset & asset );
+        void offerDownloadsPage( const QString & reason );
+
         void clearHistory();
         void rebuildSessions();
 
@@ -95,6 +100,10 @@ class MainWindow : public QMainWindow,
         void checkStartupDownload();
         void checkForUpdates();
         void updateCheckFinished( bool ok, bool updateAvailable, const QString & latestVersion, const QString & releaseUrl );
+        void updateDownloadProgress( qint64 received, qint64 total );
+        void updateDownloadReady( const QString & path );
+        void updateDownloadFailed( const QString & error );
+        void cancelUpdateDownload();
         void uploadToKoha();
         void cancelUpload();
         void uploadTransactionResult( int index, bool ok, const QString & result );
@@ -142,6 +151,11 @@ class MainWindow : public QMainWindow,
         QTimer *mScheduleTimer;
         QString mLastAutoDownloadDate;
         UpdateCheck *mUpdateCheck;
+        UpdateInstaller *mUpdateInstaller;
+        QProgressDialog *mUpdateProgress;
+        QString mUpdateReleaseUrl;
+        bool mUpdateCanceled;
+        bool mQuittingForUpdate;
 
         KohaUpload *mKohaUpload;
         QProgressDialog *mUploadProgress;

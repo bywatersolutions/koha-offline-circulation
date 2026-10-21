@@ -99,6 +99,8 @@ class MainWindow : public QMainWindow,
         void checkScheduledDownload();
         void checkStartupDownload();
         void checkForUpdates();
+        void checkForUpdatesAutomatically();
+        void setAutomaticUpdateChecks( bool enabled );
         void updateCheckFinished( bool ok, bool updateAvailable, const QString & latestVersion, const QString & releaseUrl );
         void updateDownloadProgress( qint64 received, qint64 total );
         void updateDownloadReady( const QString & path );
@@ -151,6 +153,7 @@ class MainWindow : public QMainWindow,
         QTimer *mScheduleTimer;
         QString mLastAutoDownloadDate;
         UpdateCheck *mUpdateCheck;
+        bool mUpdateCheckAutomatic;
         UpdateInstaller *mUpdateInstaller;
         QProgressDialog *mUpdateProgress;
         QString mUpdateReleaseUrl;

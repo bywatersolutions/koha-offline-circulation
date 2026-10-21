@@ -883,6 +883,7 @@
      <string>&amp;Help</string>
     </property>
     <addaction name="actionCheckForUpdates"/>
+    <addaction name="actionCheckForUpdatesAutomatically"/>
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menuDatabase">
@@ -1007,6 +1008,14 @@
   <action name="actionCheckForUpdates">
    <property name="text">
     <string>Check for Updates</string>
+   </property>
+  </action>
+  <action name="actionCheckForUpdatesAutomatically">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Check for Updates Automatically</string>
    </property>
   </action>
   <action name="actionKohaConnectionSettings">

@@ -74,6 +74,10 @@ MainWindow::MainWindow(QWidget *parent)
   mUpdateCheck = new UpdateCheck( this );
   connect( mUpdateCheck, SIGNAL( finished( bool, bool, const QString &, const QString & ) ),
            this, SLOT( updateCheckFinished( bool, bool, const QString &, const QString & ) ) );
+  mUpdateCheckAutomatic = false;
+
+  // Late enough to stay out of the way of a startup download
+  QTimer::singleShot( 30000, this, SLOT( checkForUpdatesAutomatically() ) );
 
   mUpdateInstaller = new UpdateInstaller( this );
   connect( mUpdateInstaller, SIGNAL( downloadProgress( qint64, qint64 ) ),
@@ -157,6 +161,9 @@ void MainWindow::setupActions()
   /* Help Menu Actions */
   connect(actionCheckForUpdates, SIGNAL(triggered(bool)),
           this, SLOT(checkForUpdates()));
+  actionCheckForUpdatesAutomatically->setChecked( QSettings().value("checkForUpdates", true).toBool() );
+  connect(actionCheckForUpdatesAutomatically, SIGNAL(toggled(bool)),
+          this, SLOT(setAutomaticUpdateChecks(bool)));
   connect(actionAbout, SIGNAL(triggered(bool)),
           this, SLOT(about()));
           
@@ -1259,12 +1266,45 @@ void MainWindow::checkForUpdates()
 {
   statusBar()->showMessage( tr("Checking for updates...") );
 
+  mUpdateCheckAutomatic = false;
   mUpdateCheck->start( VERSION );
+}
+
+void MainWindow::checkForUpdatesAutomatically()
+{
+    QSettings settings;
+    if ( ! settings.value("checkForUpdates", true).toBool() ) return;
+
+    // Once a day is plenty, and keeps a building full of desks well under
+    // GitHub's limit of 60 requests an hour from one address
+    QDateTime lastCheck = settings.value("updateLastCheck").toDateTime();
+    if ( lastCheck.isValid() && lastCheck > QDateTime::currentDateTime().addDays( -1 ) ) return;
+    settings.setValue( "updateLastCheck", QDateTime::currentDateTime() );
+
+    mUpdateCheckAutomatic = true;
+    mUpdateCheck->start( VERSION );
+}
+
+void MainWindow::setAutomaticUpdateChecks( bool enabled )
+{
+    QSettings settings;
+    settings.setValue( "checkForUpdates", enabled );
 }
 
 void MainWindow::updateCheckFinished( bool ok, bool updateAvailable, const QString & latestVersion, const QString & releaseUrl )
 {
-  statusBar()->clearMessage();
+  // An automatic check only speaks up about an update. When it couldn't
+  // reach GitHub, or a dialog is already open, it tries again next launch
+  if ( mUpdateCheckAutomatic ) {
+      mUpdateCheckAutomatic = false;
+      if ( ! ok || QApplication::activeModalWidget() ) {
+          QSettings().remove( "updateLastCheck" );
+          return;
+      }
+      if ( ! updateAvailable ) return;
+  } else {
+      statusBar()->clearMessage();
+  }
 
   if ( ! ok ) {
       QMessageBox::warning(this, tr("Check for Updates"),

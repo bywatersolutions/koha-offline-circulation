@@ -33,6 +33,7 @@ qt_add_executable(KohaOfflineCirculation
     kohalibraries.cpp kohalibraries.h
     kohanetwork.h
     updatecheck.cpp updatecheck.h
+    updateinstaller.cpp updateinstaller.h
     credentialstore.cpp credentialstore.h
     koc.qrc
 )
@@ -129,6 +130,13 @@ if(BUILD_TESTING)
     target_link_libraries(tst_updatecheck PRIVATE Qt6::Core Qt6::Network Qt6::Test)
 
     add_test(NAME updatecheck COMMAND tst_updatecheck)
+
+    qt_add_executable(tst_updateinstaller tests/tst_updateinstaller.cpp
+        updateinstaller.cpp updateinstaller.h updatecheck.cpp updatecheck.h)
+    target_include_directories(tst_updateinstaller PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+    target_link_libraries(tst_updateinstaller PRIVATE Qt6::Core Qt6::Network Qt6::Test)
+
+    add_test(NAME updateinstaller COMMAND tst_updateinstaller)
 
     qt_add_executable(tst_kohalibraries tests/tst_kohalibraries.cpp kohalibraries.cpp kohalibraries.h)
     target_include_directories(tst_kohalibraries PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")

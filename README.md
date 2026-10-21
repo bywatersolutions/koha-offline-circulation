@@ -39,6 +39,37 @@ next to the message about KohaOfflineCirculation. Alternatively, from a terminal
 xattr -cr "/Applications/Koha Offline Circulation.app"
 ```
 
+## Updating
+
+Once a day, 30 seconds after it starts, the app asks GitHub whether a newer
+release is out. If there is one it offers **Update Now**: it downloads the
+package for your platform, checks it against the SHA-256 checksum GitHub
+publishes for every release file, installs it and restarts. **Help → Check
+for Updates** checks right away, and **Help → Check for Updates
+Automatically** turns the daily check off.
+
+- **Windows installer:** the update runs the new installer silently, which
+  needs administrator rights just like the first install. On a desk without
+  them the app suggests asking IT.
+- **macOS:** the new version replaces the app where it is. If that folder
+  needs an administrator (a standard account and `/Applications`), the app
+  offers the downloads page instead.
+- **AppImage:** the new AppImage replaces the old file in place.
+- **Windows portable zip and Flatpak:** these can't update themselves, so the
+  app opens the downloads page. Install a new Flatpak bundle over the old one
+  with `flatpak install --user --reinstall KohaOfflineCirculation-x.y.z-x86_64.flatpak`.
+
+Machines that wipe their drives on reboot (Deep Freeze and similar) lose an
+update at the next restart, so update those while thawed or through your
+usual software deployment. To turn the daily check off centrally, set
+`checkForUpdates` to `false`:
+
+- Windows: a string value `checkForUpdates` of `false` under
+  `HKEY_CURRENT_USER\Software\Kyle M Hall\Koha Offline Circulation`
+- macOS: `defaults write "info.kylehall.Koha Offline Circulation" checkForUpdates -bool false`
+- Linux: `checkForUpdates=false` in the `[General]` section of
+  `~/.config/Kyle M Hall/Koha Offline Circulation.conf`
+
 ## Usage tips
 
 - **Settings → Set Default KOC Save Path** controls where new `.koc` files are saved

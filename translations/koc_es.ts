@@ -81,132 +81,132 @@ This file is needed in order to search for borrowers. Set its location via Setti
 <context>
     <name>KohaDownload</name>
     <message>
-        <location filename="../kohadownload.cpp" line="60"/>
+        <location filename="../kohadownload.cpp" line="61"/>
         <source>Downloading borrowers report...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohadownload.cpp" line="65"/>
+        <location filename="../kohadownload.cpp" line="66"/>
         <source>Requesting an access token...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohadownload.cpp" line="69"/>
-        <location filename="../kohadownload.cpp" line="139"/>
+        <location filename="../kohadownload.cpp" line="70"/>
+        <location filename="../kohadownload.cpp" line="143"/>
         <source>Downloading the borrowers database...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohadownload.cpp" line="74"/>
-        <location filename="../kohadownload.cpp" line="144"/>
+        <location filename="../kohadownload.cpp" line="75"/>
+        <location filename="../kohadownload.cpp" line="148"/>
         <source>Downloading borrowers...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohadownload.cpp" line="132"/>
+        <location filename="../kohadownload.cpp" line="136"/>
         <source>The server did not issue an access token. Check the API client ID and secret, and that the RESTOAuth2ClientCredentials system preference is enabled.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohadownload.cpp" line="152"/>
+        <location filename="../kohadownload.cpp" line="156"/>
         <source>The server did not return a borrowers database file. Check the Koha staff URL and that the Offline Circulation plugin is installed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohadownload.cpp" line="162"/>
+        <location filename="../kohadownload.cpp" line="166"/>
         <source>Could not write %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohadownload.cpp" line="169"/>
+        <location filename="../kohadownload.cpp" line="173"/>
         <source>Could not replace %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohadownload.cpp" line="173"/>
+        <location filename="../kohadownload.cpp" line="177"/>
         <source>Downloaded the borrowers database, %1 KB.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohadownload.cpp" line="231"/>
+        <location filename="../kohadownload.cpp" line="235"/>
         <source>The borrowers database is already up to date.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohadownload.cpp" line="238"/>
+        <location filename="../kohadownload.cpp" line="242"/>
         <source>
 
 The Offline Circulation plugin does not appear to be installed on this Koha server.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohadownload.cpp" line="241"/>
+        <location filename="../kohadownload.cpp" line="245"/>
         <source>
 
 Check the username and password. The account needs the catalogue permission.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohadownload.cpp" line="243"/>
+        <location filename="../kohadownload.cpp" line="247"/>
         <source>
 
 Check the API client ID and secret, and that the RESTOAuth2ClientCredentials system preference is enabled.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohadownload.cpp" line="246"/>
+        <location filename="../kohadownload.cpp" line="250"/>
         <source>
 
 Check the username and password, that the RESTBasicAuth system preference is enabled, and that the account has the borrowers and circulate permissions.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohadownload.cpp" line="272"/>
+        <location filename="../kohadownload.cpp" line="276"/>
         <source>The report service did not return JSON rows. Check the report IDs.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohadownload.cpp" line="280"/>
+        <location filename="../kohadownload.cpp" line="284"/>
         <source>The borrowers report returned exactly %1 rows, which is Koha&apos;s default SvcMaxReportRows limit. Raise the SvcMaxReportRows system preference on the Koha server.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohadownload.cpp" line="291"/>
+        <location filename="../kohadownload.cpp" line="295"/>
         <source>Downloading issues report...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohadownload.cpp" line="306"/>
+        <location filename="../kohadownload.cpp" line="310"/>
         <source>The API did not return JSON rows. Check the Koha staff URL.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohadownload.cpp" line="319"/>
+        <location filename="../kohadownload.cpp" line="323"/>
         <source>Downloading borrowers... %1 so far</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohadownload.cpp" line="324"/>
+        <location filename="../kohadownload.cpp" line="328"/>
         <source>Downloading checkouts...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohadownload.cpp" line="334"/>
+        <location filename="../kohadownload.cpp" line="338"/>
         <source>Downloading checkouts... %1 so far</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohadownload.cpp" line="344"/>
+        <location filename="../kohadownload.cpp" line="348"/>
         <source>Writing borrowers database...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohadownload.cpp" line="356"/>
+        <location filename="../kohadownload.cpp" line="360"/>
         <source>Downloaded %1 borrowers and %2 checkouts.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohadownload.cpp" line="357"/>
+        <location filename="../kohadownload.cpp" line="361"/>
         <source>Updated %1 changed borrowers, %2 current checkouts.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -214,19 +214,19 @@ Check the username and password, that the RESTBasicAuth system preference is ena
 <context>
     <name>KohaLibraries</name>
     <message>
-        <location filename="../kohalibraries.cpp" line="77"/>
+        <location filename="../kohalibraries.cpp" line="78"/>
         <source>
 
 Check the Koha staff URL, and that the RESTPublicAPI system preference is enabled.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohalibraries.cpp" line="86"/>
+        <location filename="../kohalibraries.cpp" line="87"/>
         <source>The server did not return a list of libraries. Check the Koha staff URL.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohalibraries.cpp" line="100"/>
+        <location filename="../kohalibraries.cpp" line="101"/>
         <source>%1 libraries loaded.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -408,53 +408,53 @@ Check the Koha staff URL, and that the RESTPublicAPI system preference is enable
 <context>
     <name>KohaUpload</name>
     <message>
-        <location filename="../kohaupload.cpp" line="67"/>
+        <location filename="../kohaupload.cpp" line="68"/>
         <source>Requesting an access token...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohaupload.cpp" line="110"/>
+        <location filename="../kohaupload.cpp" line="114"/>
         <source>The server did not issue an access token. Check the API client ID and secret, and that the RESTOAuth2ClientCredentials system preference is enabled.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohaupload.cpp" line="136"/>
+        <location filename="../kohaupload.cpp" line="140"/>
         <source>Uploading %1 transactions...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohaupload.cpp" line="154"/>
+        <location filename="../kohaupload.cpp" line="158"/>
         <source>The plugin returned an unexpected response.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohaupload.cpp" line="217"/>
+        <location filename="../kohaupload.cpp" line="221"/>
         <source>Uploading transaction %1 of %2...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohaupload.cpp" line="240"/>
+        <location filename="../kohaupload.cpp" line="244"/>
         <source>
 
 The Offline Circulation plugin does not appear to be installed on this Koha server.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohaupload.cpp" line="243"/>
+        <location filename="../kohaupload.cpp" line="247"/>
         <source>
 
 Check the API client ID and secret, and that the RESTOAuth2ClientCredentials system preference is enabled.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohaupload.cpp" line="245"/>
+        <location filename="../kohaupload.cpp" line="249"/>
         <source>
 
 Check the username and password, and that the account has the circulate permission.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../kohaupload.cpp" line="279"/>
+        <location filename="../kohaupload.cpp" line="283"/>
         <source>Authentication failed, check the username and password.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -488,381 +488,386 @@ Check the username and password, and that the account has the circulate permissi
     </message>
     <message>
         <location filename="../mainwindow.ui" line="118"/>
-        <location filename="../mainwindow.ui" line="518"/>
+        <location filename="../mainwindow.ui" line="535"/>
         <source>Item Barcode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="133"/>
-        <location filename="../mainwindow.ui" line="533"/>
+        <location filename="../mainwindow.ui" line="550"/>
         <source>Add &amp;Item</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="161"/>
-        <location filename="../mainwindow.ui" line="561"/>
+        <location filename="../mainwindow.ui" line="578"/>
         <source>Previously Scanned Barcodes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="198"/>
-        <location filename="../mainwindow.ui" line="598"/>
-        <location filename="../mainwindow.ui" line="827"/>
+        <location filename="../mainwindow.ui" line="615"/>
+        <location filename="../mainwindow.ui" line="838"/>
         <source>&amp;Delete Selected Item(s)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="255"/>
-        <location filename="../mainwindow.ui" line="655"/>
+        <location filename="../mainwindow.ui" line="672"/>
         <source>Earlier Sessions</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="283"/>
-        <location filename="../mainwindow.ui" line="683"/>
+        <location filename="../mainwindow.ui" line="277"/>
+        <location filename="../mainwindow.ui" line="694"/>
         <source>Time</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="293"/>
-        <location filename="../mainwindow.ui" line="784"/>
+        <location filename="../mainwindow.ui" line="287"/>
+        <location filename="../mainwindow.ui" line="795"/>
         <source>Patron name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="298"/>
-        <location filename="../mainwindow.ui" line="688"/>
+        <location filename="../mainwindow.ui" line="292"/>
+        <location filename="../mainwindow.ui" line="699"/>
         <source>Items</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="323"/>
+        <location filename="../mainwindow.ui" line="342"/>
         <source>Borrower Details</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="329"/>
+        <location filename="../mainwindow.ui" line="348"/>
         <source>Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="345"/>
+        <location filename="../mainwindow.ui" line="364"/>
         <source>Address</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="367"/>
+        <location filename="../mainwindow.ui" line="386"/>
         <source>Phone Number</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="383"/>
+        <location filename="../mainwindow.ui" line="402"/>
         <source>Date of Birth</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="399"/>
+        <location filename="../mainwindow.ui" line="418"/>
         <source>Fines</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="412"/>
+        <location filename="../mainwindow.ui" line="431"/>
         <source>&amp;Pay Fines</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="422"/>
+        <location filename="../mainwindow.ui" line="441"/>
         <source>Current Issues</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="462"/>
+        <location filename="../mainwindow.ui" line="475"/>
         <source>Date Due</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="467"/>
+        <location filename="../mainwindow.ui" line="480"/>
         <source>Title</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="472"/>
-        <location filename="../mainwindow.ui" line="774"/>
+        <location filename="../mainwindow.ui" line="485"/>
+        <location filename="../mainwindow.ui" line="785"/>
         <source>Type</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="477"/>
+        <location filename="../mainwindow.ui" line="490"/>
         <source>Callnumber</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="496"/>
+        <location filename="../mainwindow.ui" line="513"/>
         <source>&amp;Returns</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="721"/>
+        <location filename="../mainwindow.ui" line="732"/>
         <source>Items scanned: 0</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="749"/>
+        <location filename="../mainwindow.ui" line="760"/>
         <source>&amp;History</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="288"/>
-        <location filename="../mainwindow.ui" line="779"/>
+        <location filename="../mainwindow.ui" line="282"/>
+        <location filename="../mainwindow.ui" line="790"/>
         <source>Cardnumber</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="789"/>
+        <location filename="../mainwindow.ui" line="800"/>
         <source>Barcode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="794"/>
+        <location filename="../mainwindow.ui" line="805"/>
         <source>Payment</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="799"/>
+        <location filename="../mainwindow.ui" line="810"/>
         <source>Date</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="804"/>
+        <location filename="../mainwindow.ui" line="815"/>
         <source>Status</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="855"/>
+        <location filename="../mainwindow.ui" line="866"/>
         <source>&amp;File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="872"/>
+        <location filename="../mainwindow.ui" line="883"/>
         <source>&amp;Help</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="879"/>
+        <location filename="../mainwindow.ui" line="891"/>
         <source>Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="902"/>
+        <location filename="../mainwindow.ui" line="914"/>
         <source>&amp;New</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="912"/>
+        <location filename="../mainwindow.ui" line="924"/>
         <source>&amp;Open</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="920"/>
+        <location filename="../mainwindow.ui" line="932"/>
         <source>Open Recent</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="930"/>
+        <location filename="../mainwindow.ui" line="942"/>
         <source>&amp;Save</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="940"/>
+        <location filename="../mainwindow.ui" line="952"/>
         <source>Save &amp;As...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="950"/>
+        <location filename="../mainwindow.ui" line="962"/>
         <source>&amp;Close</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="960"/>
+        <location filename="../mainwindow.ui" line="972"/>
         <source>&amp;Quit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="970"/>
+        <location filename="../mainwindow.ui" line="982"/>
         <source>About</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="979"/>
+        <location filename="../mainwindow.ui" line="991"/>
         <source>Select Borrowers DB File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="988"/>
+        <location filename="../mainwindow.ui" line="1000"/>
         <source>Set Default KOC Save Path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="993"/>
+        <location filename="../mainwindow.ui" line="1005"/>
         <source>&amp;Upload to Koha</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="998"/>
-        <location filename="../mainwindow.cpp" line="1253"/>
-        <location filename="../mainwindow.cpp" line="1259"/>
+        <location filename="../mainwindow.ui" line="1010"/>
+        <location filename="../mainwindow.cpp" line="1310"/>
+        <location filename="../mainwindow.cpp" line="1316"/>
         <source>Check for Updates</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1003"/>
+        <location filename="../mainwindow.ui" line="1018"/>
+        <source>Check for Updates Automatically</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.ui" line="1023"/>
         <source>Koha Connection Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1012"/>
+        <location filename="../mainwindow.ui" line="1032"/>
         <source>Download Borrowers DB from Koha</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="47"/>
         <location filename="../mainwindow.cpp" line="48"/>
+        <location filename="../mainwindow.cpp" line="49"/>
         <source>Commit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="109"/>
+        <location filename="../mainwindow.cpp" line="125"/>
         <source>Ctrl+Q</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="113"/>
+        <location filename="../mainwindow.cpp" line="129"/>
         <source>Ctrl+O</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="117"/>
+        <location filename="../mainwindow.cpp" line="133"/>
         <source>Ctrl+S</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="121"/>
+        <location filename="../mainwindow.cpp" line="137"/>
         <source>Ctrl+Shift+S</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="125"/>
+        <location filename="../mainwindow.cpp" line="141"/>
         <source>Ctrl+W</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="129"/>
+        <location filename="../mainwindow.cpp" line="145"/>
         <source>Ctrl+N</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="133"/>
+        <location filename="../mainwindow.cpp" line="149"/>
         <source>Ctrl+U</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="263"/>
-        <location filename="../mainwindow.cpp" line="324"/>
+        <location filename="../mainwindow.cpp" line="282"/>
+        <location filename="../mainwindow.cpp" line="343"/>
         <source>No Borrower Cardnumber</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="264"/>
+        <location filename="../mainwindow.cpp" line="283"/>
         <source>These items cannot be committed without a borrower cardnumber.
 Enter or search for the borrower&apos;s cardnumber first.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="325"/>
+        <location filename="../mainwindow.cpp" line="344"/>
         <source>A payment cannot be recorded without a borrower cardnumber.
 Enter or search for the borrower&apos;s cardnumber first.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="333"/>
+        <location filename="../mainwindow.cpp" line="352"/>
         <source>Pay Fines</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="334"/>
+        <location filename="../mainwindow.cpp" line="353"/>
         <source>Amount:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="357"/>
+        <location filename="../mainwindow.cpp" line="376"/>
         <source>Invalid Payment Amount</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="358"/>
+        <location filename="../mainwindow.cpp" line="377"/>
         <source>The payment amount was not a valid number.
 Please try again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="516"/>
+        <location filename="../mainwindow.cpp" line="535"/>
         <source>%1 items</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="543"/>
+        <location filename="../mainwindow.cpp" line="562"/>
         <source>Starting new file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="551"/>
+        <location filename="../mainwindow.cpp" line="575"/>
         <source>Close File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="552"/>
+        <location filename="../mainwindow.cpp" line="576"/>
         <source>Close the current file? The transaction list will be cleared.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="563"/>
+        <location filename="../mainwindow.cpp" line="587"/>
         <source>File closed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="570"/>
-        <location filename="../mainwindow.cpp" line="759"/>
+        <location filename="../mainwindow.cpp" line="594"/>
+        <location filename="../mainwindow.cpp" line="783"/>
         <source>Open File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="572"/>
-        <location filename="../mainwindow.cpp" line="689"/>
+        <location filename="../mainwindow.cpp" line="596"/>
+        <location filename="../mainwindow.cpp" line="713"/>
         <source>Koha Offline Circulation Files (*.koc)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="618"/>
+        <location filename="../mainwindow.cpp" line="642"/>
         <source>File successfully loaded.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="663"/>
+        <location filename="../mainwindow.cpp" line="687"/>
         <source>File saved successfully.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="665"/>
+        <location filename="../mainwindow.cpp" line="689"/>
         <source>Failed to save file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="667"/>
+        <location filename="../mainwindow.cpp" line="691"/>
         <source>Failed to Save File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="668"/>
+        <location filename="../mainwindow.cpp" line="692"/>
         <source>Could not write the file:
 %1
 
@@ -872,198 +877,249 @@ Transactions are not being saved! Check the drive and use File, Save As to pick 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="687"/>
+        <location filename="../mainwindow.cpp" line="711"/>
         <source>Save File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="739"/>
+        <location filename="../mainwindow.cpp" line="763"/>
         <source>File Not Found</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="740"/>
+        <location filename="../mainwindow.cpp" line="764"/>
         <source>This file no longer exists:
 %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="761"/>
+        <location filename="../mainwindow.cpp" line="785"/>
         <source>KOC Borrowers DB Files (*.db)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="775"/>
+        <location filename="../mainwindow.cpp" line="799"/>
         <source>Borrowers DB File Selected: </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="782"/>
+        <location filename="../mainwindow.cpp" line="806"/>
         <source>Select Directory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="805"/>
+        <location filename="../mainwindow.cpp" line="829"/>
         <source>Default KOC Save Path Selected: </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="863"/>
-        <location filename="../mainwindow.cpp" line="996"/>
+        <location filename="../mainwindow.cpp" line="887"/>
+        <location filename="../mainwindow.cpp" line="1020"/>
         <source>Koha Connection Not Configured</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="864"/>
+        <location filename="../mainwindow.cpp" line="888"/>
         <source>Set the Koha staff URL, credentials, and download method first.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="894"/>
+        <location filename="../mainwindow.cpp" line="918"/>
         <source>Contacting Koha...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="900"/>
+        <location filename="../mainwindow.cpp" line="924"/>
         <source>Downloading borrowers database from Koha...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="956"/>
+        <location filename="../mainwindow.cpp" line="980"/>
         <source>Download Complete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="959"/>
+        <location filename="../mainwindow.cpp" line="983"/>
         <source>Koha download failed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="961"/>
+        <location filename="../mainwindow.cpp" line="985"/>
         <source>Download Failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="971"/>
-        <location filename="../mainwindow.cpp" line="1029"/>
+        <location filename="../mainwindow.cpp" line="995"/>
+        <location filename="../mainwindow.cpp" line="1053"/>
         <source>Upload to Koha</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="972"/>
+        <location filename="../mainwindow.cpp" line="996"/>
         <source>There are no transactions to upload.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="997"/>
+        <location filename="../mainwindow.cpp" line="1021"/>
         <source>Set the Koha staff URL, credentials, and branch code first.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1008"/>
-        <location filename="../mainwindow.cpp" line="1055"/>
+        <location filename="../mainwindow.cpp" line="1032"/>
+        <location filename="../mainwindow.cpp" line="1079"/>
         <source>sent</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1030"/>
+        <location filename="../mainwindow.cpp" line="1054"/>
         <source>Every transaction has already been sent.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1036"/>
+        <location filename="../mainwindow.cpp" line="1060"/>
         <source>Uploading to Koha...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1036"/>
+        <location filename="../mainwindow.cpp" line="1060"/>
+        <location filename="../mainwindow.cpp" line="1357"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1072"/>
+        <location filename="../mainwindow.cpp" line="1096"/>
         <source>Upload Complete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1073"/>
+        <location filename="../mainwindow.cpp" line="1097"/>
         <source>%1 transactions uploaded to Koha.
 
 Close the file and start a new one?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1078"/>
+        <location filename="../mainwindow.cpp" line="1102"/>
         <source>Upload Problems</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1079"/>
+        <location filename="../mainwindow.cpp" line="1103"/>
         <source>%1 transactions uploaded, %2 failed.
 
 Failed rows show the reason in the History tab&apos;s Status column. Retrying skips the rows already marked sent.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1170"/>
+        <location filename="../mainwindow.cpp" line="1194"/>
         <source>( no borrower found )</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1171"/>
+        <location filename="../mainwindow.cpp" line="1195"/>
         <source>No borrower found with cardnumber </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1243"/>
+        <location filename="../mainwindow.cpp" line="1267"/>
         <source>Checking for updates...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1254"/>
+        <location filename="../mainwindow.cpp" line="1311"/>
         <source>Could not check for updates. Try again later.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1260"/>
+        <location filename="../mainwindow.cpp" line="1317"/>
         <source>You are running the latest version, %1.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1264"/>
+        <location filename="../mainwindow.cpp" line="1327"/>
+        <location filename="../mainwindow.cpp" line="1337"/>
         <source>Update Available</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1265"/>
+        <location filename="../mainwindow.cpp" line="1328"/>
         <source>Version %1 is available, you are running %2.
 
 Open the downloads page?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1275"/>
+        <location filename="../mainwindow.cpp" line="1338"/>
+        <source>Version %1 is available, you are running %2.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="1340"/>
+        <source>Update Now</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="1341"/>
+        <source>Release Notes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="1342"/>
+        <source>Not Now</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="1357"/>
+        <source>Downloading the update...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="1420"/>
+        <source>Update Failed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="1421"/>
+        <source>%1
+
+Open the downloads page to update by hand?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="1430"/>
         <source>About Koha Offline Circulation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1314"/>
+        <location filename="../mainwindow.cpp" line="1472"/>
+        <source>Barcodes Not Committed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="1473"/>
+        <source>Scanned barcodes not yet committed: %1
+
+They will be lost. Close anyway?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="1496"/>
         <source>Items scanned: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1319"/>
-        <location filename="../mainwindow.cpp" line="1321"/>
+        <location filename="../mainwindow.cpp" line="1501"/>
+        <location filename="../mainwindow.cpp" line="1503"/>
         <source>not set</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1326"/>
+        <location filename="../mainwindow.cpp" line="1508"/>
         <source> (updated %1)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1329"/>
+        <location filename="../mainwindow.cpp" line="1511"/>
         <source>KOC save path: %1  |  Borrowers DB: %2</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1153,6 +1209,90 @@ Open the downloads page?</source>
     <message>
         <location filename="../build/_deps/qtkeychain-src/qtkeychain/keychain_apple.mm" line="62"/>
         <source>Unknown error</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>UpdateInstaller</name>
+    <message>
+        <location filename="../updateinstaller.cpp" line="92"/>
+        <location filename="../updateinstaller.cpp" line="157"/>
+        <source>Could not save the update to %1: %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../updateinstaller.cpp" line="137"/>
+        <source>Could not download the update: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../updateinstaller.cpp" line="146"/>
+        <source>The release doesn&apos;t publish a checksum for %1, so the download can&apos;t be verified.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../updateinstaller.cpp" line="152"/>
+        <source>The downloaded update doesn&apos;t match the checksum published for it. Try again later.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../updateinstaller.cpp" line="221"/>
+        <source>Installing the update needs a Windows administrator. Ask your IT staff to install the new version.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../updateinstaller.cpp" line="223"/>
+        <source>Could not start the installer, Windows error %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../updateinstaller.cpp" line="234"/>
+        <source>The app can&apos;t be replaced in %1 without an administrator.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../updateinstaller.cpp" line="241"/>
+        <source>Could not open the downloaded disk image.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../updateinstaller.cpp" line="257"/>
+        <source>Could not copy the new version out of the disk image.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../updateinstaller.cpp" line="267"/>
+        <source>The new version&apos;s code signature could not be verified, it was not installed.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../updateinstaller.cpp" line="275"/>
+        <source>Could not move the current version out of the way in %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../updateinstaller.cpp" line="281"/>
+        <source>Could not move the new version into place in %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../updateinstaller.cpp" line="293"/>
+        <source>The AppImage in %1 can&apos;t be replaced, the folder isn&apos;t writable.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../updateinstaller.cpp" line="305"/>
+        <source>Could not copy the new version to %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../updateinstaller.cpp" line="314"/>
+        <source>Could not replace %1 with the new version.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../updateinstaller.cpp" line="322"/>
+        <source>Updates can&apos;t be installed on this platform.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

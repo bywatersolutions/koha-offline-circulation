@@ -19,6 +19,7 @@
 
 #include "updatecheck.h"
 
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QNetworkAccessManager>
@@ -44,9 +45,15 @@ bool UpdateCheck::isNewer( const QString & latest, const QString & current )
     return QVersionNumber::fromString( latestNumber ) > QVersionNumber::fromString( currentNumber );
 }
 
+QList<UpdateAsset> UpdateCheck::assets() const
+{
+    return mAssets;
+}
+
 void UpdateCheck::start( const QString & currentVersion )
 {
     mCurrentVersion = currentVersion;
+    mAssets.clear();
 
     QNetworkRequest request( ( QUrl( apiUrl ) ) );
 
@@ -79,6 +86,22 @@ void UpdateCheck::onReplyFinished()
     if ( latest.isEmpty() ) {
         emit finished( false, false, QString(), QString() );
         return;
+    }
+
+    for ( const QJsonValue & value : release.value( "assets" ).toArray() ) {
+        QJsonObject assetJson = value.toObject();
+
+        UpdateAsset asset;
+        asset.name = assetJson.value( "name" ).toString();
+        asset.url = QUrl( assetJson.value( "browser_download_url" ).toString() );
+        asset.size = assetJson.value( "size" ).toInteger();
+
+        QString digest = assetJson.value( "digest" ).toString();
+        if ( digest.startsWith( "sha256:" ) ) {
+            asset.sha256 = QByteArray::fromHex( digest.mid( 7 ).toLatin1() );
+        }
+
+        mAssets.append( asset );
     }
 
     emit finished( true, isNewer( latest, mCurrentVersion ), latest, releaseUrl );

@@ -51,7 +51,13 @@ void TestUpdateCheck::updateAvailable()
     server.handler = []( const QUrl & url, int * status, QByteArray * body ) {
         Q_UNUSED( url )
         Q_UNUSED( status )
-        *body = "{\"tag_name\":\"v9.9.9\",\"html_url\":\"https://example.org/releases\"}";
+        *body = "{\"tag_name\":\"v9.9.9\",\"html_url\":\"https://example.org/releases\",\"assets\":["
+                "{\"name\":\"KohaOfflineCirculation-9.9.9-setup.exe\","
+                "\"browser_download_url\":\"https://example.org/setup.exe\",\"size\":1234,"
+                "\"digest\":\"sha256:36a26545e9d2567b6d80b3c4f2e343504291cd5b5543c5cc31246abb7e017026\"},"
+                "{\"name\":\"KohaOfflineCirculation-9.9.9-x86_64.flatpak\","
+                "\"browser_download_url\":\"https://example.org/app.flatpak\",\"size\":56}"
+                "]}";
     };
 
     UpdateCheck check;
@@ -64,6 +70,15 @@ void TestUpdateCheck::updateAvailable()
     QCOMPARE( finishedSpy.first().at( 1 ).toBool(), true );
     QCOMPARE( finishedSpy.first().at( 2 ).toString(), QString( "v9.9.9" ) );
     QCOMPARE( finishedSpy.first().at( 3 ).toString(), QString( "https://example.org/releases" ) );
+
+    // The digest is kept as raw bytes, an asset without one has none
+    QCOMPARE( check.assets().count(), 2 );
+    QCOMPARE( check.assets().at( 0 ).name, QString( "KohaOfflineCirculation-9.9.9-setup.exe" ) );
+    QCOMPARE( check.assets().at( 0 ).url, QUrl( "https://example.org/setup.exe" ) );
+    QCOMPARE( check.assets().at( 0 ).size, qint64( 1234 ) );
+    QCOMPARE( check.assets().at( 0 ).sha256.toHex(),
+              QByteArray( "36a26545e9d2567b6d80b3c4f2e343504291cd5b5543c5cc31246abb7e017026" ) );
+    QVERIFY( check.assets().at( 1 ).sha256.isEmpty() );
 
     // GitHub's API rejects requests without a user agent
     QVERIFY( ! server.requestHeaders.first().value( "user-agent" ).isEmpty() );

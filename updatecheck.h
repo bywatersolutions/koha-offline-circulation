@@ -20,13 +20,25 @@
 #ifndef UPDATECHECK_H
 #define UPDATECHECK_H
 
+#include <QByteArray>
+#include <QList>
 #include <QObject>
+#include <QUrl>
 
 class QNetworkAccessManager;
 
+/* One downloadable file of a release. GitHub publishes a SHA-256 for
+ * every release asset, an asset without one has an empty sha256. */
+struct UpdateAsset {
+    QString name;
+    QUrl url;
+    qint64 size = 0;
+    QByteArray sha256;
+};
+
 /* Asks the GitHub releases API whether a newer version has been
- * published. Just a version comparison and a pointer at the downloads
- * page, the app doesn't update itself. */
+ * published, and keeps the release's downloads so UpdateInstaller can
+ * fetch the right one for this platform. */
 class UpdateCheck : public QObject
 {
     Q_OBJECT
@@ -41,6 +53,8 @@ class UpdateCheck : public QObject
 
         static bool isNewer( const QString & latest, const QString & current );
 
+        QList<UpdateAsset> assets() const;
+
     signals:
         void finished( bool ok, bool updateAvailable, const QString & latestVersion, const QString & releaseUrl );
 
@@ -50,6 +64,7 @@ class UpdateCheck : public QObject
     private:
         QNetworkAccessManager *mNetwork;
         QString mCurrentVersion;
+        QList<UpdateAsset> mAssets;
 };
 
 #endif // UPDATECHECK_H

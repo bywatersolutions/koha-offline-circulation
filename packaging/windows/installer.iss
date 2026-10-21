@@ -33,9 +33,18 @@ Source: "{#DeployDir}\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
 Name: "{group}\Koha Offline Circulation"; Filename: "{app}\KohaOfflineCirculation.exe"; WorkingDir: "{app}"
 Name: "{autodesktop}\Koha Offline Circulation"; Filename: "{app}\KohaOfflineCirculation.exe"; WorkingDir: "{app}"
 
+[Run]
 ; windeployqt --compiler-runtime may drop the VC++ redistributable into the
 ; deploy tree, install it if so
 #ifexist DeployDir + "\vc_redist.x64.exe"
-[Run]
 Filename: "{app}\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "Installing Visual C++ runtime..."
 #endif
+; An update started from the app passes /RELAUNCH=1 to get the app back
+; afterwards. An IT deployment doesn't, so it never starts the app itself
+Filename: "{app}\KohaOfflineCirculation.exe"; Flags: nowait runasoriginaluser; Check: RelaunchRequested
+
+[Code]
+function RelaunchRequested: Boolean;
+begin
+  Result := ExpandConstant('{param:RELAUNCH|0}') = '1';
+end;

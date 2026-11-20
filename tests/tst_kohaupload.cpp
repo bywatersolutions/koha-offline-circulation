@@ -164,12 +164,16 @@ void TestKohaUpload::rejectedTransactionContinues()
 
 void TestKohaUpload::transportFailureStops()
 {
-    // Point at a port nothing listens on. Borrow a free port and close it
-    // again, a fixed low port is silently dropped on some CI runners.
-    QTcpServer closedServer;
-    QVERIFY( closedServer.listen( QHostAddress::LocalHost, 0 ) );
-    QString deadUrl = QString( "http://127.0.0.1:%1" ).arg( closedServer.serverPort() );
-    closedServer.close();
+    // A server that hangs up on every connection. A closed port would do,
+    // but some CI runners drop those connections instead of refusing them.
+    QTcpServer hangUpServer;
+    connect( &hangUpServer, &QTcpServer::newConnection, &hangUpServer, [&hangUpServer]() {
+        QTcpSocket *socket = hangUpServer.nextPendingConnection();
+        socket->abort();
+        socket->deleteLater();
+    } );
+    QVERIFY( hangUpServer.listen( QHostAddress::LocalHost, 0 ) );
+    QString deadUrl = QString( "http://127.0.0.1:%1" ).arg( hangUpServer.serverPort() );
 
     KocTransaction transaction;
     transaction.type = "return";

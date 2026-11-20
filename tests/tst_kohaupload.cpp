@@ -164,12 +164,12 @@ void TestKohaUpload::rejectedTransactionContinues()
 
 void TestKohaUpload::transportFailureStops()
 {
-    // Point at a port nothing listens on
-    MockHttpServer server;
-    QVERIFY( server.listen() );
-    QString deadUrl = server.baseUrl();
-    // The server object stays alive but we use an unlikely port instead
-    deadUrl = "http://127.0.0.1:1";
+    // Point at a port nothing listens on. Borrow a free port and close it
+    // again, a fixed low port is silently dropped on some CI runners.
+    QTcpServer closedServer;
+    QVERIFY( closedServer.listen( QHostAddress::LocalHost, 0 ) );
+    QString deadUrl = QString( "http://127.0.0.1:%1" ).arg( closedServer.serverPort() );
+    closedServer.close();
 
     KocTransaction transaction;
     transaction.type = "return";
